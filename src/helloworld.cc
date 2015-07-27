@@ -2,28 +2,33 @@
 #include <iostream>
 
 HelloWorld::HelloWorld()
-: m_button("Hello World")   // creates a new button with label "Hello World".
+: w_file_chooser("Select a Video", Gtk::FILE_CHOOSER_ACTION_OPEN),
+  w_label("Source Video")
 {
   // Sets the border width of the window.
   set_border_width(10);
 
-  // When the button receives the "clicked" signal, it will call the
-  // on_button_clicked() method defined below.
-  m_button.signal_clicked().connect(sigc::mem_fun(*this,
-              &HelloWorld::on_button_clicked));
+  w_grid.attach(w_label, 0,0,1,1);
 
-  // This packs the button into the Window (a container).
-  add(m_button);
+  w_file_chooser.set_width_chars(32);
+  w_grid.attach(w_file_chooser, 1,0,1,1);
 
-  // The final step is to display this newly created widget...
-  m_button.show();
+  w_image.set_size_request(400,300);
+  w_grid.attach(w_image, 0,1,1,2);
+
+  add(w_grid);
+
+  w_file_chooser.signal_file_set().connect(sigc::mem_fun(*this,
+              &HelloWorld::on_file_set));
+
+  show_all();
 }
 
 HelloWorld::~HelloWorld()
 {
 }
 
-void HelloWorld::on_button_clicked()
+void HelloWorld::on_file_set()
 {
-  std::cout << "Hello World" << std::endl;
+  std::cout << "Filename: " << w_file_chooser.get_filename() << std::endl;
 }
