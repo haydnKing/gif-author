@@ -25,6 +25,7 @@
 
 #include <glib-object.h>
 #include <gtk/gtk.h>
+#include <opencv/cv.h>
 
 typedef struct _SampleWindow SampleWindow;
 typedef struct _SampleWindowClass   SampleWindowClass;

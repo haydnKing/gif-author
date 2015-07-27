@@ -22,13 +22,14 @@
  */
 
 #include <string.h>
+#include <glib/gprintf.h>
 #include "sample-window.h"
 
 /* If you share headers, or interface with other libraries, you do
  * not want to expose internals. Instead, use a private struct to store
  * instance related data */
 struct _SampleWindowPriv {
-        int hit_count;
+        gchar* fname;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(SampleWindow, sample_window, GTK_TYPE_WINDOW)
@@ -39,7 +40,7 @@ static void sample_window_init(SampleWindow *self);
 static void sample_window_dispose(GObject *object);
 
 /* Runs when the button is clicked */
-static void button_cb(GtkWidget *widget, gpointer userdata);
+static void fileset_cb(GtkWidget *widget, gpointer userdata);
 
 /* Initialisation */
 static void sample_window_class_init(SampleWindowClass *klass)
@@ -53,7 +54,8 @@ static void sample_window_class_init(SampleWindowClass *klass)
 
 static void sample_window_init(SampleWindow *self)
 {
-        GtkWidget *button;
+        GtkWidget *grid, *button, *image;
+
 
         /* Initialize the private storage, the method is generated
          * for you when you use G_DEFINE_TYPE_WITH_PRIVATE, and
@@ -67,17 +69,38 @@ static void sample_window_init(SampleWindow *self)
         /* Ensure we quit when a user closes the window */
         g_signal_connect(self, "destroy", gtk_main_quit, NULL);
 
-        /* Add a new button to ourselves */
-        button = gtk_button_new_with_label("Click me");
-        gtk_container_add(GTK_CONTAINER(self), button);
+        /* make a grid layout thingy */
+        grid = gtk_grid_new();
+        gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
+
+        /* make a file open button */
+        button = gtk_file_chooser_button_new("Click me",
+                GTK_FILE_CHOOSER_ACTION_OPEN);
+        gtk_file_chooser_button_set_width_chars(
+                GTK_FILE_CHOOSER_BUTTON(button),
+                32);
+        g_object_set(G_OBJECT(button), "margin", 10, NULL);
 
         /* Center the button so it doesn't fill available space */
         gtk_widget_set_halign(button, GTK_ALIGN_CENTER);
         gtk_widget_set_valign(button, GTK_ALIGN_CENTER);
 
         /* The clicked_cb method is called on click */
-        g_signal_connect(button, "clicked", G_CALLBACK(button_cb),
+        g_signal_connect(button, "file-set", G_CALLBACK(fileset_cb),
                 self);
+
+        /* make an image */
+        image = gtk_image_new();
+        gtk_widget_set_size_request(image, 400, 400);
+
+        /* add all the layout stuff */
+        gtk_grid_attach(GTK_GRID(grid),
+                        button,
+                        0,0,1,1);
+        gtk_grid_attach(GTK_GRID(grid),
+                        image,
+                        0,1,1,1);
+        gtk_container_add(GTK_CONTAINER(self), grid);
 
         /* Show ourselves */
         gtk_widget_show_all(GTK_WIDGET(self));
@@ -98,25 +121,25 @@ SampleWindow *sample_window_new(void)
         return self;
 }
 
-static void button_cb(GtkWidget *widget, gpointer userdata)
+static void fileset_cb(GtkWidget *widget, gpointer userdata)
 {
         SampleWindow *self;
-        gchar *text = NULL;
-        int hit_count;
+        gchar *fname = NULL;
+        CvCapture* cap;
+        IplImage* img;
 
         /* We passed our window via the userdata pointer */
         self = SAMPLE_WINDOW(userdata);
-        hit_count = self->priv->hit_count + 1;
+        fname = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widget));
+        self->priv->fname = fname;
 
-        /* Set the label to a new string */
-        text = g_strdup_printf("Clicked: #%d", hit_count);
-        if (!text) {
-                g_warning("Unable to allocate memory!");
-                return;
+        g_printf("filename: %s\n", fname);
+
+        cap = cvCaptureFromFile(fname);
+        img = cvQueryFrame(cap);
+        if(img != NULL){
+            g_printf("Got a non-null frame!");
         }
-        self->priv->hit_count = hit_count;
-        gtk_button_set_label(GTK_BUTTON(widget), text);
 
-        /* Always cleanup */
-        g_free(text);
+        cvReleaseCapture(cap);
 }
