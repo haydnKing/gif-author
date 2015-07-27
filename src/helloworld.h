@@ -6,7 +6,9 @@
 #include <gtkmm/filechooserbutton.h>
 #include <gtkmm/window.h>
 #include <gtkmm/label.h>
+#include <gdkmm/pixbuf.h>
 
+#include <opencv2/opencv.hpp>
 
 class HelloWorld : public Gtk::Window
 {
