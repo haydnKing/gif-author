@@ -21,6 +21,14 @@ protected:
   //Signal handlers:
   void on_file_set();
 
+  //Private functions
+  void set_image(cv::Mat* frame);
+
+  //Members
+  cv::Mat* the_frame;
+  cv::VideoCapture* the_cap;
+  Glib::RefPtr<Gdk::Pixbuf> the_pixbuf;
+
   //Member widgets:
   Gtk::Grid w_grid;
   Gtk::FileChooserButton w_file_chooser;
