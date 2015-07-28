@@ -29,6 +29,9 @@ HelloWorld::HelloWorld()
   w_file_chooser.signal_file_set().connect(sigc::mem_fun(*this,
               &HelloWorld::on_file_set));
 
+  w_image.signal_size_allocate().connect(sigc::mem_fun(*this,
+              &HelloWorld::on_image_resize));
+
   show_all();
 }
 
@@ -85,4 +88,13 @@ void HelloWorld::set_image(cv::Mat* frame){
   }
 
 }
+
+void HelloWorld::on_image_resize(Gtk::Allocation& allocation){
+  if(the_pixbuf){
+      w_image.set(the_pixbuf->scale_simple(w_image.get_allocated_width(),
+                  w_image.get_allocated_height(),
+                  Gdk::INTERP_BILINEAR));
+  }
+}
+
 

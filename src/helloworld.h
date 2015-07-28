@@ -20,6 +20,7 @@ public:
 protected:
   //Signal handlers:
   void on_file_set();
+  void on_image_resize(Gtk::Allocation& allocation);
 
   //Private functions
   void set_image(cv::Mat* frame);
