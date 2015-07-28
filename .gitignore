@@ -8,5 +8,9 @@
 /stamp-h?
 .deps/
 .dirstamp
+depcomp
+gif-author
+install-sh
+missing
 *.o
 *~
