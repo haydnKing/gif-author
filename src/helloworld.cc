@@ -24,7 +24,9 @@ HelloWorld::HelloWorld()
   w_file_chooser.set_halign(Gtk::ALIGN_START);
   w_grid.attach(w_file_chooser, 1,0,1,1);
 
-  //setup image
+  //setup image area
+  w_image_area.set_hexpand(true);
+  w_image_area.set_vexpand(true);
   w_grid.attach(w_image_area, 0,1,2,1);
 
   //add the grid
