@@ -14,6 +14,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "imagearea.h"
+
 class HelloWorld : public Gtk::Window
 {
 
@@ -28,7 +30,6 @@ public:
 protected:
   //Signal handlers:
   void on_file_set();
-  void on_image_resize(Gtk::Allocation& allocation);
   virtual bool on_key_press_event(GdkEventKey* event);
 
   //Private functions
@@ -38,14 +39,12 @@ protected:
   //Members
   cv::Mat* the_frame;
   cv::VideoCapture* the_cap;
-  Glib::RefPtr<Gdk::Pixbuf> the_pixbuf;
   sigc::connection playback_conn;
 
   //Member widgets:
   Gtk::Grid w_grid;
-  Gtk::ScrolledWindow w_sw;
   Gtk::FileChooserButton w_file_chooser;
-  Gtk::Image w_image;
+  ImageArea w_image_area;
   Gtk::Label w_label;
 };
 

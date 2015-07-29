@@ -24,17 +24,8 @@ HelloWorld::HelloWorld()
   w_file_chooser.set_halign(Gtk::ALIGN_START);
   w_grid.attach(w_file_chooser, 1,0,1,1);
 
-  //setup scrolledWindow
-  w_sw.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-  //change to the line below when 3.16 ships
-  //w_sw.set_policy(Gtk::POLICY_EXTERNAL, Gtk::POLICY_EXTERNAL);
-  w_sw.set_size_request(400,300);
-
   //setup image
-  w_image.set_hexpand(true);
-  w_image.set_vexpand(true);
-  w_sw.add(w_image);
-  w_grid.attach(w_sw, 0,1,2,1);
+  w_grid.attach(w_image_area, 0,1,2,1);
 
   //add the grid
   add(w_grid);
@@ -42,9 +33,6 @@ HelloWorld::HelloWorld()
   //connect to events
   w_file_chooser.signal_file_set().connect(sigc::mem_fun(*this,
               &HelloWorld::on_file_set));
-
-  w_sw.signal_size_allocate().connect(sigc::mem_fun(*this,
-              &HelloWorld::on_image_resize));
 
   add_events(Gdk::KEY_PRESS_MASK);
 
@@ -88,36 +76,16 @@ void HelloWorld::pause(){
 
 
 void HelloWorld::set_image(cv::Mat* frame){
-  cv::Mat* old = the_frame;
-  the_frame = frame;
   
-  //the_frame->addref();
-  the_pixbuf = Gdk::Pixbuf::create_from_data(the_frame->ptr(),
-          Gdk::COLORSPACE_RGB,
-          false,
-          8,
-          the_frame->size().width,
-          the_frame->size().height,
-          the_frame->size().width * 3);
+  w_image_area.update_image(frame);  
 
-  w_image.set(the_pixbuf->scale_simple(w_image.get_allocated_width()-1,
-              w_image.get_allocated_height()-1,
-              Gdk::INTERP_BILINEAR));
-
-  if(old!=NULL){
-    old->release();
+  if(the_frame!=NULL){
+    the_frame->release();
     //delete old;
   }
+  the_frame = frame;
 
 
-}
-
-void HelloWorld::on_image_resize(Gtk::Allocation& allocation){
-  if(the_pixbuf){
-      w_image.set(the_pixbuf->scale_simple(allocation.get_width(),
-                  allocation.get_height(),
-                  Gdk::INTERP_BILINEAR));
-  }
 }
 
 bool HelloWorld::frame_next(){
