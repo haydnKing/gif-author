@@ -93,6 +93,7 @@ void HelloWorld::set_image(cv::Mat* frame){
 bool HelloWorld::frame_next(){
   if(the_cap!=NULL){
       cv::Mat * frame = new cv::Mat;
+      std::cout << the_cap->get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
       the_cap->read(*frame);
       set_image(frame);
     return true;
@@ -100,20 +101,37 @@ bool HelloWorld::frame_next(){
   return false;
 }
 
+bool HelloWorld::frame_prev(){
+  if(the_cap!=NULL){
+      double pos = the_cap->get(CV_CAP_PROP_POS_FRAMES);
+      if(pos <= 0){
+          return false;
+      }
+      the_cap->set(CV_CAP_PROP_POS_FRAMES, (double)0.);
+      cv::Mat * frame = new cv::Mat;
+      the_cap->read(*frame);
+      set_image(frame);
+    return true;
+  }
+  return false;
+}
 
 bool HelloWorld::on_key_press_event(GdkEventKey* event){
-    if(event->keyval == GDK_KEY_Right){
-        frame_next();
-        return true;
-    }
-    if(event->keyval == GDK_KEY_space){
-        if(playing()){
-            pause();
-        }
-        else{
-            play();
-        }
-        return true;
+    switch(event->keyval){
+        case GDK_KEY_Right:
+            frame_next();
+            return true;
+        case GDK_KEY_Left:
+            frame_prev();
+            return true;
+        case GDK_KEY_space:
+            if(playing()){
+                pause();
+            }
+            else{
+                play();
+            }
+            return true;
     }
     return false;
 }

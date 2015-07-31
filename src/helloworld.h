@@ -14,6 +14,12 @@
 
 #include <opencv2/opencv.hpp>
 
+extern "C" {
+#include <libavutil/imgutils.h>
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+}
+
 #include "imagearea.h"
 
 class HelloWorld : public Gtk::Window
@@ -35,6 +41,7 @@ protected:
   //Private functions
   void set_image(cv::Mat* frame);
   bool frame_next();
+  bool frame_prev();
 
   //Members
   cv::Mat* the_frame;
