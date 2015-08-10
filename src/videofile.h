@@ -31,6 +31,16 @@ class VideoFile
          */
         void close();
 
+        /**
+         * Frame width, -1 if no file open
+         */
+        int width();
+
+        /**
+         * Frame height, -1 if no file open
+         */
+        int height();
+
     protected:
         void init();
         static bool done_init;

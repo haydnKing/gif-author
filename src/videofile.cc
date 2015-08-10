@@ -83,6 +83,20 @@ void VideoFile::close(){
     }
 }
 
+int VideoFile::width(){
+    if(isOpen()){
+        return codecCtx->width;
+    }
+    return -1;
+}
+
+int VideoFile::height(){
+    if(isOpen()){
+        return codecCtx->height;
+    }
+    return -1;
+}
+
 
 void VideoFile::init(){
     if(!done_init){
