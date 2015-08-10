@@ -1,20 +1,19 @@
-#ifndef GTKMM_GIFAUTHOR_VIDEOCACHE_H
-#define GTKMM_GIFAUTHOR_VIDEOCACHE_H
+#ifndef GTKMM_GIFAUTHOR_VIDEOFILE_H
+#define GTKMM_GIFAUTHOR_VIDEOFILE_H
 
 extern "C" {
-#include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
+#include <libavformat/avformat.h>
 }
 
-class VideoCache
+class VideoFile
 {
     public:
         /**
          * default constructor
          */
-        VideoCache();
-        virtual ~VideoCache();
+        VideoFile();
+        virtual ~VideoFile();
 
         /**
          * Open a video file

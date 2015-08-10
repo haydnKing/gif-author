@@ -1,18 +1,18 @@
-#include "videocache.h"
+#include "videofile.h"
 
-bool VideoCache::done_init = false;
+bool VideoFile::done_init = false;
 
-VideoCache::VideoCache(){
+VideoFile::VideoFile(){
    init();
 }
 
-VideoCache::~VideoCache(){
+VideoFile::~VideoFile(){
     if(isOpen()){
         close();
     }
 }
 
-bool VideoCache::open(const char* filename){
+bool VideoFile::open(const char* filename){
     AVCodecContext *tempCodecContext;
 
     //close anything that's already open
@@ -58,12 +58,12 @@ bool VideoCache::open(const char* filename){
     }
 }
 
-bool VideoCache::isOpen(){
+bool VideoFile::isOpen(){
 
 }
 
 
-void VideoCache::init(){
+void VideoFile::init(){
     if(!done_init){
         av_register_all();
         done_init = true;
