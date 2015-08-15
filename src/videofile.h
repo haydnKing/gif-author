@@ -74,7 +74,9 @@ class VideoFile
         void init();
 
         AVFrame *new_avframe();
-        bool decode_frame(AVFrame **out);
+        bool decode_frame();
+        bool convert_frame(AVFrame **out);
+        bool decode_convert_frame(AVFrame **out);
         static bool done_init;
 
         AVFormatContext *formatCtx;

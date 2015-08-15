@@ -166,17 +166,10 @@ AVFrame *VideoFile::new_avframe(){
 }
 
 bool VideoFile::get_next_frame(AVFrame **out){
-    return decode_frame(out);
+    return decode_convert_frame(out);
 }
 
-bool VideoFile::decode_frame(AVFrame **out){
-    if(*out == NULL){
-        *out = new_avframe();
-        if(*out == NULL){
-            return false;
-        }
-    }
-
+bool VideoFile::decode_frame(){
     AVPacket packet;
     int frameFinished;
     while(av_read_frame(formatCtx, &packet)>=0) {
@@ -187,25 +180,8 @@ bool VideoFile::decode_frame(AVFrame **out){
 
             // Did we get a video frame?
             if(frameFinished) {
-                // Convert the image from its native format to RGB
-                sws_scale(swsCtx, 
-                          (uint8_t const * const *)orig_frame->data,
-                          orig_frame->linesize, 
-                          0, 
-                          codecCtx->height,
-                          (*out)->data, 
-                          (*out)->linesize);
-
-                //copy properties
-                av_frame_copy_props(*out, orig_frame);
-
-                //Return the completed frame
                 av_free_packet(&packet);
                 return true;
-            }
-            else{
-                //avoid thinking we've got a keyframe
-                orig_frame->key_frame = false;
             }
         }
 
@@ -214,6 +190,34 @@ bool VideoFile::decode_frame(AVFrame **out){
     }
 
     return false;
+}
+
+bool VideoFile::convert_frame(AVFrame **out){
+    if(*out == NULL){
+        *out = new_avframe();
+        if(*out == NULL){
+            return false;
+        }
+    }
+
+    // Convert the image from its native format to RGB
+    sws_scale(swsCtx, 
+            (uint8_t const * const *)orig_frame->data,
+            orig_frame->linesize, 
+            0, 
+            codecCtx->height,
+            (*out)->data, 
+            (*out)->linesize);
+
+    //copy properties
+    av_frame_copy_props(*out, orig_frame);
+
+    return true;
+}
+
+bool VideoFile::decode_convert_frame(AVFrame **out){
+    if(!decode_frame()) return false;
+    return convert_frame(out);
 }
 
 bool VideoFile::get_prev_frame(AVFrame **out){
@@ -234,12 +238,12 @@ bool VideoFile::get_prev_frame(AVFrame **out){
         avcodec_flush_buffers(codecCtx);
 
         //decode forwards until we get to the frame just before where we were
-        if(!get_next_frame(out)) return false;
+        if(!decode_frame()) return false;
         while(av_frame_get_best_effort_timestamp(orig_frame) < pts){
-            if(!get_next_frame(out)) return false;
+            if(!decode_frame()) return false;
         }
 
-        return out;
+        return convert_frame(out);
     }
     return false;
 }
