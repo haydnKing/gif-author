@@ -4,6 +4,7 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
 #include <libswscale/swscale.h>
 }
 
@@ -47,19 +48,33 @@ class VideoFile
          * @param frame The frame to decode into, NULL to create a new frame
          * @returns the decoded frame
          */
-        AVFrame *next_frame(AVFrame *frame = NULL);
+        bool get_next_frame(AVFrame **out);
 
         /**
          * Read the previous frame
          * @param frame The frame to decode into, NULL to create a new frame
          * @returns the decoded frame
          */
-        AVFrame *prev_frame(AVFrame *frame = NULL);
+        bool get_prev_frame(AVFrame **out);
+
+
+        /**
+         * Get the current timestamp
+         * @returns current timestamp
+         */
+        int16_t get_timestamp();
+
+        /**
+         * Get current frame number
+         * @returns current frame index
+         */
+        int16_t get_frame_index();
 
     protected:
         void init();
 
         AVFrame *new_avframe();
+        bool decode_frame(AVFrame **out);
         static bool done_init;
 
         AVFormatContext *formatCtx;
@@ -67,8 +82,10 @@ class VideoFile
         AVCodec *codec;
         SwsContext *swsCtx;
         int videoStream;
+        int64_t lastKey;
+        int frameLength;
 
-        AVFrame *temp_frame;
+        AVFrame *orig_frame;
         uint8_t *buffer;
         
 

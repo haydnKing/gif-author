@@ -22,9 +22,9 @@ public:
   HelloWorld();
   virtual ~HelloWorld();
 
-  void play();
+  void play(bool reverse=false);
   void pause();
-  bool playing();
+  bool isPlaying();
 
 protected:
   //Signal handlers:
@@ -35,11 +35,12 @@ protected:
   void set_image(AVFrame* frame);
   bool frame_next();
   bool frame_prev();
+  void play_fn();
 
   //Members
   AVFrame *frame;
   VideoFile video;
-  sigc::connection playback_conn;
+  bool playing, play_reverse;
 
   //Member widgets:
   Gtk::Grid w_grid;

@@ -11,7 +11,7 @@ VideoFile::VideoFile(){
    swsCtx = NULL;
    videoStream = -1;
 
-   temp_frame=NULL;
+   orig_frame=NULL;
    buffer=NULL;
 }
 
@@ -23,6 +23,7 @@ VideoFile::~VideoFile(){
 
 bool VideoFile::open(const char* filename){
     AVCodecContext *tempCodecCtx;
+    lastKey = 0;
 
     //close anything that's already open
     close();
@@ -86,7 +87,12 @@ bool VideoFile::open(const char* filename){
                                   NULL
                                   );
 
-    temp_frame = av_frame_alloc();
+    orig_frame = av_frame_alloc();
+
+    frameLength = (formatCtx->streams[videoStream]->time_base.den * 
+                   formatCtx->streams[videoStream]->avg_frame_rate.den) / 
+                  (formatCtx->streams[videoStream]->time_base.num *
+                   formatCtx->streams[videoStream]->avg_frame_rate.num);
 
     return true;
 }
@@ -112,9 +118,9 @@ void VideoFile::close(){
         swsCtx = NULL;
     }
 
-    if(temp_frame != NULL){
-        av_free(temp_frame);
-        temp_frame = NULL;
+    if(orig_frame != NULL){
+        av_free(orig_frame);
+        orig_frame = NULL;
     }
     if(buffer != NULL){
         av_free(buffer);
@@ -159,11 +165,15 @@ AVFrame *VideoFile::new_avframe(){
     return ret_frame;
 }
 
-AVFrame *VideoFile::next_frame(AVFrame *frame){
-    if(frame == NULL){
-        frame = new_avframe();
-        if(frame == NULL){
-            return NULL;
+bool VideoFile::get_next_frame(AVFrame **out){
+    return decode_frame(out);
+}
+
+bool VideoFile::decode_frame(AVFrame **out){
+    if(*out == NULL){
+        *out = new_avframe();
+        if(*out == NULL){
+            return false;
         }
     }
 
@@ -172,26 +182,30 @@ AVFrame *VideoFile::next_frame(AVFrame *frame){
     while(av_read_frame(formatCtx, &packet)>=0) {
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
+            // remember key frames
+            if(orig_frame->key_frame){
+                lastKey = av_frame_get_best_effort_timestamp(orig_frame);
+            }
             // Decode video frame
-            avcodec_decode_video2(codecCtx, temp_frame, &frameFinished, &packet);
+            avcodec_decode_video2(codecCtx, orig_frame, &frameFinished, &packet);
 
             // Did we get a video frame?
             if(frameFinished) {
                 // Convert the image from its native format to RGB
                 sws_scale(swsCtx, 
-                          (uint8_t const * const *)temp_frame->data,
-                          temp_frame->linesize, 
+                          (uint8_t const * const *)orig_frame->data,
+                          orig_frame->linesize, 
                           0, 
                           codecCtx->height,
-                          frame->data, 
-                          frame->linesize);
+                          (*out)->data, 
+                          (*out)->linesize);
 
                 //copy properties
-                av_frame_copy_props(frame, temp_frame);
+                av_frame_copy_props(*out, orig_frame);
 
                 //Return the completed frame
                 av_free_packet(&packet);
-                return frame;
+                return true;
             }
         }
 
@@ -199,17 +213,44 @@ AVFrame *VideoFile::next_frame(AVFrame *frame){
         av_free_packet(&packet);
     }
 
-    return NULL;
+    return false;
 }
 
-AVFrame *VideoFile::prev_frame(AVFrame *frame){
-    if(temp_frame){
-        av_seek_frame(formatCtx, 
-                      videoStream, 
-                      temp_frame->pts-1,
-                      AVSEEK_FLAG_ANY);
-        return next_frame(frame);
+bool VideoFile::get_prev_frame(AVFrame **out){
+    uint16_t pts;
+    if(orig_frame){
+        //return false if we're at the start
+        if(get_timestamp() == 0){
+            return false;
+        }
+        //hop back to the last key frame
+        if(av_seek_frame(formatCtx, 
+                         videoStream, 
+                         lastKey,
+                         AVSEEK_FLAG_ANY && AVSEEK_FLAG_BACKWARD) < 0){
+            return false;
+        }
+        avcodec_flush_buffers(codecCtx);
+
+        //decode forwards until we get to the frame just before where we were
+        pts = av_frame_get_best_effort_timestamp(orig_frame) - frameLength;
+        if(!get_next_frame(out)) return false;
+        while(av_frame_get_best_effort_timestamp(orig_frame) < pts){
+            if(!get_next_frame(out)) return false;
+        }
+
+        return out;
     }
-    return NULL;
+    return false;
 }
+
+int16_t VideoFile::get_timestamp(){
+    return av_frame_get_best_effort_timestamp(orig_frame);
+}
+
+int16_t VideoFile::get_frame_index(){
+    return av_frame_get_best_effort_timestamp(orig_frame) / frameLength;
+}
+
+
 

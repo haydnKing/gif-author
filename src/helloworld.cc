@@ -4,7 +4,7 @@
 HelloWorld::HelloWorld()
     : w_file_chooser("Select a Video", Gtk::FILE_CHOOSER_ACTION_OPEN),
     w_label("Source Video"),
-    playback_conn()
+    playing(false)
 {
     frame =NULL;
 
@@ -54,20 +54,22 @@ void HelloWorld::on_file_set()
     frame_next();
 }
 
-void HelloWorld::play(){
+void HelloWorld::play(bool reverse){
     //if we're not playing, start playing
-    if(playback_conn.empty()){
-        playback_conn = Glib::signal_timeout().connect(sigc::mem_fun(*this,
-                    &HelloWorld::frame_next), 40);
+    if(!isPlaying()){
+        playing = true;
+        play_reverse = reverse;
+        play_fn();
     }
 }
 
 void HelloWorld::pause(){
-    playback_conn.disconnect();
+    playing = false;
 }
 
 
 void HelloWorld::set_image(AVFrame* frame){
+    std::cout << "Frame: " << video.get_frame_index() << std::endl;
     w_image_area.update_image(frame->data[0],
             frame->width,
             frame->height,
@@ -76,7 +78,9 @@ void HelloWorld::set_image(AVFrame* frame){
 
 bool HelloWorld::frame_next(){
     if(video.isOpen()){
-        frame = video.next_frame(frame);
+        if(!video.get_next_frame(&frame)){
+            return false;
+        }
         set_image(frame);
         return true;
     }
@@ -85,12 +89,44 @@ bool HelloWorld::frame_next(){
 
 bool HelloWorld::frame_prev(){
     if(video.isOpen()){
-        frame = video.prev_frame(frame);
+        if(!video.get_prev_frame(&frame)){
+            return false;
+        }
         set_image(frame);
         return true;
     }
     return false;
 }
+
+void HelloWorld::play_fn(){
+    bool r;
+    int64_t time = g_get_monotonic_time();
+    if(play_reverse){
+        r = frame_prev();
+    }
+    else {
+        r = frame_next();
+    }
+    if(!r){
+        pause();
+        return;
+    }
+    if(playing){
+        time = (g_get_monotonic_time()- time)/1000;
+        if(time < 35){
+            time = 40 - time;
+        }
+        else{
+            time = 5;
+        }
+        Glib::signal_timeout().connect_once(
+                sigc::mem_fun(*this,
+                              &HelloWorld::play_fn), 
+                time);
+    }
+}
+
+    
 
 bool HelloWorld::on_key_press_event(GdkEventKey* event){
     switch(event->keyval){
@@ -101,17 +137,17 @@ bool HelloWorld::on_key_press_event(GdkEventKey* event){
             frame_prev();
             return true;
         case GDK_KEY_space:
-            if(playing()){
+            if(isPlaying()){
                 pause();
             }
             else{
-                play();
+                play(event->state & GDK_SHIFT_MASK);
             }
             return true;
     }
     return false;
 }
 
-bool HelloWorld::playing(){
-    return !playback_conn.empty();
+bool HelloWorld::isPlaying(){
+    return playing;
 }
