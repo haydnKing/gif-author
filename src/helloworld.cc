@@ -84,6 +84,11 @@ bool HelloWorld::frame_next(){
 }
 
 bool HelloWorld::frame_prev(){
+    if(video.isOpen()){
+        frame = video.prev_frame(frame);
+        set_image(frame);
+        return true;
+    }
     return false;
 }
 

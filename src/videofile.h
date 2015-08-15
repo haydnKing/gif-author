@@ -49,6 +49,13 @@ class VideoFile
          */
         AVFrame *next_frame(AVFrame *frame = NULL);
 
+        /**
+         * Read the previous frame
+         * @param frame The frame to decode into, NULL to create a new frame
+         * @returns the decoded frame
+         */
+        AVFrame *prev_frame(AVFrame *frame = NULL);
+
     protected:
         void init();
 

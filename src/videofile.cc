@@ -202,3 +202,14 @@ AVFrame *VideoFile::next_frame(AVFrame *frame){
     return NULL;
 }
 
+AVFrame *VideoFile::prev_frame(AVFrame *frame){
+    if(temp_frame){
+        av_seek_frame(formatCtx, 
+                      videoStream, 
+                      temp_frame->pts-1,
+                      AVSEEK_FLAG_ANY);
+        return next_frame(frame);
+    }
+    return NULL;
+}
+
