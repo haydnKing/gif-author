@@ -18,15 +18,15 @@ ImageArea::ImageArea(int width, int height) :
 
 ImageArea::~ImageArea() {};
 
-void ImageArea::update_image(cv::Mat* image){
-    if(image){
-        orig_image = Gdk::Pixbuf::create_from_data(image->ptr(),
+void ImageArea::update_image(uint8_t *data, int width, int height, int linesize){
+    if(data){
+        orig_image = Gdk::Pixbuf::create_from_data(data,
                                     Gdk::COLORSPACE_RGB,
                                     false,
                                     8,
-                                    image->size().width,
-                                    image->size().height,
-                                    image->size().width * 3);
+                                    width,
+                                    height,
+                                    linesize);
     }
     else {
         orig_image->fill(0x000000ff);

@@ -6,9 +6,7 @@ HelloWorld::HelloWorld()
   w_label("Source Video"),
   playback_conn()
 {
-  the_frame = NULL;
-  the_cap = NULL;
-  
+    frame =NULL;
 
   // Sets the border width of the window.
   set_border_width(10);
@@ -44,12 +42,9 @@ HelloWorld::HelloWorld()
 
 HelloWorld::~HelloWorld()
 {
-    if(the_frame != NULL){
-        the_frame->release();
-    }
-    if(the_cap != NULL){
-        the_cap->release();
-        delete the_cap;
+    if(frame != NULL){
+        av_free(frame);
+        frame = NULL;
     }
 }
 
@@ -57,10 +52,7 @@ void HelloWorld::on_file_set()
 {
   std::cout << "Filename: " << w_file_chooser.get_filename() << std::endl;
 
-  if(the_cap != NULL){
-      delete the_cap;
-  }
-  the_cap = new cv::VideoCapture(w_file_chooser.get_filename());
+  video.open(w_file_chooser.get_filename().c_str());
   frame_next();
 }
 
@@ -77,24 +69,18 @@ void HelloWorld::pause(){
 }
 
 
-void HelloWorld::set_image(cv::Mat* frame){
+void HelloWorld::set_image(AVFrame* frame){
   
-  w_image_area.update_image(frame);  
-
-  if(the_frame!=NULL){
-    the_frame->release();
-    //delete old;
-  }
-  the_frame = frame;
-
+  w_image_area.update_image(frame->data[0],
+                            frame->width,
+                            frame->height,
+                            frame->linesize[0]);  
 
 }
 
 bool HelloWorld::frame_next(){
-  if(the_cap!=NULL){
-      cv::Mat * frame = new cv::Mat;
-      std::cout << the_cap->get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
-      the_cap->read(*frame);
+  if(video.isOpen()){
+      frame = video.next_frame(frame);
       set_image(frame);
     return true;
   }
@@ -102,17 +88,6 @@ bool HelloWorld::frame_next(){
 }
 
 bool HelloWorld::frame_prev(){
-  if(the_cap!=NULL){
-      double pos = the_cap->get(CV_CAP_PROP_POS_FRAMES);
-      if(pos <= 0){
-          return false;
-      }
-      the_cap->set(CV_CAP_PROP_POS_FRAMES, (double)0.);
-      cv::Mat * frame = new cv::Mat;
-      the_cap->read(*frame);
-      set_image(frame);
-    return true;
-  }
   return false;
 }
 

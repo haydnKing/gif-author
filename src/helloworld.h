@@ -12,14 +12,7 @@
 
 #include <glibmm/main.h>
 
-#include <opencv2/opencv.hpp>
-
-extern "C" {
-#include <libavutil/imgutils.h>
-#include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
-}
-
+#include "videofile.h"
 #include "imagearea.h"
 
 class HelloWorld : public Gtk::Window
@@ -39,13 +32,13 @@ protected:
   virtual bool on_key_press_event(GdkEventKey* event);
 
   //Private functions
-  void set_image(cv::Mat* frame);
+  void set_image(AVFrame* frame);
   bool frame_next();
   bool frame_prev();
 
   //Members
-  cv::Mat* the_frame;
-  cv::VideoCapture* the_cap;
+  AVFrame *frame;
+  VideoFile video;
   sigc::connection playback_conn;
 
   //Member widgets:

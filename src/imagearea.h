@@ -25,7 +25,7 @@ class ImageArea : public Gtk::DrawingArea
          * provided.
          * Setting image=NULL will draw a blank image
          */
-        void update_image(cv::Mat* image);
+        void update_image(uint8_t *data, int width, int height, int linesize);
 
     protected:
         //override default on_draw handler
