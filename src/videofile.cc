@@ -1,4 +1,5 @@
 #include "videofile.h"
+#include <iostream>
 
 bool VideoFile::done_init = false;
 
@@ -146,25 +147,24 @@ void VideoFile::init(){
 AVFrame *VideoFile::new_avframe(){
     
     AVFrame *ret_frame = av_frame_alloc();
+
+    ret_frame->format = AV_PIX_FMT_RGB24;
+    ret_frame->width = codecCtx->width;
+    ret_frame->height = codecCtx->height;
+
+    if(av_frame_get_buffer(ret_frame, 4)<0){
+        return NULL;
+    };
     
-    uint8_t *buffer = NULL;
-
-    buffer = (uint8_t *) av_malloc(sizeof(uint8_t) * 
-                                   avpicture_get_size(PIX_FMT_RGB24, 
-                                                      codecCtx->width,
-                                                      codecCtx->height));
-    avpicture_fill((AVPicture *)ret_frame, 
-                   buffer, 
-                   PIX_FMT_RGB24,
-                   codecCtx->width, 
-                   codecCtx->height);
-
     return ret_frame;
 }
 
 AVFrame *VideoFile::next_frame(AVFrame *frame){
     if(frame == NULL){
         frame = new_avframe();
+        if(frame == NULL){
+            return NULL;
+        }
     }
 
     AVPacket packet;
@@ -185,6 +185,9 @@ AVFrame *VideoFile::next_frame(AVFrame *frame){
                           codecCtx->height,
                           frame->data, 
                           frame->linesize);
+
+                //copy properties
+                av_frame_copy_props(frame, temp_frame);
 
                 //Return the completed frame
                 av_free_packet(&packet);
