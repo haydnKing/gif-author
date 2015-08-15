@@ -82,7 +82,6 @@ class VideoFile
         AVCodec *codec;
         SwsContext *swsCtx;
         int videoStream;
-        int64_t lastKey;
         int64_t frameLength;
 
         AVFrame *orig_frame;

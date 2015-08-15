@@ -23,7 +23,6 @@ VideoFile::~VideoFile(){
 
 bool VideoFile::open(const char* filename){
     AVCodecContext *tempCodecCtx;
-    lastKey = 0;
 
     //close anything that's already open
     close();
@@ -183,11 +182,6 @@ bool VideoFile::decode_frame(AVFrame **out){
     while(av_read_frame(formatCtx, &packet)>=0) {
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
-            // remember key frames
-            if(orig_frame->key_frame){
-                std::cout << "lastKey: " << lastKey << " -> " << av_frame_get_best_effort_timestamp(orig_frame) << std::endl;
-                lastKey = av_frame_get_best_effort_timestamp(orig_frame);
-            }
             // Decode video frame
             avcodec_decode_video2(codecCtx, orig_frame, &frameFinished, &packet);
 
@@ -233,8 +227,8 @@ bool VideoFile::get_prev_frame(AVFrame **out){
         //hop back to the last key frame
         if(av_seek_frame(formatCtx, 
                          videoStream, 
-                         lastKey,
-                         AVSEEK_FLAG_ANY && AVSEEK_FLAG_BACKWARD) < 0){
+                         pts,
+                         /*AVSEEK_FLAG_ANY &&*/ AVSEEK_FLAG_BACKWARD) < 0){
             return false;
         }
         avcodec_flush_buffers(codecCtx);
