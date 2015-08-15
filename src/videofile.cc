@@ -4,6 +4,14 @@ bool VideoFile::done_init = false;
 
 VideoFile::VideoFile(){
    init();
+   formatCtx = NULL;
+   codecCtx = NULL;
+   codec = NULL;
+   swsCtx = NULL;
+   videoStream = -1;
+
+   temp_frame=NULL;
+   buffer=NULL;
 }
 
 VideoFile::~VideoFile(){
@@ -63,6 +71,22 @@ bool VideoFile::open(const char* filename){
         return false; // Could not open codec
     }
 
+    // initialize SWS context for software scaling
+    swsCtx = sws_getCachedContext(swsCtx,
+                                  codecCtx->width,
+                                  codecCtx->height,
+                                  codecCtx->pix_fmt,
+                                  codecCtx->width,
+                                  codecCtx->height,
+                                  PIX_FMT_RGB24,
+                                  SWS_BILINEAR,
+                                  NULL,
+                                  NULL,
+                                  NULL
+                                  );
+
+    temp_frame = av_frame_alloc();
+
     return true;
 }
 
@@ -80,6 +104,20 @@ void VideoFile::close(){
     if(formatCtx != NULL){
         avformat_close_input(&formatCtx);
         formatCtx = NULL;
+    }
+
+    if(swsCtx != NULL){
+        sws_freeContext(swsCtx);
+        swsCtx = NULL;
+    }
+
+    if(temp_frame != NULL){
+        av_free(temp_frame);
+        temp_frame = NULL;
+    }
+    if(buffer != NULL){
+        av_free(buffer);
+        buffer = NULL;
     }
 }
 
@@ -104,3 +142,60 @@ void VideoFile::init(){
         done_init = true;
     }
 }
+
+AVFrame *VideoFile::new_avframe(){
+    
+    AVFrame *ret_frame = av_frame_alloc();
+    
+    uint8_t *buffer = NULL;
+
+    buffer = (uint8_t *) av_malloc(sizeof(uint8_t) * 
+                                   avpicture_get_size(PIX_FMT_RGB24, 
+                                                      codecCtx->width,
+                                                      codecCtx->height));
+    avpicture_fill((AVPicture *)ret_frame, 
+                   buffer, 
+                   PIX_FMT_RGB24,
+                   codecCtx->width, 
+                   codecCtx->height);
+
+    return ret_frame;
+}
+
+AVFrame *VideoFile::next_frame(AVFrame *frame){
+    if(frame == NULL){
+        frame = new_avframe();
+    }
+
+    AVPacket packet;
+    int frameFinished;
+    while(av_read_frame(formatCtx, &packet)>=0) {
+        // Is this a packet from the video stream?
+        if(packet.stream_index==videoStream) {
+            // Decode video frame
+            avcodec_decode_video2(codecCtx, temp_frame, &frameFinished, &packet);
+
+            // Did we get a video frame?
+            if(frameFinished) {
+                // Convert the image from its native format to RGB
+                sws_scale(swsCtx, 
+                          (uint8_t const * const *)temp_frame->data,
+                          temp_frame->linesize, 
+                          0, 
+                          codecCtx->height,
+                          frame->data, 
+                          frame->linesize);
+
+                //Return the completed frame
+                av_free_packet(&packet);
+                return frame;
+            }
+        }
+
+        // Free the packet that was allocated by av_read_frame
+        av_free_packet(&packet);
+    }
+
+    return NULL;
+}
+

@@ -4,6 +4,7 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libswscale/swscale.h>
 }
 
 class VideoFile
@@ -41,14 +42,28 @@ class VideoFile
          */
         int height();
 
+        /**
+         * Read the next frame
+         * @param frame The frame to decode into, NULL to create a new frame
+         * @returns the decoded frame
+         */
+        AVFrame *next_frame(AVFrame *frame = NULL);
+
     protected:
         void init();
+
+        AVFrame *new_avframe();
         static bool done_init;
 
         AVFormatContext *formatCtx;
         AVCodecContext *codecCtx;
         AVCodec *codec;
+        SwsContext *swsCtx;
         int videoStream;
+
+        AVFrame *temp_frame;
+        uint8_t *buffer;
+        
 
 };
 
