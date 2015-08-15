@@ -162,6 +162,7 @@ AVFrame *VideoFile::new_avframe(){
         return NULL;
     };
     
+    ret_frame->key_frame = false;
     return ret_frame;
 }
 
@@ -184,6 +185,7 @@ bool VideoFile::decode_frame(AVFrame **out){
         if(packet.stream_index==videoStream) {
             // remember key frames
             if(orig_frame->key_frame){
+                std::cout << "lastKey: " << lastKey << " -> " << av_frame_get_best_effort_timestamp(orig_frame) << std::endl;
                 lastKey = av_frame_get_best_effort_timestamp(orig_frame);
             }
             // Decode video frame
@@ -207,6 +209,10 @@ bool VideoFile::decode_frame(AVFrame **out){
                 av_free_packet(&packet);
                 return true;
             }
+            else{
+                //avoid thinking we've got a keyframe
+                orig_frame->key_frame = false;
+            }
         }
 
         // Free the packet that was allocated by av_read_frame
@@ -217,12 +223,13 @@ bool VideoFile::decode_frame(AVFrame **out){
 }
 
 bool VideoFile::get_prev_frame(AVFrame **out){
-    uint16_t pts;
+    int64_t pts;
     if(orig_frame){
         //return false if we're at the start
         if(get_timestamp() == 0){
             return false;
         }
+        pts = av_frame_get_best_effort_timestamp(orig_frame) - frameLength;
         //hop back to the last key frame
         if(av_seek_frame(formatCtx, 
                          videoStream, 
@@ -233,7 +240,6 @@ bool VideoFile::get_prev_frame(AVFrame **out){
         avcodec_flush_buffers(codecCtx);
 
         //decode forwards until we get to the frame just before where we were
-        pts = av_frame_get_best_effort_timestamp(orig_frame) - frameLength;
         if(!get_next_frame(out)) return false;
         while(av_frame_get_best_effort_timestamp(orig_frame) < pts){
             if(!get_next_frame(out)) return false;

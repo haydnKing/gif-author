@@ -83,7 +83,7 @@ class VideoFile
         SwsContext *swsCtx;
         int videoStream;
         int64_t lastKey;
-        int frameLength;
+        int64_t frameLength;
 
         AVFrame *orig_frame;
         uint8_t *buffer;

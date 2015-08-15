@@ -69,7 +69,7 @@ void HelloWorld::pause(){
 
 
 void HelloWorld::set_image(AVFrame* frame){
-    std::cout << "Frame: " << video.get_frame_index() << std::endl;
+    std::cout << video.get_frame_index() << std::endl;
     w_image_area.update_image(frame->data[0],
             frame->width,
             frame->height,
