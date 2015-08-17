@@ -257,4 +257,8 @@ int16_t VideoFile::get_frame_index(){
 }
 
 
+int16_t VideoFile::get_length_frames(){
+    std::cout << "return " << formatCtx->streams[videoStream]->nb_frames << std::endl;
+    return formatCtx->streams[videoStream]->nb_frames;
+}
 

@@ -27,6 +27,9 @@ HelloWorld::HelloWorld()
     w_image_area.set_vexpand(true);
     w_grid.attach(w_image_area, 0,1,2,1);
 
+    //setup videoscrollbar
+    w_grid.attach(w_video_scrollbar, 0,2,2,1);
+
     //add the grid
     add(w_grid);
 
@@ -51,6 +54,7 @@ HelloWorld::~HelloWorld()
 void HelloWorld::on_file_set()
 {
     video.open(w_file_chooser.get_filename().c_str());
+    w_video_scrollbar.set_frame_count(video.get_length_frames());
     frame_next();
 }
 

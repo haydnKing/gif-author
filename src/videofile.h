@@ -70,6 +70,12 @@ class VideoFile
          */
         int16_t get_frame_index();
 
+        /**
+         * Get the length of the video in frames
+         * @returns length
+         */
+        int16_t get_length_frames();
+
     protected:
         void init();
 

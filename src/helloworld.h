@@ -14,6 +14,7 @@
 
 #include "videofile.h"
 #include "imagearea.h"
+#include "videoscrollbar.h"
 
 class HelloWorld : public Gtk::Window
 {
@@ -46,6 +47,7 @@ protected:
   Gtk::Grid w_grid;
   Gtk::FileChooserButton w_file_chooser;
   ImageArea w_image_area;
+  VideoScrollbar w_video_scrollbar;
   Gtk::Label w_label;
 };
 
