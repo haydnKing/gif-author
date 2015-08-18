@@ -54,6 +54,7 @@ HelloWorld::~HelloWorld()
 void HelloWorld::on_file_set()
 {
     video.open(w_file_chooser.get_filename().c_str());
+    std::cout << "video length: " << video.get_length_frames() << " frames" << std::endl;
     w_video_scrollbar.set_frame_count(video.get_length_frames());
     frame_next();
 }
@@ -73,7 +74,7 @@ void HelloWorld::pause(){
 
 
 void HelloWorld::set_image(AVFrame* frame){
-    std::cout << video.get_frame_index() << std::endl;
+    w_video_scrollbar.set_current_frame(video.get_frame_index());
     w_image_area.update_image(frame->data[0],
             frame->width,
             frame->height,

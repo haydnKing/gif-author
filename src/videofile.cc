@@ -258,12 +258,13 @@ int64_t VideoFile::get_frame_index(){
 
 
 int64_t VideoFile::get_length_frames(){
-    return formatCtx->duration;
+    std::cout << "return "<<formatCtx->duration<<" / "<<frameLength<< std::endl;
+    return (formatCtx->duration * formatCtx->streams[videoStream]->time_base.den) / 
+        (frameLength * AV_TIME_BASE * formatCtx->streams[videoStream]->time_base.num);
 }
 
 
 bool VideoFile::skip_to_frame(int64_t frame){
-    std::cout << "skip_to_frame(" << frame << ")" << std::endl;
     return skip_to_timestamp(frame * frameLength);
 }
 
