@@ -258,9 +258,7 @@ int64_t VideoFile::get_frame_index(){
 
 
 int64_t VideoFile::get_length_frames(){
-    if(formatCtx->streams[videoStream]->nb_frames != 0)
-        return formatCtx->streams[videoStream]->nb_frames;
-    return 1 + (formatCtx->streams[videoStream]->duration / frameLength);
+    return formatCtx->duration;
 }
 
 

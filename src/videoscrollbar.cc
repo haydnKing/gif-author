@@ -25,7 +25,14 @@ VideoScrollbar::~VideoScrollbar() {};
 
 void VideoScrollbar::set_frame_count(int64_t _frame_count)
 {
+    std::cout << "set_frame_count(" << _frame_count << ")" << std::endl;
     frame_count = _frame_count;
+    queue_draw();
+}
+
+void VideoScrollbar::set_current_frame(int64_t frame)
+{
+    curr_frame = frame;
     queue_draw();
 }
 
@@ -169,12 +176,16 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->stroke();
 
 
+
+
     //temp
     int64_t frames_in_view = frame_count;
     int64_t first_frame = 1;
     //draw marks
     double px_per_frame = w / frames_in_view;
+    std::cout << "double px_per_frame = w / frames_in_view = " << px_per_frame << std::endl;
     int64_t frames_per_mark = static_cast<int64_t>(50. / px_per_frame);
+    std::cout << "\tframes_per_mark = " << frames_per_mark << std::endl;
     
     double rm = std::log10(frames_per_mark) - std::floor(std::log10(frames_per_mark));
     frames_per_mark = std::pow(10, std::floor(std::log10(frames_per_mark)));
@@ -190,6 +201,7 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     {
         frames_per_mark *= 10;
     }
+    std::cout << "\tframes_per_mark = " << frames_per_mark << std::endl;
     
     cr->set_line_width(0.5);
     int64_t frame = ((first_frame / frames_per_mark)+1) * frames_per_mark;
@@ -200,7 +212,15 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         cr->stroke();
         draw_text(cr, convertInt(frame), (frame-first_frame)*px_per_frame, h-10); 
     }
-    
+
+
+    if(curr_frame > first_frame && (curr_frame-first_frame) < frames_in_view)
+    {
+        cr->set_source_rgb(0.0,1.0,0.0);
+        cr->set_line_width(1.5);
+        cr->move_to((curr_frame - first_frame)*px_per_frame, 0);
+        cr->line_to((curr_frame - first_frame)*px_per_frame, h-20.5);
+    }
 
     return true;
 }

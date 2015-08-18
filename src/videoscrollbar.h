@@ -12,6 +12,7 @@ class VideoScrollbar : public Gtk::Widget
 
         void set_frame_count(int64_t frame_count);
         int64_t get_frame_count() const;
+        void set_current_frame(int64_t frame);
 
     protected:
 
@@ -35,7 +36,7 @@ class VideoScrollbar : public Gtk::Widget
 
         Glib::RefPtr<Gdk::Window> m_refGdkWindow;
 
-        int64_t frame_count;
+        int64_t frame_count, curr_frame;
 
 };
 
