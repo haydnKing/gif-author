@@ -10,7 +10,6 @@ VideoFile::VideoFile(){
    codec = NULL;
    swsCtx = NULL;
    videoStream = -1;
-
    orig_frame=NULL;
    buffer=NULL;
 }
@@ -92,6 +91,7 @@ bool VideoFile::open(const char* filename){
                    formatCtx->streams[videoStream]->avg_frame_rate.den) / 
                   (formatCtx->streams[videoStream]->time_base.num *
                    formatCtx->streams[videoStream]->avg_frame_rate.num);
+
 
     return true;
 }
@@ -248,17 +248,50 @@ bool VideoFile::get_prev_frame(AVFrame **out){
     return false;
 }
 
-int16_t VideoFile::get_timestamp(){
+int64_t VideoFile::get_timestamp(){
     return av_frame_get_best_effort_timestamp(orig_frame);
 }
 
-int16_t VideoFile::get_frame_index(){
+int64_t VideoFile::get_frame_index(){
     return av_frame_get_best_effort_timestamp(orig_frame) / frameLength;
 }
 
 
-int16_t VideoFile::get_length_frames(){
-    std::cout << "return " << formatCtx->streams[videoStream]->nb_frames << std::endl;
-    return formatCtx->streams[videoStream]->nb_frames;
+int64_t VideoFile::get_length_frames(){
+    if(formatCtx->streams[videoStream]->nb_frames != 0)
+        return formatCtx->streams[videoStream]->nb_frames;
+    return 1 + (formatCtx->streams[videoStream]->duration / frameLength);
 }
 
+
+bool VideoFile::skip_to_frame(int64_t frame){
+    std::cout << "skip_to_frame(" << frame << ")" << std::endl;
+    return skip_to_timestamp(frame * frameLength);
+}
+
+bool VideoFile::skip_to_timestamp(int64_t ts){
+    //TODO CHeck if ts is past the end of the file
+    
+    //last frame we decode should be the one before target
+    ts = ts - frameLength;
+    //skip to behind where we are
+    if((ts - get_timestamp()) < 0 || (ts - get_timestamp()) > 100*frameLength){
+        while(true){
+            if(av_seek_frame(formatCtx, 
+                        videoStream, 
+                        ts,
+                        (ts < get_timestamp()) ? AVSEEK_FLAG_BACKWARD : AVSEEK_FLAG_ANY) < 0){
+                return false;
+            }
+            avcodec_flush_buffers(codecCtx);
+            if(!decode_frame()) return false;
+            if(get_timestamp() <= ts) break;
+        }
+    }
+
+    //decode forwards until we get to the frame just before where we were
+    while(av_frame_get_best_effort_timestamp(orig_frame) < ts){
+        if(!decode_frame()) return false;
+    }
+    return true;
+}

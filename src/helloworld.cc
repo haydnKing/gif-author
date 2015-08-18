@@ -135,10 +135,30 @@ void HelloWorld::play_fn(){
 bool HelloWorld::on_key_press_event(GdkEventKey* event){
     switch(event->keyval){
         case GDK_KEY_Right:
-            frame_next();
+            if(event->state & GDK_SHIFT_MASK)
+            {
+                video.skip_to_frame(video.get_frame_index()+25);
+                if(!playing){
+                    frame_next();
+                }
+            }
+            else
+            {
+                frame_next();
+            }
             return true;
         case GDK_KEY_Left:
-            frame_prev();
+            if(event->state & GDK_SHIFT_MASK)
+            {
+                video.skip_to_frame(video.get_frame_index()-25);
+                if(!playing){
+                    frame_next();
+                }
+            }
+            else
+            {
+                frame_prev();
+            }
             return true;
         case GDK_KEY_space:
             if(isPlaying()){

@@ -62,19 +62,24 @@ class VideoFile
          * Get the current timestamp
          * @returns current timestamp
          */
-        int16_t get_timestamp();
+        int64_t get_timestamp();
 
         /**
          * Get current frame number
          * @returns current frame index
          */
-        int16_t get_frame_index();
+        int64_t get_frame_index();
 
         /**
          * Get the length of the video in frames
          * @returns length
          */
-        int16_t get_length_frames();
+        int64_t get_length_frames();
+
+        /**
+         */
+        bool skip_to_frame(int64_t frame);
+        bool skip_to_timestamp(int64_t ts);
 
     protected:
         void init();
