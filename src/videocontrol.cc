@@ -36,30 +36,39 @@ VideoControl::~VideoControl(){
 }
 
 void VideoControl::on_fw_play(){
-    if(play_state){
-        fw_play.set_image_from_icon_name("media-playback-start");
-        rv_play.set_image(img_play_backward);
+    if(play_state && play_forwards){
         play_state = false;
     }
     else{
-        fw_play.set_image_from_icon_name("media-playback-pause");
-        rv_play.set_image(img_play_backward);
         play_state = true;
         play_forwards = true;
     }
+    update_icons();
 };
 
 void VideoControl::on_rv_play(){
-    if(play_state){
-        rv_play.set_image(img_play_backward);
-        fw_play.set_image_from_icon_name("media-playback-start");
+    if(play_state && !play_forwards){
         play_state = false;
     }
     else{
-        rv_play.set_image_from_icon_name("media-playback-pause");
-        fw_play.set_image_from_icon_name("media-playback-start");
         play_state = true;
         play_forwards = false;
+    }
+    update_icons();
+};
+
+void VideoControl::update_icons(){
+    if(play_state && play_forwards){
+        rv_play.set_image(img_play_backward);
+        fw_play.set_image_from_icon_name("media-playback-pause");
+    }
+    else if (play_state && !play_forwards){
+        rv_play.set_image_from_icon_name("media-playback-pause");
+        fw_play.set_image_from_icon_name("media-playback-start");
+    }
+    else {
+        rv_play.set_image(img_play_backward);
+        fw_play.set_image_from_icon_name("media-playback-start");
     }
 };
 
