@@ -27,8 +27,10 @@ HelloWorld::HelloWorld()
     w_image_area.set_vexpand(true);
     w_grid.attach(w_image_area, 0,1,2,1);
 
+    w_grid.attach(w_video_control, 0,2,2,1);
+
     //setup videoscrollbar
-    w_grid.attach(w_video_scrollbar, 0,2,2,1);
+    w_grid.attach(w_video_scrollbar, 0,3,2,1);
 
     //add the grid
     add(w_grid);

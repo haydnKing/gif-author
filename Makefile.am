@@ -6,5 +6,6 @@ gif_author_SOURCES =  src/main.cc  \
 					  src/helloworld.cc  src/helloworld.h \
 					  src/imagearea.cc src/imagearea.h \
 					  src/videofile.cc src/videofile.h \
+					  src/videocontrol.cc src/videocontrol.h \
 					  src/videoscrollbar.cc src/videoscrollbar.h 
 gif_author_LDADD = $(GTKMM_LIBS) $(CV2_LIBS) $(FFMPEG_LIBS)
