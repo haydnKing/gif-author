@@ -77,12 +77,14 @@ void VideoControl::on_fw_play(){
         play_state = false;
     }
     else{
-        play_state = true;
         play_forwards = true;
+        if(!play_state) {
+            play_state = true;
+            on_play_tick();
+        }
     }
     update_icons();
     s_play_state_changed.emit(play_state, play_forwards);
-    on_play_tick();
 };
 
 void VideoControl::on_rv_play(){
@@ -90,12 +92,14 @@ void VideoControl::on_rv_play(){
         play_state = false;
     }
     else{
-        play_state = true;
         play_forwards = false;
+        if(!play_state) {
+            play_state = true;
+            on_play_tick();
+        }
     }
     update_icons();
     s_play_state_changed.emit(play_state, play_forwards);
-    on_play_tick();
 };
 
 void VideoControl::update_icons(){
