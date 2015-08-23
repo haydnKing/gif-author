@@ -160,7 +160,7 @@ bool VideoControl::on_window_key_press_event(GdkEventKey* event){
             }
             else
             {
-                s_frame_next.emit();
+                s_frame_prev.emit();
             }
             return true;
         case GDK_KEY_space:

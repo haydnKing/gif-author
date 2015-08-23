@@ -19,6 +19,8 @@ VideoPlayer::VideoPlayer(){
     w_control.signal_seek_backward().connect(sigc::mem_fun(*this, &VideoPlayer::on_seek_rv));
     w_control.signal_to_start().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_start));
     w_control.signal_to_end().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_end));
+
+    s_frame_change.connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_changed));
 };
 
 VideoPlayer::~VideoPlayer(){};
@@ -62,6 +64,10 @@ void VideoPlayer::on_frame_prev(){
         update_image();
         s_frame_change.emit(video_input.get_frame_index());
     }
+};
+
+void VideoPlayer::on_frame_changed(int64_t frame_index){
+    std::cout << "F: " << frame_index << std::endl;
 };
 
 void VideoPlayer::update_image(){

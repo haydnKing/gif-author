@@ -33,6 +33,8 @@ class VideoPlayer : public Gtk::Grid
         void on_to_start();
         void on_to_end();
 
+        void on_frame_changed(int64_t frame_index);
+
         void update_image();
 
         AVFrame* frame;
