@@ -7,6 +7,7 @@
 #include "imagearea.h"
 #include "videocontrol.h"
 #include "videofile.h"
+#include "videoscrollbar.h"
 
 /**
  * Display and play a video
@@ -44,6 +45,7 @@ class VideoPlayer : public Gtk::Grid
         VideoControl w_control;
         VideoFile video_input;
         Gtk::SpinButton w_frame;
+        VideoScrollbar w_scrollbar;
 
         sigc::signal<void, int64_t> s_frame_change;
 };

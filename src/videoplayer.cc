@@ -16,6 +16,7 @@ VideoPlayer::VideoPlayer():
     attach(w_frame, 0,1,1,1);
     w_control.set_halign(Gtk::ALIGN_CENTER);
     attach(w_control, 1,1,1,1);
+    attach(w_scrollbar, 0,2,3,1);
 
     w_control.signal_frame_next().connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_next));
     w_control.signal_frame_prev().connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_prev));
@@ -38,6 +39,7 @@ bool VideoPlayer::open_from_file(const char* filename){
         return false;
     }
     w_frame.set_range(0, video_input.get_length_frames());
+    w_scrollbar.set_frame_count(video_input.get_length_frames());
     w_control.next_frame();
     set_sensitive(true);
 };
@@ -78,6 +80,7 @@ void VideoPlayer::on_frame_prev(){
 
 void VideoPlayer::on_frame_changed(int64_t frame_index){
     w_frame.set_value(frame_index);
+    w_scrollbar.set_current_frame(frame_index);
 };
 
 void VideoPlayer::update_image(){
