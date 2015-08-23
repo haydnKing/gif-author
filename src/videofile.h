@@ -26,7 +26,7 @@ class VideoFile
          * is a file open?
          * \returns True if a file is open
          */
-        bool isOpen();
+        bool is_open();
 
         /**
          * Close an open file and deallocate all memory

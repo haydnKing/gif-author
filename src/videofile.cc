@@ -15,7 +15,7 @@ VideoFile::VideoFile(){
 }
 
 VideoFile::~VideoFile(){
-    if(isOpen()){
+    if(is_open()){
         close();
     }
 }
@@ -96,7 +96,7 @@ bool VideoFile::open(const char* filename){
     return true;
 }
 
-bool VideoFile::isOpen(){
+bool VideoFile::is_open(){
     return (codecCtx != NULL) && (formatCtx != NULL);
 }
 
@@ -128,14 +128,14 @@ void VideoFile::close(){
 }
 
 int VideoFile::width(){
-    if(isOpen()){
+    if(is_open()){
         return codecCtx->width;
     }
     return -1;
 }
 
 int VideoFile::height(){
-    if(isOpen()){
+    if(is_open()){
         return codecCtx->height;
     }
     return -1;

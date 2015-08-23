@@ -1,6 +1,8 @@
 #ifndef GTKMM_EXAMPLE_HELLOWORLD_H
 #define GTKMM_EXAMPLE_HELLOWORLD_H
 
+#include <stdint.h>
+
 #include <gtkmm/image.h>
 #include <gtkmm/grid.h>
 #include <gtkmm/filechooserbutton.h>
@@ -12,10 +14,8 @@
 
 #include <glibmm/main.h>
 
-#include "videofile.h"
-#include "imagearea.h"
-#include "videoscrollbar.h"
 #include "videocontrol.h"
+#include "videoplayer.h"
 
 class HelloWorld : public Gtk::Window
 {
@@ -31,26 +31,15 @@ public:
 protected:
   //Signal handlers:
   void on_file_set();
-  virtual bool on_key_press_event(GdkEventKey* event);
-
-  //Private functions
-  void set_image(AVFrame* frame);
-  bool frame_next();
-  bool frame_prev();
-  void play_fn();
-
-  //Members
-  AVFrame *frame;
-  VideoFile video;
-  bool playing, play_reverse;
+  bool on_key_press_event(GdkEventKey* event);
 
   //Member widgets:
   Gtk::Grid w_grid;
   Gtk::FileChooserButton w_file_chooser;
-  ImageArea w_image_area;
-  VideoScrollbar w_video_scrollbar;
+
+  VideoPlayer w_player;
+
   Gtk::Label w_label;
-  VideoControl w_video_control;
 };
 
 #endif // GTKMM_EXAMPLE_HELLOWORLD_H

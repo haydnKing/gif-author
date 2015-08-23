@@ -1,9 +1,9 @@
 #ifndef GIF_AUTHOR_IMAGE_AREA_H
 #define GIF_AUTHOR_IMAGE_AREA_H
 
+#include <stdint.h>
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/pixbuf.h>
-#include <opencv2/opencv.hpp>
 
 /**
  * Display an image, automatically scaled to the available space
