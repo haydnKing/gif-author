@@ -2,6 +2,7 @@
 #define GIF_AUTHOR_VIDEO_PLAYER_H
 
 #include <gtkmm/grid.h>
+#include <gtkmm/spinbutton.h>
 
 #include "imagearea.h"
 #include "videocontrol.h"
@@ -34,6 +35,7 @@ class VideoPlayer : public Gtk::Grid
         void on_to_end();
 
         void on_frame_changed(int64_t frame_index);
+        void on_spin_changed();
 
         void update_image();
 
@@ -41,6 +43,7 @@ class VideoPlayer : public Gtk::Grid
         ImageArea w_image;
         VideoControl w_control;
         VideoFile video_input;
+        Gtk::SpinButton w_frame;
 
         sigc::signal<void, int64_t> s_frame_change;
 };

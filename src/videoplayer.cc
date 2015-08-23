@@ -2,16 +2,20 @@
 
 #include <iostream>
 
-VideoPlayer::VideoPlayer(){
+VideoPlayer::VideoPlayer():
+    w_frame(1.0)
+{
     frame = NULL;
 
     set_row_spacing(10);
 
     w_image.set_vexpand(true);
     w_image.set_hexpand(true);
-    attach(w_image, 0,0,1,1);
+    attach(w_image, 0,0,3,1);
+    w_frame.set_increments(1.0, 25.0);
+    attach(w_frame, 0,1,1,1);
     w_control.set_halign(Gtk::ALIGN_CENTER);
-    attach(w_control, 0,1,1,1);
+    attach(w_control, 1,1,1,1);
 
     w_control.signal_frame_next().connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_next));
     w_control.signal_frame_prev().connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_prev));
@@ -21,6 +25,8 @@ VideoPlayer::VideoPlayer(){
     w_control.signal_to_end().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_end));
 
     s_frame_change.connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_changed));
+
+    w_frame.signal_value_changed().connect(sigc::mem_fun(*this, &VideoPlayer::on_spin_changed));
 };
 
 VideoPlayer::~VideoPlayer(){};
@@ -29,6 +35,7 @@ bool VideoPlayer::open_from_file(const char* filename){
     if(!video_input.open(filename)){
         return false;
     }
+    w_frame.set_range(0, video_input.get_length_frames());
     w_control.next_frame();
 };
 
@@ -67,7 +74,7 @@ void VideoPlayer::on_frame_prev(){
 };
 
 void VideoPlayer::on_frame_changed(int64_t frame_index){
-    std::cout << "F: " << frame_index << std::endl;
+    w_frame.set_value(frame_index);
 };
 
 void VideoPlayer::update_image(){
@@ -102,6 +109,15 @@ void VideoPlayer::on_to_end(){
     video_input.skip_to_frame(video_input.get_length_frames());
     if(!w_control.is_playing()){
         w_control.next_frame();
+    }
+};
+
+void VideoPlayer::on_spin_changed(){
+    if((int64_t)w_frame.get_value() != video_input.get_frame_index()){
+        video_input.skip_to_frame(w_frame.get_value());
+        if(!w_control.is_playing()){
+            w_control.next_frame();
+        }
     }
 };
 
