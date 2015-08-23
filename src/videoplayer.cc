@@ -27,6 +27,8 @@ VideoPlayer::VideoPlayer():
     s_frame_change.connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_changed));
 
     w_frame.signal_value_changed().connect(sigc::mem_fun(*this, &VideoPlayer::on_spin_changed));
+
+    set_sensitive(false);
 };
 
 VideoPlayer::~VideoPlayer(){};
@@ -37,6 +39,7 @@ bool VideoPlayer::open_from_file(const char* filename){
     }
     w_frame.set_range(0, video_input.get_length_frames());
     w_control.next_frame();
+    set_sensitive(true);
 };
 
 void VideoPlayer::connect_window_keypress(Gtk::Window &window){
