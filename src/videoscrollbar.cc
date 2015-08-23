@@ -150,23 +150,23 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
     const double w = (double)get_allocation().get_width();
     const double h = (double)get_allocation().get_height();
+    Glib::RefPtr<Gtk::StyleContext> context = get_style_context();
 
     // paint the view background
-    this->get_style_context()->add_class(GTK_STYLE_CLASS_VIEW);
+    context->context_save();
+    context->add_class(GTK_STYLE_CLASS_VIEW);
     Gdk::Cairo::set_source_rgba(cr, get_style_context()->get_background_color());
     cr->paint();
+    context->context_restore();
     
     //paint the key background
-    this->get_style_context()->remove_class(GTK_STYLE_CLASS_VIEW);
-    this->get_style_context()->add_class(GTK_STYLE_CLASS_BACKGROUND);
-    Gdk::Cairo::set_source_rgba(cr, get_style_context()->get_background_color());
+    context->context_save();
+    context->add_class(GTK_STYLE_CLASS_BACKGROUND);
+    Gdk::Cairo::set_source_rgba(cr, context->get_background_color());
     cr->rectangle(0,h-20,w,h);
     cr->fill();
-    Gdk::Cairo::set_source_rgba(cr, get_style_context()->get_color());
-
-
-
-
+    Gdk::Cairo::set_source_rgba(cr, context->get_color());
+    
     //temp
     int64_t frames_in_view = frame_count;
     int64_t first_frame = 1;
@@ -211,7 +211,7 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
 
     // draw the background lines
-    Gdk::Cairo::set_source_rgba(cr, get_style_context()->get_color());
+    Gdk::Cairo::set_source_rgba(cr, context->get_color());
     cr->set_line_width(0.7);
     cr->move_to(0.5,0.5);
     cr->line_to(w-0.5,0.5);
@@ -221,6 +221,8 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->move_to(0.5,h-20.5);
     cr->line_to(w-0.5,h-20.5);
     cr->stroke();
+
+    context->context_restore();
     return true;
 }
         
