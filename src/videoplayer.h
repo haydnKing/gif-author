@@ -28,6 +28,8 @@ class VideoPlayer : public Gtk::Grid
         sigc::signal<void, int64_t> signal_frame_changed();
 
     protected:
+        void seek_to_frame(int64_t frame);
+
         void on_frame_next();
         void on_frame_prev();
         void on_seek_fw();

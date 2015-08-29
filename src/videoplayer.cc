@@ -24,6 +24,8 @@ VideoPlayer::VideoPlayer():
     w_control.signal_seek_backward().connect(sigc::mem_fun(*this, &VideoPlayer::on_seek_rv));
     w_control.signal_to_start().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_start));
     w_control.signal_to_end().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_end));
+    
+    w_scrollbar.signal_frame_change().connect(sigc::mem_fun(*this, &VideoPlayer::seek_to_frame));
 
     s_frame_change.connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_changed));
 
@@ -89,19 +91,20 @@ void VideoPlayer::update_image(){
             frame->height,
             frame->linesize[0]);  
 };
-
-void VideoPlayer::on_seek_fw(){
-    video_input.skip_to_frame(video_input.get_frame_index()+25);
+    
+void VideoPlayer::seek_to_frame(int64_t frame){
+    video_input.skip_to_frame(frame);
     if(!w_control.is_playing()){
         w_control.next_frame();
     }
 };
 
+void VideoPlayer::on_seek_fw(){
+    seek_to_frame(video_input.get_frame_index()+25);
+};
+
 void VideoPlayer::on_seek_rv(){
-    video_input.skip_to_frame(video_input.get_frame_index()-25);
-    if(!w_control.is_playing()){
-        w_control.next_frame();
-    }
+    seek_to_frame(video_input.get_frame_index()-25);
 };
 
 void VideoPlayer::on_to_start(){

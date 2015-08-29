@@ -14,6 +14,9 @@ class VideoScrollbar : public Gtk::Widget
         int64_t get_frame_count() const;
         void set_current_frame(int64_t frame);
 
+        //signals
+        sigc::signal<void, int64_t> signal_frame_change();
+
     protected:
 
         //Overrides:
@@ -43,6 +46,7 @@ class VideoScrollbar : public Gtk::Widget
         int64_t frame_count, curr_frame;
         int64_t first_frame, frames_in_view;
 
+        sigc::signal<void, int64_t> s_frame_change;
 };
 
 #endif //GTKMM_GIFAUTHOR_VIDEOSCROLLBAR_H

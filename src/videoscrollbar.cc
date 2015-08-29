@@ -51,6 +51,10 @@ int64_t VideoScrollbar::get_frame_count() const
     return frame_count;
 }
 
+sigc::signal<void, int64_t> VideoScrollbar::signal_frame_change(){
+    return s_frame_change;
+};
+
 Gtk::SizeRequestMode VideoScrollbar::get_request_mode_vfunc() const
 {
     //default value
@@ -282,7 +286,7 @@ std::string convertInt(int number)
 
 bool VideoScrollbar::on_button_press(GdkEventButton *evt){
     if(evt->type == GDK_BUTTON_PRESS && evt->button == 1){
-        std::cout << "on_button_press("<< pixel_to_frame(evt->x) <<")" << std::endl;
+        s_frame_change.emit(pixel_to_frame(evt->x));
     }
     return true;
 };
