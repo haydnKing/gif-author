@@ -1,6 +1,7 @@
 #include "videoscrollbar.h"
 
 #include <gdkmm/general.h>
+#include <gtkmm/cssprovider.h>
 
 #include <iostream>
 #include <sstream>
@@ -148,30 +149,53 @@ void VideoScrollbar::on_unrealize()
 
 bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-    const double w = (double)get_allocation().get_width();
-    const double h = (double)get_allocation().get_height();
+    const double TEXT_HEIGHT = 20.;
+    const double PAD = 5.;
+    double x = 0;
+    double y = 0;
+    double w = (double)get_allocation().get_width();
+    double h = (double)get_allocation().get_height();
     Glib::RefPtr<Gtk::StyleContext> context = get_style_context();
+
+    //get border
+    Gtk::Border border = context->get_border(); 
+
+    w -= border.get_left() + border.get_right();
+    h -= border.get_top() + border.get_bottom();
+    x += border.get_left();
+    y += border.get_top();
+
 
     // paint the view background
     context->context_save();
-    context->add_class(GTK_STYLE_CLASS_VIEW);
-    Gdk::Cairo::set_source_rgba(cr, get_style_context()->get_background_color());
-    cr->paint();
+    context->add_class(GTK_STYLE_CLASS_ENTRY);
+    context->render_background(cr, x,y,w,h-TEXT_HEIGHT);
+    context->context_restore();
+
+    // paint the scale background
+    context->context_save();
+    context->add_class(GTK_STYLE_CLASS_BUTTON);
+    context->render_background(cr, x, y + h-TEXT_HEIGHT, w, TEXT_HEIGHT);
+    context->render_frame(cr, x,y,w,h);
     context->context_restore();
     
-    //paint the key background
+    // draw a line separating the view and the scale
     context->context_save();
-    context->add_class(GTK_STYLE_CLASS_BACKGROUND);
-    Gdk::Cairo::set_source_rgba(cr, context->get_background_color());
-    cr->rectangle(0,h-20,w,h);
-    cr->fill();
-    Gdk::Cairo::set_source_rgba(cr, context->get_color());
+    context->add_class(GTK_STYLE_CLASS_PANE_SEPARATOR);
+    Gdk::Cairo::set_source_rgba(cr, context->get_border_color(context->get_state()));
+    cr->set_line_width(1.0);
+    cr->move_to(x+1, 0.5+std::floor(y+h-TEXT_HEIGHT));
+    cr->line_to(w-1, 0.5+std::floor(y+h-TEXT_HEIGHT));
+    cr->stroke();
+    context->context_restore();
+
     
     //temp
     int64_t frames_in_view = frame_count;
     int64_t first_frame = 1;
-    //draw marks
-    double px_per_frame = w / frames_in_view;
+    
+    //Work out where to put marks
+    double px_per_frame = (w-2*PAD) / frames_in_view;
     int64_t frames_per_mark = static_cast<int64_t>(50. / px_per_frame);
     
     double rm = std::log10(frames_per_mark) - std::floor(std::log10(frames_per_mark));
@@ -189,40 +213,31 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
         frames_per_mark *= 10;
     }
     
+    //draw the marks
     cr->set_line_width(0.5);
     int64_t frame = ((first_frame / frames_per_mark)+1) * frames_per_mark;
     std::ostringstream convert;
     for(;frame < first_frame + frames_in_view; frame += frames_per_mark){
-        cr->move_to(std::floor((frame-first_frame)*px_per_frame)+0.5,0);
-        cr->line_to(std::floor((frame-first_frame)*px_per_frame)+0.5,h-20.5);
-        cr->stroke();
-        draw_text(cr, convertInt(frame), (frame-first_frame)*px_per_frame, h-10); 
+        context->render_line(cr,
+                             std::floor(PAD+(frame-first_frame)*px_per_frame)+0.5, y+2,
+                             std::floor(PAD+(frame-first_frame)*px_per_frame)+0.5, h-TEXT_HEIGHT);
+        context->context_save();
+        context->add_class(GTK_STYLE_CLASS_BUTTON);
+        Gdk::Cairo::set_source_rgba(cr, context->get_color(context->get_state()));
+        draw_text(cr, convertInt(frame), PAD+(frame-first_frame)*px_per_frame, h-0.5*TEXT_HEIGHT); 
+        context->context_restore();
     }
 
 
     if(curr_frame > first_frame && (curr_frame-first_frame) < frames_in_view)
     {
         cr->set_source_rgb(0.0,1.0,0.0);
-        cr->set_line_width(1.5);
-        cr->move_to((curr_frame - first_frame)*px_per_frame, 0);
-        cr->line_to((curr_frame - first_frame)*px_per_frame, h-20.5);
+        cr->set_line_width(1.);
+        cr->move_to(PAD+(curr_frame - first_frame)*px_per_frame, y+2);
+        cr->line_to(PAD+(curr_frame - first_frame)*px_per_frame, h-TEXT_HEIGHT);
         cr->stroke();
     }
 
-
-    // draw the background lines
-    Gdk::Cairo::set_source_rgba(cr, context->get_color());
-    cr->set_line_width(0.7);
-    cr->move_to(0.5,0.5);
-    cr->line_to(w-0.5,0.5);
-    cr->line_to(w-0.5,h-0.5);
-    cr->line_to(0.5,h-0.5);
-    cr->line_to(0.5,0.5);
-    cr->move_to(0.5,h-20.5);
-    cr->line_to(w-0.5,h-20.5);
-    cr->stroke();
-
-    context->context_restore();
     return true;
 }
         
