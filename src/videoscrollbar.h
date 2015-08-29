@@ -29,14 +29,19 @@ class VideoScrollbar : public Gtk::Widget
         virtual void on_unrealize();
         virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 
+        virtual bool on_button_press(GdkEventButton *evt);
+
         void draw_text(const Cairo::RefPtr<Cairo::Context>& cr,
                        const std::string &str,
                        double x_pos, 
                        double y_pos);
 
+        int64_t pixel_to_frame(double x_loc);
+
         Glib::RefPtr<Gdk::Window> m_refGdkWindow;
 
         int64_t frame_count, curr_frame;
+        int64_t first_frame, frames_in_view;
 
 };
 

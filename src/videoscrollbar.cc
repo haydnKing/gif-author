@@ -8,6 +8,8 @@
 
 const int VIDEOSCROLLBAR_HEIGHT = 70;
 const int VIDEOSCROLLBAR_WIDTH = 200;
+const double TEXT_HEIGHT = 20.;
+const double PAD = 5.;
 
 std::string convertInt(int number);
 
@@ -15,12 +17,17 @@ VideoScrollbar::VideoScrollbar():
     Glib::ObjectBase("videoscrollbar"),
     Gtk::Widget(),
     frame_count(100),
-    curr_frame(0)
+    curr_frame(0),
+    first_frame(0),
+    frames_in_view(100)
 {
     set_has_window(true);
     
     set_vexpand(false);
     set_hexpand(true);
+
+    signal_button_press_event().connect(sigc::mem_fun(*this, &VideoScrollbar::on_button_press));
+    set_events(Gdk::EXPOSURE_MASK | Gdk::BUTTON_PRESS_MASK);
 }
 
 VideoScrollbar::~VideoScrollbar() {};
@@ -28,6 +35,8 @@ VideoScrollbar::~VideoScrollbar() {};
 void VideoScrollbar::set_frame_count(int64_t _frame_count)
 {
     frame_count = _frame_count;
+    frames_in_view = frame_count;
+    first_frame = 0;
     queue_draw();
 }
 
@@ -128,6 +137,7 @@ void VideoScrollbar::on_realize()
 
         m_refGdkWindow = Gdk::Window::create(get_parent_window(), &attributes,
                 GDK_WA_X | GDK_WA_Y);
+        m_refGdkWindow->set_events(get_events());
         set_window(m_refGdkWindow);
 
         //set colors
@@ -149,8 +159,6 @@ void VideoScrollbar::on_unrealize()
 
 bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
-    const double TEXT_HEIGHT = 20.;
-    const double PAD = 5.;
     double x = 0;
     double y = 0;
     double w = (double)get_allocation().get_width();
@@ -189,10 +197,6 @@ bool VideoScrollbar::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->stroke();
     context->context_restore();
 
-    
-    //temp
-    int64_t frames_in_view = frame_count;
-    int64_t first_frame = 1;
     
     //Work out where to put marks
     double px_per_frame = (w-2*PAD) / frames_in_view;
@@ -275,3 +279,16 @@ std::string convertInt(int number)
     ss << number;//add number to the stream
     return ss.str();//return a string with the contents of the stream
 }
+
+bool VideoScrollbar::on_button_press(GdkEventButton *evt){
+    if(evt->type == GDK_BUTTON_PRESS && evt->button == 1){
+        std::cout << "on_button_press("<< pixel_to_frame(evt->x) <<")" << std::endl;
+    }
+    return true;
+};
+
+int64_t VideoScrollbar::pixel_to_frame(double x_loc){
+    return first_frame + 
+            (x_loc-PAD) / 
+            (((double)get_allocation().get_width()-2*PAD) / frames_in_view);
+};
