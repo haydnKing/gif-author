@@ -1,11 +1,13 @@
 #include "videoplayer.h"
 
+#include "videofile.h"
 #include <iostream>
 
 VideoPlayer::VideoPlayer():
     w_frame(1.0)
 {
     frame = NULL;
+    video_input = NULL;
 
     set_row_spacing(10);
 
@@ -37,11 +39,21 @@ VideoPlayer::VideoPlayer():
 VideoPlayer::~VideoPlayer(){};
 
 bool VideoPlayer::open_from_file(const char* filename){
-    if(!video_input.open(filename)){
+    //if we already have a video open
+    if(video_input){
+        delete video_input;
+        video_input = NULL;
+    }
+
+    VideoFile *video_file = new VideoFile();
+
+    if(!video_file->open(filename)){
         return false;
     }
-    w_frame.set_range(0, video_input.get_length_frames());
-    w_scrollbar.set_frame_count(video_input.get_length_frames());
+    video_input = static_cast<Video*>(video_file);
+
+    w_frame.set_range(0, video_input->length());
+    w_scrollbar.set_frame_count(video_input->length());
     w_control.next_frame();
     set_sensitive(true);
 };
@@ -63,20 +75,22 @@ sigc::signal<void, int64_t> VideoPlayer::signal_frame_changed(){
 };
 
 void VideoPlayer::on_frame_next(){
-    if(video_input.is_open()){
-        if(!video_input.get_next_frame(&frame))
+    if(video_input && video_input->is_ok()){
+        if(!video_input->get_frame(&frame))
             return;
         update_image();
-        s_frame_change.emit(video_input.get_frame_index());
+        s_frame_change.emit(video_input->position());
     }
 };
 
 void VideoPlayer::on_frame_prev(){
-    if(video_input.is_open()){
-        if(!video_input.get_prev_frame(&frame))
+    if(video_input && video_input->is_ok()){
+        if(!video_input->seek_to(video_input->position()-1))
+            return;
+        if(!video_input->get_frame(&frame))
             return;
         update_image();
-        s_frame_change.emit(video_input.get_frame_index());
+        s_frame_change.emit(video_input->position());
     }
 };
 
@@ -93,39 +107,41 @@ void VideoPlayer::update_image(){
 };
     
 void VideoPlayer::seek_to_frame(int64_t frame){
-    video_input.skip_to_frame(frame);
-    if(!w_control.is_playing()){
-        w_control.next_frame();
+    if(video_input && video_input->is_ok()){
+        if(!video_input->seek_to(frame, false))
+            return;
+        if(!w_control.is_playing()){
+            w_control.next_frame();
+        }
     }
 };
 
 void VideoPlayer::on_seek_fw(){
-    seek_to_frame(video_input.get_frame_index()+25);
-};
-
-void VideoPlayer::on_seek_rv(){
-    seek_to_frame(video_input.get_frame_index()-25);
-};
-
-void VideoPlayer::on_to_start(){
-    video_input.skip_to_frame(0);
-    if(!w_control.is_playing()){
-        w_control.next_frame();
+    if(video_input && video_input->is_ok()){
+        seek_to_frame(video_input->position() + 25);
     }
 };
 
+void VideoPlayer::on_seek_rv(){
+    if(video_input && video_input->is_ok()){
+        seek_to_frame(video_input->position() - 25);
+    }
+};
+
+void VideoPlayer::on_to_start(){
+    seek_to_frame(0);
+};
+
 void VideoPlayer::on_to_end(){
-    video_input.skip_to_frame(video_input.get_length_frames());
-    if(!w_control.is_playing()){
-        w_control.next_frame();
+    if(video_input && video_input->is_ok()){
+        seek_to_frame(video_input->length()-1);
     }
 };
 
 void VideoPlayer::on_spin_changed(){
-    if((int64_t)w_frame.get_value() != video_input.get_frame_index()){
-        video_input.skip_to_frame(w_frame.get_value());
-        if(!w_control.is_playing()){
-            w_control.next_frame();
+    if(video_input && video_input->is_ok()){
+        if(static_cast<int64_t>(w_frame.get_value()) != video_input->position()){
+            seek_to_frame(w_frame.get_value());
         }
     }
 };

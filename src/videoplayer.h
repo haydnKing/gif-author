@@ -6,7 +6,7 @@
 
 #include "imagearea.h"
 #include "videocontrol.h"
-#include "videofile.h"
+#include "video.h"
 #include "videoscrollbar.h"
 
 /**
@@ -19,6 +19,7 @@ class VideoPlayer : public Gtk::Grid
         virtual ~VideoPlayer();
         
         bool open_from_file(const char* filename);
+        bool open_from_video(Video *video);
 
         void connect_window_keypress(Gtk::Window &window);
 
@@ -45,7 +46,7 @@ class VideoPlayer : public Gtk::Grid
         AVFrame* frame;
         ImageArea w_image;
         VideoControl w_control;
-        VideoFile video_input;
+        Video *video_input;
         Gtk::SpinButton w_frame;
         VideoScrollbar w_scrollbar;
 
