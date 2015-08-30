@@ -163,6 +163,7 @@ int64_t VideoFile::frame_duration_ms(){
 };
 
 bool VideoFile::seek_to(int64_t index, bool wrap){
+    std::cout << "VideoFile::seek_to(" << index << ", " << wrap << ")" << std::endl;
     //if we're out of bounds and wrap is false
     if(!wrap && (index < 0 || index >= length())){
         return false;
