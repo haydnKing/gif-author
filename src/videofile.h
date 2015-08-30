@@ -1,7 +1,7 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEOFILE_H
 #define GTKMM_GIFAUTHOR_VIDEOFILE_H
 
-#include "Video.h"
+#include "video.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -41,6 +41,11 @@ class VideoFile: public Video
          */
         void close();
 
+        /**
+         * get the timestamp of the current frame
+         */
+        int64_t timestamp();
+
     //inherited functions
 
         virtual bool is_ok();
@@ -49,9 +54,11 @@ class VideoFile: public Video
 
         virtual int height();
 
-        virtual int64_t get_position();
+        virtual int64_t position();
 
-        virtual int64_t get_length();
+        virtual int64_t length();
+
+        virtual int64_t frame_duration_ms();
 
         virtual bool seek_to(int64_t index, bool wrap=true);
 

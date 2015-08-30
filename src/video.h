@@ -15,23 +15,23 @@ class Video
         /**
          * Is the video ok to read from
          */
-        virtual bool is_ok() = NULL;
+        virtual bool is_ok() = 0;
 
         /**
          * The width of the video frames
          */
-        virtual int width() = NULL;
+        virtual int width() = 0;
 
         /**
          * height of the video frames
          */
-        virtual int height() = NULL;
+        virtual int height() = 0;
 
         /**
          * Get the index of the current frame
          * @returns index
          */
-        virtual int64_t get_position() = NULL;
+        virtual int64_t position() = 0;
 
         /**
          * Get the length of the sequence in frames (this may not be completely
@@ -39,14 +39,14 @@ class Video
          * codecs)
          * @returns number of frames
          */
-        virtual int64_t get_length() = NULL;
+        virtual int64_t length() = 0;
 
         /**
          * Get the duration of each frame in milliseconds (assume equal length frames for
          * simplicity)
          * @return frame duration
          */
-        virtual int64_t get_frame_duration_ms() = NULL;
+        virtual int64_t frame_duration_ms() = 0;
 
         /**
          * Seek to the given index
@@ -55,7 +55,7 @@ class Video
          * index=-1 seeks to the last frame)
          * @returns true on success
          */
-        virtual bool seek_to(int64_t index, bool wrap=true) = NULL;
+        virtual bool seek_to(int64_t index, bool wrap=true) = 0;
 
         /**
          * Get the current frame in the sequence and increment the position by
@@ -64,7 +64,7 @@ class Video
          * create a new frame
          * @returns true on success
          */
-        virtual bool get_frame(AVFrame **out) = NULL;
+        virtual bool get_frame(AVFrame **out) = 0;
 
 };
          

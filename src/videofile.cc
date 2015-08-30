@@ -127,6 +127,14 @@ void VideoFile::close(){
     }
 }
 
+int64_t VideoFile::timestamp(){
+    return av_frame_get_best_effort_timestamp(orig_frame);
+};
+
+bool VideoFile::is_ok() {
+    return is_open();
+};
+
 int VideoFile::width(){
     if(is_open()){
         return codecCtx->width;
@@ -141,6 +149,72 @@ int VideoFile::height(){
     return -1;
 }
 
+int64_t VideoFile::position(){
+    return av_frame_get_best_effort_timestamp(orig_frame) / frameLength;
+};
+
+int64_t VideoFile::length(){
+    return (formatCtx->duration * formatCtx->streams[videoStream]->time_base.den) / 
+        (frameLength * AV_TIME_BASE * formatCtx->streams[videoStream]->time_base.num);
+};
+
+int64_t VideoFile::frame_duration_ms(){
+    return frameLength;
+};
+
+bool VideoFile::seek_to(int64_t index, bool wrap){
+    //if we're out of bounds and wrap is false
+    if(!wrap && (index < 0 || index >= length())){
+        return false;
+    }
+
+    //If wrap then wrap
+    if(wrap){
+        if(index < 0){
+            index = length() - ((-index) % length());
+        }
+        else if(index >= length()){
+            index = index % length();
+        }
+    }
+    
+    //last frame we decode should be the one before target
+    int64_t ts = (index-1) * frameLength;
+
+    //if we need to go backwards or forwards by more than 500 frames
+    if((ts - timestamp()) < 0 || (ts - timestamp()) > 500*frameLength){
+        while(true){
+            //this will land us on the keyframe before or after the frame we're
+            //interested in
+            if(av_seek_frame(formatCtx, 
+                        videoStream, 
+                        ts,
+                        (ts < timestamp()) ? AVSEEK_FLAG_BACKWARD : AVSEEK_FLAG_ANY) < 0){
+                return false;
+            }
+            //flush any previously decoded frames
+            avcodec_flush_buffers(codecCtx);
+            //if we were seeking to the first frame, it must be a keyframe so
+            //don't decode it
+            if(ts < 0) break;
+            //decode a frame and check the timestamp, if it's <= the desired
+            //frame, break
+            if(!decode_frame()) return false;
+            if(timestamp() <= ts) break;
+        }
+    }
+
+    //decode forwards until we get to the frame just before where we want
+    while(av_frame_get_best_effort_timestamp(orig_frame) < ts){
+        if(!decode_frame()) return false;
+    }
+    return true;
+
+};
+
+bool VideoFile::get_frame(AVFrame **out){
+    return decode_convert_frame(out);
+};
 
 void VideoFile::init(){
     if(!done_init){
@@ -163,10 +237,6 @@ AVFrame *VideoFile::new_avframe(){
     
     ret_frame->key_frame = false;
     return ret_frame;
-}
-
-bool VideoFile::get_next_frame(AVFrame **out){
-    return decode_convert_frame(out);
 }
 
 bool VideoFile::decode_frame(){
@@ -220,77 +290,4 @@ bool VideoFile::decode_convert_frame(AVFrame **out){
     return convert_frame(out);
 }
 
-bool VideoFile::get_prev_frame(AVFrame **out){
-    int64_t pts;
-    if(orig_frame){
-        //return false if we're at the start
-        if(get_timestamp() == 0){
-            return false;
-        }
-        pts = av_frame_get_best_effort_timestamp(orig_frame) - frameLength;
-        //hop back to the last key frame
-        if(av_seek_frame(formatCtx, 
-                         videoStream, 
-                         pts,
-                         /*AVSEEK_FLAG_ANY &&*/ AVSEEK_FLAG_BACKWARD) < 0){
-            return false;
-        }
-        avcodec_flush_buffers(codecCtx);
 
-        //decode forwards until we get to the frame just before where we were
-        if(!decode_frame()) return false;
-        while(av_frame_get_best_effort_timestamp(orig_frame) < pts){
-            if(!decode_frame()) return false;
-        }
-
-        return convert_frame(out);
-    }
-    return false;
-}
-
-int64_t VideoFile::get_timestamp(){
-    return av_frame_get_best_effort_timestamp(orig_frame);
-}
-
-int64_t VideoFile::get_frame_index(){
-    return av_frame_get_best_effort_timestamp(orig_frame) / frameLength;
-}
-
-
-int64_t VideoFile::get_length_frames(){
-    std::cout << "return "<<formatCtx->duration<<" / "<<frameLength<< std::endl;
-    return (formatCtx->duration * formatCtx->streams[videoStream]->time_base.den) / 
-        (frameLength * AV_TIME_BASE * formatCtx->streams[videoStream]->time_base.num);
-}
-
-
-bool VideoFile::skip_to_frame(int64_t frame){
-    return skip_to_timestamp(frame * frameLength);
-}
-
-bool VideoFile::skip_to_timestamp(int64_t ts){
-    //TODO CHeck if ts is past the end of the file
-    
-    //last frame we decode should be the one before target
-    ts = ts - frameLength;
-    //skip to behind where we are
-    if((ts - get_timestamp()) < 0 || (ts - get_timestamp()) > 100*frameLength){
-        while(true){
-            if(av_seek_frame(formatCtx, 
-                        videoStream, 
-                        ts,
-                        (ts < get_timestamp()) ? AVSEEK_FLAG_BACKWARD : AVSEEK_FLAG_ANY) < 0){
-                return false;
-            }
-            avcodec_flush_buffers(codecCtx);
-            if(!decode_frame()) return false;
-            if(get_timestamp() <= ts) break;
-        }
-    }
-
-    //decode forwards until we get to the frame just before where we were
-    while(av_frame_get_best_effort_timestamp(orig_frame) < ts){
-        if(!decode_frame()) return false;
-    }
-    return true;
-}
