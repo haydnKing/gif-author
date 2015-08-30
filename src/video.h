@@ -1,18 +1,17 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEO_H
 #define GTKMM_GIFAUTHOR_VIDEO_H
 
+
+extern "C" {
+#include <libavformat/avformat.h>
+}
+
 /**
  * Abstract base class for VideoFile and VideoClip
  */
 class Video 
 {
     public:
-        /**
-         * Abstract constructor
-         */
-        Video() = NULL;
-        virtual ~Video() {};
-
         /**
          * Is the video ok to read from
          */
@@ -32,7 +31,7 @@ class Video
          * Get the index of the current frame
          * @returns index
          */
-        int64_t get_position() = NULL;
+        virtual int64_t get_position() = NULL;
 
         /**
          * Get the length of the sequence in frames (this may not be completely
@@ -40,7 +39,14 @@ class Video
          * codecs)
          * @returns number of frames
          */
-        int64_t get_length() = NULL;
+        virtual int64_t get_length() = NULL;
+
+        /**
+         * Get the duration of each frame in milliseconds (assume equal length frames for
+         * simplicity)
+         * @return frame duration
+         */
+        virtual int64_t get_frame_duration_ms() = NULL;
 
         /**
          * Seek to the given index
@@ -52,8 +58,8 @@ class Video
         virtual bool seek_to(int64_t index, bool wrap=true) = NULL;
 
         /**
-         * Get the current frame in the sequence - returns the same as the last
-         * call to get_next_frame or get_prev_frame
+         * Get the current frame in the sequence and increment the position by
+         * one
          * @param out The frame to decode into, passing a NULL value will
          * create a new frame
          * @returns true on success

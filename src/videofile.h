@@ -1,6 +1,8 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEOFILE_H
 #define GTKMM_GIFAUTHOR_VIDEOFILE_H
 
+#include "Video.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -8,7 +10,10 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-class VideoFile
+/**
+ * A video that's being read from disk
+ */
+class VideoFile: public Video
 {
     public:
         /**
@@ -17,14 +22,17 @@ class VideoFile
         VideoFile();
         virtual ~VideoFile();
 
+    //member functions
+
         /**
          * Open a video file
-         * \returns true on success
+         * @returns true on success
          */
         bool open(const char* filename);
+
         /**
          * is a file open?
-         * \returns True if a file is open
+         * @returns True if a file is open
          */
         bool is_open();
 
@@ -33,53 +41,21 @@ class VideoFile
          */
         void close();
 
-        /**
-         * Frame width, -1 if no file open
-         */
-        int width();
+    //inherited functions
 
-        /**
-         * Frame height, -1 if no file open
-         */
-        int height();
+        virtual bool is_ok();
 
-        /**
-         * Read the next frame
-         * @param frame The frame to decode into, NULL to create a new frame
-         * @returns the decoded frame
-         */
-        bool get_next_frame(AVFrame **out);
+        virtual int width();
 
-        /**
-         * Read the previous frame
-         * @param frame The frame to decode into, NULL to create a new frame
-         * @returns the decoded frame
-         */
-        bool get_prev_frame(AVFrame **out);
+        virtual int height();
 
+        virtual int64_t get_position();
 
-        /**
-         * Get the current timestamp
-         * @returns current timestamp
-         */
-        int64_t get_timestamp();
+        virtual int64_t get_length();
 
-        /**
-         * Get current frame number
-         * @returns current frame index
-         */
-        int64_t get_frame_index();
+        virtual bool seek_to(int64_t index, bool wrap=true);
 
-        /**
-         * Get the length of the video in frames
-         * @returns length
-         */
-        int64_t get_length_frames();
-
-        /**
-         */
-        bool skip_to_frame(int64_t frame);
-        bool skip_to_timestamp(int64_t ts);
+        virtual bool get_frame(AVFrame **out);
 
     protected:
         void init();
@@ -99,7 +75,6 @@ class VideoFile
 
         AVFrame *orig_frame;
         uint8_t *buffer;
-        
 
 };
 
