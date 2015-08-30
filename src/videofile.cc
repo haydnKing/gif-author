@@ -92,6 +92,30 @@ bool VideoFile::open(const char* filename){
                   (formatCtx->streams[videoStream]->time_base.num *
                    formatCtx->streams[videoStream]->avg_frame_rate.num);
 
+    //estimate of the number of frames
+    numFrames = (formatCtx->duration * formatCtx->streams[videoStream]->time_base.den) / 
+        (frameLength * AV_TIME_BASE * formatCtx->streams[videoStream]->time_base.num);
+
+    if(!seek_to(numFrames-1)){
+        //try seeking to the frame, reducing until success
+        //This corrects overestimated length
+        while(!seek_to(numFrames-1, false) && numFrames > 1){
+            numFrames--;
+            seek_to(0);
+        }
+    }
+    else{
+        //increase until fail
+        //This corrects for underestimated length
+        while(seek_to(numFrames-1, false)){
+            numFrames++;
+            seek_to(0);
+        }
+        //correct length is two less than we ended up with
+        numFrames -= 2;
+    }
+    //back to where we should be, the start
+    seek_to(0);
 
     return true;
 }
@@ -154,8 +178,7 @@ int64_t VideoFile::position(){
 };
 
 int64_t VideoFile::length(){
-    return (formatCtx->duration * formatCtx->streams[videoStream]->time_base.den) / 
-        (frameLength * AV_TIME_BASE * formatCtx->streams[videoStream]->time_base.num);
+    return numFrames;
 };
 
 int64_t VideoFile::frame_duration_ms(){
@@ -163,7 +186,6 @@ int64_t VideoFile::frame_duration_ms(){
 };
 
 bool VideoFile::seek_to(int64_t index, bool wrap){
-    std::cout << "VideoFile::seek_to(" << index << ", " << wrap << ")" << std::endl;
     //if we're out of bounds and wrap is false
     if(!wrap && (index < 0 || index >= length())){
         return false;
@@ -200,14 +222,18 @@ bool VideoFile::seek_to(int64_t index, bool wrap){
             if(ts < 0) break;
             //decode a frame and check the timestamp, if it's <= the desired
             //frame, break
-            if(!decode_frame()) return false;
+            if(!decode_frame()){
+                return false;
+            }
             if(timestamp() <= ts) break;
         }
     }
 
     //decode forwards until we get to the frame just before where we want
     while(av_frame_get_best_effort_timestamp(orig_frame) < ts){
-        if(!decode_frame()) return false;
+        if(!decode_frame()){
+            return false;
+        }
     }
     return true;
 

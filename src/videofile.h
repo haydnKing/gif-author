@@ -78,7 +78,7 @@ class VideoFile: public Video
         AVCodec *codec;
         SwsContext *swsCtx;
         int videoStream;
-        int64_t frameLength;
+        int64_t frameLength, numFrames;
 
         AVFrame *orig_frame;
         uint8_t *buffer;
