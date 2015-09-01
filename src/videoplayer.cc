@@ -76,8 +76,10 @@ sigc::signal<void, int64_t> VideoPlayer::signal_frame_changed(){
 
 void VideoPlayer::on_frame_next(){
     if(video_input && video_input->is_ok()){
-        if(!video_input->get_frame(&frame))
+        if(!video_input->get_frame(&frame)){
+            w_control.pause();
             return;
+        }
         update_image();
         s_frame_change.emit(video_input->position());
     }
@@ -85,10 +87,14 @@ void VideoPlayer::on_frame_next(){
 
 void VideoPlayer::on_frame_prev(){
     if(video_input && video_input->is_ok()){
-        if(!video_input->seek_to(video_input->position()-1))
+        if(!video_input->seek_to(video_input->position()-1)){
+            w_control.pause();
             return;
-        if(!video_input->get_frame(&frame))
+        }
+        if(!video_input->get_frame(&frame)){
+            w_control.pause();
             return;
+        }
         update_image();
         s_frame_change.emit(video_input->position());
     }
