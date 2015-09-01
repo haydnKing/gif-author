@@ -15,7 +15,7 @@
 #include <glibmm/main.h>
 
 #include "videocontrol.h"
-#include "videoplayer.h"
+#include "videoclipper.h"
 
 class HelloWorld : public Gtk::Window
 {
@@ -37,7 +37,7 @@ protected:
   Gtk::Grid w_grid;
   Gtk::FileChooserButton w_file_chooser;
 
-  VideoPlayer w_player;
+  VideoClipper w_player;
 
   Gtk::Label w_label;
 };

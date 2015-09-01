@@ -29,7 +29,7 @@ VideoPlayer::VideoPlayer():
     
     w_scrollbar.signal_frame_change().connect(sigc::mem_fun(*this, &VideoPlayer::seek_to_frame));
 
-    s_frame_change.connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_changed));
+    s_frame_changed.connect(sigc::mem_fun(*this, &VideoPlayer::on_frame_changed));
 
     w_frame.signal_value_changed().connect(sigc::mem_fun(*this, &VideoPlayer::on_spin_changed));
 
@@ -56,6 +56,9 @@ bool VideoPlayer::open_from_file(const char* filename){
     w_scrollbar.set_frame_count(video_input->length());
     w_control.next_frame();
     set_sensitive(true);
+
+    s_video_changed.emit();
+    return true;
 };
 
 void VideoPlayer::connect_window_keypress(Gtk::Window &window){
@@ -71,8 +74,12 @@ VideoControl& VideoPlayer::get_controller() {
 };
 
 sigc::signal<void, int64_t> VideoPlayer::signal_frame_changed(){
-    return s_frame_change;
+    return s_frame_changed;
 };
+
+sigc::signal<void> VideoPlayer::signal_video_changed(){
+    return s_video_changed;
+}
 
 void VideoPlayer::on_frame_next(){
     if(video_input && video_input->is_ok()){
@@ -81,7 +88,7 @@ void VideoPlayer::on_frame_next(){
             return;
         }
         update_image();
-        s_frame_change.emit(video_input->position());
+        s_frame_changed.emit(video_input->position());
     }
 };
 
@@ -96,7 +103,7 @@ void VideoPlayer::on_frame_prev(){
             return;
         }
         update_image();
-        s_frame_change.emit(video_input->position());
+        s_frame_changed.emit(video_input->position());
     }
 };
 

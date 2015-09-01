@@ -27,6 +27,7 @@ class VideoPlayer : public Gtk::Grid
         VideoControl& get_controller();
         
         sigc::signal<void, int64_t> signal_frame_changed();
+        sigc::signal<void> signal_video_changed();
 
     protected:
         void seek_to_frame(int64_t frame);
@@ -50,7 +51,8 @@ class VideoPlayer : public Gtk::Grid
         Gtk::SpinButton w_frame;
         VideoScrollbar w_scrollbar;
 
-        sigc::signal<void, int64_t> s_frame_change;
+        sigc::signal<void, int64_t> s_frame_changed;
+        sigc::signal<void> s_video_changed;
 };
 
 #endif
