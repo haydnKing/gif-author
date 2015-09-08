@@ -1,10 +1,7 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEO_H
 #define GTKMM_GIFAUTHOR_VIDEO_H
 
-
-extern "C" {
-#include <libavformat/avformat.h>
-}
+#include "videoframe.h"
 
 /**
  * Abstract base class for VideoFile and VideoClip
@@ -60,11 +57,9 @@ class Video
         /**
          * Get the current frame in the sequence and increment the position by
          * one
-         * @param out The frame to decode into, passing a NULL value will
-         * create a new frame
-         * @returns true on success
+         * @returns RefPtr to the fetched frame, points to NULL on failure
          */
-        virtual bool get_frame(AVFrame **out) = 0;
+        virtual Glib::RefPtr<VideoFrame> get_frame() = 0;
 
 };
          

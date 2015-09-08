@@ -5,6 +5,8 @@
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/pixbuf.h>
 
+#include "videoframe.h"
+
 /**
  * Display an image, automatically scaled to the available space
  */
@@ -21,17 +23,16 @@ class ImageArea : public Gtk::DrawingArea
 
         /**
          * Change the displayed image, automatically invoke a redraw
-         * The data in image should not be deleted until another image is 
-         * provided.
-         * Setting image=NULL will draw a blank image
+         * @param img The image to display
          */
-        void update_image(uint8_t *data, int width, int height, int linesize);
+        void update_image(Glib::RefPtr<VideoFrame> img);
 
     protected:
         //override default on_draw handler
         virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 
         Glib::RefPtr<Gdk::Pixbuf> orig_image, scaled_image;
+        Glib::RefPtr<VideoFrame> the_frame;
         int last_width, last_height;
 };
 

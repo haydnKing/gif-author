@@ -44,7 +44,6 @@ class VideoPlayer : public Gtk::Grid
 
         void update_image();
 
-        AVFrame* frame;
         ImageArea w_image;
         VideoControl w_control;
         Video *video_input;
