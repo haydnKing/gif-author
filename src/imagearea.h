@@ -25,7 +25,7 @@ class ImageArea : public Gtk::DrawingArea
          * Change the displayed image, automatically invoke a redraw
          * @param img The image to display
          */
-        void update_image(Glib::RefPtr<VideoFrame> img);
+        void update_image(Glib::RefPtr<VideoFrame>& img);
 
     protected:
         //override default on_draw handler

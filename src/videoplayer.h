@@ -50,6 +50,8 @@ class VideoPlayer : public Gtk::Grid
         Gtk::SpinButton w_frame;
         VideoScrollbar w_scrollbar;
 
+        Glib::RefPtr<VideoFrame> frame;
+
         sigc::signal<void, int64_t> s_frame_changed;
         sigc::signal<void> s_video_changed;
 };

@@ -239,8 +239,16 @@ bool VideoFile::seek_to(int64_t index, bool wrap){
 
 };
 
-bool VideoFile::get_frame(AVFrame **out){
-    return decode_convert_frame(out);
+Glib::RefPtr<VideoFrame> VideoFile::get_frame(){
+    AVFrame *out = NULL;
+    if(!decode_convert_frame(&out)){
+        return VideoFrame::create();
+    }
+    return VideoFrame::create_from_data(out->data[0],
+                                        out->width,
+                                        out->height,
+                                        out->linesize[0],
+                                        false);
 };
 
 void VideoFile::init(){

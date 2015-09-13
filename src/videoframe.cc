@@ -4,7 +4,7 @@
 VideoFrame::VideoFrame():
     width(-1),
     height(-1),
-    rowstride(-1),
+    rowstride(-1)
 {
     data = NULL;
 };
@@ -20,7 +20,7 @@ VideoFrame::~VideoFrame(){
  */
 
 Glib::RefPtr<VideoFrame> VideoFrame::create(){
-    return Glib::RefPtr<VideoFrame>(VideoFrame());
+    return Glib::RefPtr<VideoFrame>(new VideoFrame());
 };
 
 Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
@@ -28,7 +28,7 @@ Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
                 int width,
                 int height,
                 int rowstride,
-                bool copy=true){
+                bool copy){
     uint8_t* cdata = data;
     if(copy){
         cdata = new uint8_t[3*rowstride*height];
@@ -36,7 +36,7 @@ Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
     }
     VideoFrame* f = new VideoFrame();
     f->init(cdata, width, height, rowstride);
-    return Glib::RefPtr<VideoFrame>(*f);
+    return Glib::RefPtr<VideoFrame>(f);
 };
 
 /*

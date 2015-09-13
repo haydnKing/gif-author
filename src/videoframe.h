@@ -1,7 +1,9 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEOFRAME_H
 #define GTKMM_GIFAUTHOR_VIDEOFRAME_H
 
+#include <stdint.h>
 #include <glibmm/main.h>
+#include <glibmm/object.h>
 
 /**
  * Hold a frame of video

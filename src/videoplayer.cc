@@ -6,7 +6,6 @@
 VideoPlayer::VideoPlayer():
     w_frame(1.0)
 {
-    frame = NULL;
     video_input = NULL;
 
     set_row_spacing(10);
@@ -83,7 +82,8 @@ sigc::signal<void> VideoPlayer::signal_video_changed(){
 
 void VideoPlayer::on_frame_next(){
     if(video_input && video_input->is_ok()){
-        if(!video_input->get_frame(&frame)){
+        frame = video_input->get_frame();
+        if(!frame->is_ok()){
             w_control.pause();
             return;
         }
@@ -98,7 +98,8 @@ void VideoPlayer::on_frame_prev(){
             w_control.pause();
             return;
         }
-        if(!video_input->get_frame(&frame)){
+        frame = video_input->get_frame();
+        if(!frame->is_ok()){
             w_control.pause();
             return;
         }
@@ -113,10 +114,7 @@ void VideoPlayer::on_frame_changed(int64_t frame_index){
 };
 
 void VideoPlayer::update_image(){
-    w_image.update_image(frame->data[0],
-            frame->width,
-            frame->height,
-            frame->linesize[0]);  
+    w_image.update_image(frame);  
 };
     
 void VideoPlayer::seek_to_frame(int64_t frame){

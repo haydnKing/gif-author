@@ -18,15 +18,17 @@ ImageArea::ImageArea(int width, int height) :
 
 ImageArea::~ImageArea() {};
 
-void ImageArea::update_image(uint8_t *data, int width, int height, int linesize){
-    if(data){
-        orig_image = Gdk::Pixbuf::create_from_data(data,
+void ImageArea::update_image(Glib::RefPtr<VideoFrame>& img){
+    if(img->is_ok()){
+        //keep a reference to the image so that the data doesn't go out of scope
+        the_frame = img;
+        orig_image = Gdk::Pixbuf::create_from_data(img->get_data(),
                                     Gdk::COLORSPACE_RGB,
                                     false,
                                     8,
-                                    width,
-                                    height,
-                                    linesize);
+                                    img->get_width(),
+                                    img->get_height(),
+                                    img->get_rowstride());
     }
     else {
         orig_image->fill(0x000000ff);
