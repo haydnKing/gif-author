@@ -6,7 +6,7 @@
 /**
  * Hold a frame of video
  */
-class VideoFrame
+class VideoFrame : public Glib::Object
 {
     public:
         virtual ~VideoFrame();
