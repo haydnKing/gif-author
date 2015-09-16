@@ -22,7 +22,7 @@ class VideoSequence: public Video
          * Create a new VideoSequence from a video, clipping as necessary
          */
         static Glib::RefPtr<VideoSequence> create_from_video(
-                Video& rhs, int start_frame=-1, int end_frame=-1);
+                Video& rhs, int64_t start_frame=-1, int64_t end_frame=-1);
 
         /*
          * Add a frame to the end of the sequence
