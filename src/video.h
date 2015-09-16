@@ -4,7 +4,7 @@
 #include "videoframe.h"
 
 /**
- * Abstract base class for VideoFile and VideoClip
+ * Abstract base class for VideoFile and VideoSequence
  */
 class Video 
 {
