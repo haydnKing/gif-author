@@ -1,9 +1,12 @@
 #include "videosequence.h"
 
 VideoSequence::VideoSequence(int w, int h):
-    width(w),
-    height(h)
-{};
+    frame_width(w),
+    frame_height(h),
+    p(0)
+{
+    it = frames.begin();
+};
 
 VideoSequence::~VideoSequence(){};
 
@@ -50,4 +53,37 @@ Glib::RefPtr<VideoSequence> VideoSequence::create_from_video(
 
     return ret;
 };
+
+void VideoSequence::append(Glib::RefPtr<VideoFrame>& frame){
+    if(frame->width() == width() && frame->height() == height())
+        frame.push_back(frame);
+};
+
+bool VideoSequence::is_ok(){
+    return frame_width > 0 && frame_height > 0;
+};
+
+int VideoSequence::width(){
+    return frame_width;
+};
+
+int VideoSequence::height(){
+    return frame_height;
+};
+
+int64_t VideoSequence::position(){
+    return p;
+};
+
+int64_t VideoSequence::length(){
+    return frames.size();
+};
+
+int64_t VideoSequence::frame_duration_ms(){
+    return 40;
+};
+
+bool VideoSequence::seek_to(int64_t index, bool wrap){};
+
+Glib::RefPtr<VideoFrame> VideoSequence::get_frame(){};
 

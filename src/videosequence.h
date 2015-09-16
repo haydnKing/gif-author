@@ -44,7 +44,9 @@ class VideoSequence: public Video
         
     private:
         std::list<Glib::RefPtr<VideoFrame>> frames;
-        int width, height;
+        std::iterator it;
+        int64_t p;
+        int frame_width, frame_height;
 };
          
 
