@@ -1,12 +1,13 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEO_H
 #define GTKMM_GIFAUTHOR_VIDEO_H
 
+#include <glibmm/main.h>
 #include "videoframe.h"
 
 /**
  * Abstract base class for VideoFile and VideoSequence
  */
-class Video 
+class Video : public Glib::Object
 {
     public:
         /**
