@@ -1,12 +1,13 @@
 #ifndef GTKMM_GIFAUTHOR_VIDEO_H
 #define GTKMM_GIFAUTHOR_VIDEO_H
 
+#include <glibmm/main.h>
 #include "videoframe.h"
 
 /**
- * Abstract base class for VideoFile and VideoClip
+ * Abstract base class for VideoFile and VideoSequence
  */
-class Video 
+class Video : public Glib::Object
 {
     public:
         /**
@@ -37,13 +38,6 @@ class Video
          * @returns number of frames
          */
         virtual int64_t length() = 0;
-
-        /**
-         * Get the duration of each frame in milliseconds (assume equal length frames for
-         * simplicity)
-         * @return frame duration
-         */
-        virtual int64_t frame_duration_ms() = 0;
 
         /**
          * Seek to the given index

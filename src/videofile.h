@@ -58,8 +58,6 @@ class VideoFile: public Video
 
         virtual int64_t length();
 
-        virtual int64_t frame_duration_ms();
-
         virtual bool seek_to(int64_t index, bool wrap=true);
 
         virtual Glib::RefPtr<VideoFrame> get_frame();
