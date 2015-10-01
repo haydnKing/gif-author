@@ -40,13 +40,6 @@ class Video : public Glib::Object
         virtual int64_t length() = 0;
 
         /**
-         * Get the duration of each frame in milliseconds (assume equal length frames for
-         * simplicity)
-         * @return frame duration
-         */
-        virtual int64_t frame_duration_ms() = 0;
-
-        /**
          * Seek to the given index
          * @param index The index of the frame to seek to
          * @param wrap whether to wrap when index is out of range (e.g.
