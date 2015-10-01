@@ -7,6 +7,7 @@ gif_author_SOURCES =  src/main.cc  \
 					  src/imagearea.cc src/imagearea.h \
 					  src/videoframe.cc src/videoframe.h \
 					  src/videofile.cc src/videofile.h \
+					  src/videosequence.cc src/videosequence.h \
 					  src/videocontrol.cc src/videocontrol.h \
 					  src/videoplayer.cc src/videoplayer.h \
 					  src/videoclipper.cc src/videoclipper.h \

@@ -85,5 +85,10 @@ int64_t VideoSequence::frame_duration_ms(){
 
 bool VideoSequence::seek_to(int64_t index, bool wrap){};
 
-Glib::RefPtr<VideoFrame> VideoSequence::get_frame(){};
+Glib::RefPtr<VideoFrame> VideoSequence::get_frame(){
+    if(frames.empty()){
+        return Glib::RefPtr<VideoFrame>(NULL);
+    }
+
+};
 
