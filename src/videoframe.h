@@ -24,13 +24,15 @@ class VideoFrame : public Glib::Object
          * @param copy if true, inisialise a copy of the data leaving the
          * caller responsible for the original. If false, responsibility to
          * delete the data is passed to the VideoFrame
+         * @param timestamp the timestamp of the frame, defaults to none
          */
         static Glib::RefPtr<VideoFrame> create_from_data(
                 uint8_t* data,
                 int width,
                 int height,
                 int rowstride,
-                bool copy=true);
+                bool copy=true,
+                int64_t timestamp=-1);
 
         /*
          * frame height
@@ -48,6 +50,10 @@ class VideoFrame : public Glib::Object
          * data size
          */
         int get_datasize() const;
+        /*
+         * when to display the frame in ms
+         */
+        int64_t get_timestamp() const; 
 
         /*
          * get a const pointer to the data
@@ -68,9 +74,10 @@ class VideoFrame : public Glib::Object
         VideoFrame();
 
     private:
-        void init(uint8_t* _data, int w, int h, int r); 
+        void init(uint8_t* _data, int w, int h, int r, int64_t t); 
 
         int height, width, rowstride;
+        int64_t timestamp;
         uint8_t* data;
         
 };
