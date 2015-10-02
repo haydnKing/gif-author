@@ -248,7 +248,8 @@ Glib::RefPtr<VideoFrame> VideoFile::get_frame(){
                                         out->width,
                                         out->height,
                                         out->linesize[0],
-                                        false);
+                                        false,
+                                        timestamp());
 };
 
 void VideoFile::init(){
