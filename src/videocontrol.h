@@ -57,6 +57,14 @@ class VideoControl : public Gtk::Grid
          * Triggered when the used explicitly wants to see the previous frame
          */
         sigc::signal<void> signal_frame_prev();
+        /**
+         * Seek forward by 25 frames
+         */
+        Glib::SignalProxy0<void> VideoControl::signal_seek_forward()
+        /** 
+         * Seek backward by 25 frames
+         */
+        Glib::SignalProxy0<void> VideoControl::signal_seek_backward()
 
     protected:
         bool on_window_key_press_event(GdkEventKey* event);
