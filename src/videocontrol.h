@@ -10,12 +10,20 @@
 #include <glibmm/main.h>
 #include <string>
 
+/**
+ * A set of widgets for controlling the video playback, maintains play state
+ * and emits a set of signals to the videoplayer widget
+ */
 class VideoControl : public Gtk::Grid
 {
     public:
         VideoControl();
         virtual ~VideoControl();
 
+        /*
+         * This function should be called with the main window so that keypresses
+         * can be handled by the widget even when it doesn't have focus
+         */
         void connect_window_keypress(Gtk::Window &window);
 
         bool is_playing() const;
@@ -27,18 +35,31 @@ class VideoControl : public Gtk::Grid
         void prev_frame();
 
         //signals
+        /**
+         * event fired when the play state changes
+         * bool: play_state true if playing
+         * bool: forwards true if playing forwards (value undefined if play_state false)
+         */
         sigc::signal<void, bool, bool> signal_play_state_changed();
+        /**
+         * Triggered when the video should be moved to the start
+         */
         Glib::SignalProxy0<void> signal_to_start();
+        /**
+         * Triggered when the video should be moved to the end
+         */
         Glib::SignalProxy0<void> signal_to_end();
+        /**
+         * Triggered when the used explicitly wants to see the next frame
+         */
         sigc::signal<void> signal_frame_next();
+        /**
+         * Triggered when the used explicitly wants to see the previous frame
+         */
         sigc::signal<void> signal_frame_prev();
-        Glib::SignalProxy0<void> signal_seek_forward();
-        Glib::SignalProxy0<void> signal_seek_backward();
-
 
     protected:
         bool on_window_key_press_event(GdkEventKey* event);
-        void on_play_tick();
 
         bool play_state;
         bool play_forwards;

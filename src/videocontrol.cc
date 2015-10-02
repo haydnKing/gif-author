@@ -72,50 +72,6 @@ void VideoControl::prev_frame(){
     s_frame_prev.emit();
 };
 
-void VideoControl::on_fw_play(){
-    if(play_state && play_forwards){
-        play_state = false;
-    }
-    else{
-        play_forwards = true;
-        if(!play_state) {
-            play_state = true;
-            on_play_tick();
-        }
-    }
-    update_icons();
-    s_play_state_changed.emit(play_state, play_forwards);
-};
-
-void VideoControl::on_rv_play(){
-    if(play_state && !play_forwards){
-        play_state = false;
-    }
-    else{
-        play_forwards = false;
-        if(!play_state) {
-            play_state = true;
-            on_play_tick();
-        }
-    }
-    update_icons();
-    s_play_state_changed.emit(play_state, play_forwards);
-};
-
-void VideoControl::update_icons(){
-    if(play_state && play_forwards){
-        rv_play.set_image(img_play_backward);
-        fw_play.set_image_from_icon_name("media-playback-pause");
-    }
-    else if (play_state && !play_forwards){
-        rv_play.set_image_from_icon_name("media-playback-pause");
-        fw_play.set_image_from_icon_name("media-playback-start");
-    }
-    else {
-        rv_play.set_image(img_play_backward);
-        fw_play.set_image_from_icon_name("media-playback-start");
-    }
-};
 
 sigc::signal<void, bool, bool> VideoControl::signal_play_state_changed(){
     return s_play_state_changed;
@@ -178,7 +134,7 @@ bool VideoControl::on_window_key_press_event(GdkEventKey* event){
     }
     return false;
 };
-
+/*
 void VideoControl::on_play_tick(){
     bool r;
     int64_t time = g_get_monotonic_time();
@@ -194,5 +150,48 @@ void VideoControl::on_play_tick(){
         Glib::signal_timeout().connect_once(
                 sigc::mem_fun(*this, &VideoControl::on_play_tick), 
                 time);
+    }
+};
+*/
+void VideoControl::on_fw_play(){
+    if(play_state && play_forwards){
+        play_state = false;
+    }
+    else{
+        play_forwards = true;
+        if(!play_state) {
+            play_state = true;
+        }
+    }
+    update_icons();
+    s_play_state_changed.emit(play_state, play_forwards);
+};
+
+void VideoControl::on_rv_play(){
+    if(play_state && !play_forwards){
+        play_state = false;
+    }
+    else{
+        play_forwards = false;
+        if(!play_state) {
+            play_state = true;
+        }
+    }
+    update_icons();
+    s_play_state_changed.emit(play_state, play_forwards);
+};
+
+void VideoControl::update_icons(){
+    if(play_state && play_forwards){
+        rv_play.set_image(img_play_backward);
+        fw_play.set_image_from_icon_name("media-playback-pause");
+    }
+    else if (play_state && !play_forwards){
+        rv_play.set_image_from_icon_name("media-playback-pause");
+        fw_play.set_image_from_icon_name("media-playback-start");
+    }
+    else {
+        rv_play.set_image(img_play_backward);
+        fw_play.set_image_from_icon_name("media-playback-start");
     }
 };
