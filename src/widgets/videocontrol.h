@@ -60,11 +60,11 @@ class VideoControl : public Gtk::Grid
         /**
          * Seek forward by 25 frames
          */
-        Glib::SignalProxy0<void> VideoControl::signal_seek_forward()
+        Glib::SignalProxy0<void> signal_seek_forward();
         /** 
          * Seek backward by 25 frames
          */
-        Glib::SignalProxy0<void> VideoControl::signal_seek_backward()
+        Glib::SignalProxy0<void> signal_seek_backward();
 
     protected:
         bool on_window_key_press_event(GdkEventKey* event);

@@ -1,5 +1,5 @@
-#ifndef GTKMM_EXAMPLE_HELLOWORLD_H
-#define GTKMM_EXAMPLE_HELLOWORLD_H
+#ifndef GTKMM_MAINWINDOW_H
+#define GTKMM_MAINWINDOW_H
 
 #include <stdint.h>
 
@@ -14,15 +14,15 @@
 
 #include <glibmm/main.h>
 
-#include "videocontrol.h"
-#include "videoclipper.h"
+#include "widgets/videocontrol.h"
+#include "widgets/videoclipper.h"
 
-class HelloWorld : public Gtk::Window
+class MainWindow : public Gtk::Window
 {
 
 public:
-  HelloWorld();
-  virtual ~HelloWorld();
+  MainWindow();
+  virtual ~MainWindow();
 
   void play(bool reverse=false);
   void pause();
@@ -42,4 +42,4 @@ protected:
   Gtk::Label w_label;
 };
 
-#endif // GTKMM_EXAMPLE_HELLOWORLD_H
+#endif // GTKMM_MAINWINDOW_H

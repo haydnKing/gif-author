@@ -4,9 +4,9 @@
 #include <gtkmm/grid.h>
 #include <gtkmm/spinbutton.h>
 
+#include "../input/video.h"
 #include "imagearea.h"
 #include "videocontrol.h"
-#include "video.h"
 #include "videoscrollbar.h"
 
 /**

@@ -1,7 +1,7 @@
-#include "helloworld.h"
+#include "mainwindow.h"
 #include <iostream>
 
-HelloWorld::HelloWorld()
+MainWindow::MainWindow()
     : w_file_chooser("Select a Video", Gtk::FILE_CHOOSER_ACTION_OPEN),
     w_label("Source Video")
 {
@@ -30,20 +30,20 @@ HelloWorld::HelloWorld()
 
     //connect to events
     w_file_chooser.signal_file_set().connect(sigc::mem_fun(*this,
-                &HelloWorld::on_file_set));
+                &MainWindow::on_file_set));
 
 
     //show everything
     show_all();
 }
 
-HelloWorld::~HelloWorld(){};
+MainWindow::~MainWindow(){};
 
-void HelloWorld::on_file_set()
+void MainWindow::on_file_set()
 {
     w_player.open_from_file(w_file_chooser.get_filename().c_str());
 }
 
-bool HelloWorld::on_key_press_event(GdkEventKey* event){
+bool MainWindow::on_key_press_event(GdkEventKey* event){
     return false;
 };

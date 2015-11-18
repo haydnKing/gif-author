@@ -5,7 +5,7 @@ VideoFrame::VideoFrame():
     width(-1),
     height(-1),
     rowstride(-1),
-    timestamp(-1),
+    timestamp(-1)
 {
     data = NULL;
 };
@@ -38,7 +38,7 @@ Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
     }
     VideoFrame* f = new VideoFrame();
     f->init(cdata, width, height, rowstride, timestamp);
-    return Glib::RefPtr<VideoFrame>(*f);
+    return Glib::RefPtr<VideoFrame>(f);
 };
 
 /*
