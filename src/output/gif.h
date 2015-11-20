@@ -45,10 +45,22 @@ class GIFColorTable
          */
         bool set_color(int index, uint8_t r, uint8_t g, uint8_t b);
 
+        /**
+         * /returns the size of the saved color table in bytes
+         */
+        int get_size_bytes() const;
+
     private:
         int bits, size;
         uint8_t data;
 };
+
+
+enum DisposalMethod {
+    DISPOSAL_METHOD_NOT_SPECIFIED = 0,
+    DISPOSAL_METHOD_NONE = 1,
+    DISPOSAL_METHOD_RESTORE_BACKGROUND = 2,
+    DISPOSAL_METHOD_RESTORE_PREVIOUS = 3};
 
 /**
  * Store an individual GIF Image
@@ -61,7 +73,8 @@ class GIFImage
                  int width, 
                  int height, 
                  int delay_time=0, 
-                 ColorTable* ct=NULL);
+                 ColorTable* ct=NULL,
+                 uint8_t* data=NULL);
         ~GIFImage();
 
         // accessors
@@ -85,7 +98,7 @@ class GIFImage
         int left, top, width, height, delay_time;
         bool flag_interlace, flag_transparency, flag_user_input;
         int t_color_index;
-        int disposal_method; // should be an enum?
+        DisposalMethod disposal_method;
         ColorTable* ct;
         uint8_t* data;
 };
@@ -93,8 +106,32 @@ class GIFImage
 /**
  * Store an entire GIF
  */
-class GIF
+class GIF : public std::list<GIFImage>
 {
+    public:
+        GIF(int _width, 
+            int _height,
+            ColorTable* _global_color_table=NULL,
+            uint8_t _background_color_index=0,
+            uint8_t _pixel_aspect_ratio=0);
+        virtual ~GIF();
+
+        //accessors
+        int get_width() const {return width;};
+        int get_height() const {return height;};
+        int get_par() const {return par;};
+        uint8_t get_bg_color_index() const {return bg_color_index;};
+        ColorTable* get_global_colortable() {return global_ct;};
+        const ColorTable* get_global_colortable() const {return global_ct;};
+
+
+
+
+    private:
+        int width, height;
+        uint8_t bg_color_index, par;
+        ColorTable* global_ct;
+
 };
 
 #endif
