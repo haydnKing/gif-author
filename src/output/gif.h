@@ -3,37 +3,57 @@
 
 #include "../input/videoframe.h"
 
+#include <cmath>
+#include <ostream>
+
+enum ColorIndex {RED = 0, GREEN=1, BLUE=2};
+
 /**
  * Store a GIF Color Table
+ *
+ * TOTO: Expand colors to nearest power of two
  */
 class GIFColorTable
 {
     public:
         /**
-         * \param _bits number of bits per color channel
-         * \param _size number of colors in the color table
+         * \param _depth number of bits per color channel
+         * \param _colors log_2 of the number of colors
          * \param _sorted is the color table ordered according to priority
          */
-        GIFColorTable(int _bits, int _size, bool _sorted = false);
+        GIFColorTable(int _depth = 8,
+                      int _colors = 256,
+                      bool _sorted = false, 
+                      uint8_t* _data = NULL);
         ~GifColorTable();
 
         /**
          * \returns the number of bits per image channel
          */
-        int get_bits() const;
+        int get_depth() const {return depth;};
 
         /**
-         * \returns the number of colors in the table
+         * \returns the number of colors
          */
-        int get_size() const;
+        int num_colors() const {return colors;};
+
+        /**
+         * \returns log-2(number of colors)
+         */
+        uint8_t log_colors() const {return uint8_t(std::log(colors)/std::log(2));};
+
+        /**
+         * is the colortable sorted
+         */
+        bool is_sorted() const {return sorted;};
 
         /**
          * get an RGB tuple of a color from the table
          * \param index the index of the color
          * \returns [Red,Green,Blue]
          */
-        uint8_t[3] operator[](int index);
-        const uint8_t[3] operator[](int index) const;
+        uint8_t* operator[](int index) {return data+3*index;};
+        const uint8_t* operator[](int index) const {return data+3*index;};
 
         /**
          * set a color in the color table
@@ -41,17 +61,24 @@ class GIFColorTable
          * \param r the red channel
          * \param g the green channel
          * \param b the blue channel
-         * \returns true on success
          */
-        bool set_color(int index, uint8_t r, uint8_t g, uint8_t b);
+        void set_color(int index, uint8_t r, uint8_t g, uint8_t b);
 
         /**
          * /returns the size of the saved color table in bytes
          */
-        int get_size_bytes() const;
+        int get_size_bytes() const {return 3*colors;};
+
+        /**
+         * write the color table to the stringstream
+         * /returns the number of bytes written
+         */
+        int write(std::ostream& str) const;
+        
 
     private:
-        int bits, size;
+        int depth, colors;
+        bool sorted;
         uint8_t data;
 };
 
@@ -72,32 +99,33 @@ class GIFImage
                  int top,
                  int width, 
                  int height, 
+                 uint8_t* data,
                  int delay_time=0, 
-                 ColorTable* ct=NULL,
-                 uint8_t* data=NULL);
+                 ColorTable* ct=NULL);
         ~GIFImage();
 
         // accessors
 
-        int get_left() const;
-        int get_top() const;
-        int get_width() const;
-        int get_height() const;
-        int get_delay_time() const;
+        int get_left() const {return left;};
+        int get_top() const {return top;};
+        int get_width() const {return width;};
+        int get_height() const {return height;};
+        int get_delay_time() const {return delay_time;};
 
-        bool is_interlaced() const;
-        bool has_local_colortable() const;
-        bool has_transparency() const;
-        bool is_user_input() const;
+        bool is_interlaced() const {return flag_interlaced;};
+        bool has_local_colortable() const {return ct!=NULL;};
+        bool has_transparency() const {return flag_transparency;};
+        bool is_user_input() const {return flag_user_input;};
 
-        int transparent_index() const;
+        int transparent_index() const {return t_color_index;};
 
-        // methods
+        // methods        
+        void write(std::ostream& str) const;
 
     private:
-        int left, top, width, height, delay_time;
+        uint16_t left, top, width, height, delay_time;
         bool flag_interlace, flag_transparency, flag_user_input;
-        int t_color_index;
+        uint8_t t_color_index;
         DisposalMethod disposal_method;
         ColorTable* ct;
         uint8_t* data;
@@ -125,7 +153,7 @@ class GIF : public std::list<GIFImage>
         const ColorTable* get_global_colortable() const {return global_ct;};
 
 
-
+        void write(std::ostream& out) const;
 
     private:
         int width, height;
