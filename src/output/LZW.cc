@@ -14,6 +14,7 @@ LZW::LZW(std::ostream& _stream, int _minimum_code_size):
     max_code = stop_code;
     
     chunk = new uint8_t[256];
+    std::memset(chunk, 0, 256);
 
     dict = new LZWNode[4096];
     clear_dictionary();
@@ -112,5 +113,6 @@ void LZW::flush_chunk(){
         out.write(reinterpret_cast<char*>(chunk), chunk_index);
         //reset the chunk
         chunk_index = 0;
+        std::memset(chunk, 0, 256);
     }
 };
