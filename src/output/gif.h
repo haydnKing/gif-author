@@ -2,6 +2,7 @@
 #define GIF_AUTHOR_GIF_H
 
 #include "../input/videoframe.h"
+#include "LZW.h"
 
 #include <cmath>
 #include <ostream>

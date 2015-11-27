@@ -124,8 +124,7 @@ void GIFImage::write(std::ostream& str, ColorTable* global_ct) const
     str.put(active_ct->depth());
     //Image Data
     writer = LZW(str, active_ct->depth());
-    for(int i=0; i < width*height; i++)
-        writer.write(i);
+    writer.write(data, width*height);
     writer.flush();
 
     //End image block
