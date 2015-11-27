@@ -7,7 +7,29 @@
 #include <cmath>
 #include <ostream>
 
-enum ColorIndex {RED = 0, GREEN=1, BLUE=2};
+class RGBColor {
+    public:
+        RGBColor();
+        RGBColor(uint8_t _r,
+                 uint8_t _g,
+                 uint8_t _b);
+        RGBColor(const RGBColor& rhs);
+        virtual ~RGBColor() {};
+
+        const uint8_t& r() const {return c[0];};
+        const uint8_t& g() const {return c[1];};
+        const uint8_t& b() const {return c[2];};
+
+        void r(uint8_t r) {c[0]=r;};
+        void g(uint8_t g) {c[1]=g;};
+        void b(uint8_t b) {c[2]=b;};
+        
+        void rgb(uint8_t r, uint8_t g, uint8_t b) {c[0]=r;c[1]=g;c[2]=b;};
+
+    protected:
+        uint8_t c[3];
+
+};
 
 /**
  * Store a GIF Color Table
@@ -22,10 +44,7 @@ class GIFColorTable
          * \param _colors log_2 of the number of colors
          * \param _sorted is the color table ordered according to priority
          */
-        GIFColorTable(int _depth = 8,
-                      int _colors = 256,
-                      bool _sorted = false, 
-                      uint8_t* _data = NULL);
+        GIFColorTable(int _depth = 8, bool _sorted = false);
         ~GifColorTable();
 
         /**
@@ -39,9 +58,9 @@ class GIFColorTable
         int num_colors() const {return colors;};
 
         /**
-         * \returns log-2(number of colors)
+         * \returns the next highest log2(num_colors)
          */
-        uint8_t log_colors() const {return uint8_t(std::log(colors)/std::log(2));};
+        uint8_t log_colors() const;
 
         /**
          * is the colortable sorted
@@ -49,21 +68,19 @@ class GIFColorTable
         bool is_sorted() const {return sorted;};
 
         /**
-         * get an RGB tuple of a color from the table
+         * get an RGBColor from the table
          * \param index the index of the color
-         * \returns [Red,Green,Blue]
+         * \returns RGBColor
          */
-        uint8_t* operator[](int index) {return data+3*index;};
-        const uint8_t* operator[](int index) const {return data+3*index;};
+        RGBColor& operator[](int index) {return data[index];};
+        const RGBColor& operator[](int index) const {return data[index];};
 
+        RGBColor& operator=(const RGBColor& rhs);
         /**
-         * set a color in the color table
-         * \param index the index of the color to set
-         * \param r the red channel
-         * \param g the green channel
-         * \param b the blue channel
+         * add a color to the colorscheme
+         * \returns index on success, -1 on failure
          */
-        void set_color(int index, uint8_t r, uint8_t g, uint8_t b);
+        int push_color(RGBColor col);
 
         /**
          * /returns the size of the saved color table in bytes
@@ -72,15 +89,16 @@ class GIFColorTable
 
         /**
          * write the color table to the stringstream
-         * /returns the number of bytes written
          */
-        int write(std::ostream& str) const;
+        void write(std::ostream& str) const;
+
+        const uint8_t* data() const;
         
 
     private:
         int depth, colors;
         bool sorted;
-        uint8_t data;
+        RGBColor* data;
 };
 
 

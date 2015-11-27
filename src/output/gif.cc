@@ -1,41 +1,63 @@
 #include "gif.h"
 
-
-GIFColorTable::GIFColorTable(int _depth,
-                             int _colors,
-                             bool _sorted, 
-                             uint8_t* _data):
-    depth(_depth),
-    colors(_colors),
-    sorted(_sorted)
-{
-    if(_data==NULL){
-        data = new uint8_t[3 * std::pow(2, colors)];
-        std::memset(data, 0, 3*std::pow(2,colors));
-    }
-    else {
-        data = _data;
-    }
+RGBColor::RGBColor(){
+    std::memset(c,0,3);
 };
 
-GIFColorTable::~GIFColorTable() 
+RGBColor::RGBColor(uint8_t _r, int8_t _g, uint8_t _b){
+    c[0] = r;
+    c[1] = g;
+    c[2] = b;
+};
+
+RGBColor::RGBColor(const RGBColor& rhs){
+    c[0] = rhs.r();
+    c[1] = rhs.g();
+    c[2] = rhs.b();
+};
+
+RGBColor& RGBColor::operator=(const RGBColor& rhs){
+    c[0] = rhs.r();
+    c[1] = rhs.g();
+    c[2] = rhs.b();
+    return *this;
+};
+
+const uint8_t* RGBColor::data() const {
+    return c;
+};
+
+GIFColorTable::GIFColorTable(int _depth = 8, bool _sorted = false) :
+    depth(_depth),
+    sorted(_sorted),
+    colors(0)
+{
+    data = new RGBColor[256];
+};
+
+GIFColorTable::~GifColorTable()
 {
     delete data;
 };
 
-void GIFColorTable::set_color(int index, uint8_t r, uint8_t g, uint8_t b)
-{
-    data[index + RED] = r;
-    data[index + GREEN] = g;
-    data[index + BLUE] = b;
+uint8_t GIFColorTable::log_colors() const {
+    return uint8_t(std::ceil(std::log(colors)/std::log(2)));
 };
 
-int GIFColorTable::write(std::ostringstream& str) const
-{
-    std.write(reinterpret_cast<char*>data, 3*std::pow(2,colors));
-
-    return 3*std::pow(2,colors);
+int GIFColorTable::push_color(RGBColor col){
+    if(colors < 256){
+        data[colors++] = col;
+        return colors-1;
+    }
+    return -1;
 };
+
+void write(std::ostream& str) const {
+    int full_colors = std::pow(2, log_colors());
+    for(int i = 0; i < full_colors; i++){
+        str.write(data[i].data(), 3);
+    }
+}
 
 GIFImage::GIFImage(int _left, 
                    int _top,
