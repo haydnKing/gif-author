@@ -1,11 +1,15 @@
 #ifndef GIF_AUTHOR_GIF_H
 #define GIF_AUTHOR_GIF_H
 
-#include "../input/videoframe.h"
 #include "LZW.h"
 
 #include <cmath>
+#include <cstring>
+#include <list>
+#include <stdint.h>
 #include <ostream>
+
+#include <iostream>
 
 class RGBColor {
     public:
@@ -24,7 +28,10 @@ class RGBColor {
         void g(uint8_t g) {c[1]=g;};
         void b(uint8_t b) {c[2]=b;};
         
-        void rgb(uint8_t r, uint8_t g, uint8_t b) {c[0]=r;c[1]=g;c[2]=b;};
+        void rgb(uint8_t _r, uint8_t _g, uint8_t _b);
+        RGBColor& operator=(const RGBColor& rhs);
+        
+        const uint8_t* get_data() const;
 
     protected:
         uint8_t c[3];
@@ -45,7 +52,7 @@ class GIFColorTable
          * \param _sorted is the color table ordered according to priority
          */
         GIFColorTable(int _depth = 8, bool _sorted = false);
-        ~GifColorTable();
+        ~GIFColorTable();
 
         /**
          * \returns the number of bits per image channel
@@ -92,7 +99,6 @@ class GIFColorTable
          */
         void write(std::ostream& str) const;
 
-        const uint8_t* data() const;
         
 
     private:
@@ -120,7 +126,7 @@ class GIFImage
                  int height, 
                  uint8_t* data,
                  int delay_time=0, 
-                 ColorTable* ct=NULL);
+                 GIFColorTable* ct=NULL);
         ~GIFImage();
 
         // accessors
@@ -139,14 +145,14 @@ class GIFImage
         int transparent_index() const {return t_color_index;};
 
         // methods        
-        void write(std::ostream& str) const;
+        void write(std::ostream& str, GIFColorTable* global_ct) const;
 
     private:
         uint16_t left, top, width, height, delay_time;
-        bool flag_interlace, flag_transparency, flag_user_input;
+        bool flag_interlaced, flag_transparency, flag_user_input;
         uint8_t t_color_index;
         DisposalMethod disposal_method;
-        ColorTable* ct;
+        GIFColorTable* ct;
         uint8_t* data;
 };
 
@@ -158,7 +164,7 @@ class GIF : public std::list<GIFImage>
     public:
         GIF(int _width, 
             int _height,
-            ColorTable* _global_color_table=NULL,
+            GIFColorTable* _global_color_table=NULL,
             uint8_t _background_color_index=0,
             uint8_t _pixel_aspect_ratio=0);
         virtual ~GIF();
@@ -168,8 +174,8 @@ class GIF : public std::list<GIFImage>
         int get_height() const {return height;};
         int get_par() const {return par;};
         uint8_t get_bg_color_index() const {return bg_color_index;};
-        ColorTable* get_global_colortable() {return global_ct;};
-        const ColorTable* get_global_colortable() const {return global_ct;};
+        GIFColorTable* get_global_colortable() {return global_ct;};
+        const GIFColorTable* get_global_colortable() const {return global_ct;};
 
 
         void write(std::ostream& out) const;
@@ -177,7 +183,7 @@ class GIF : public std::list<GIFImage>
     private:
         int width, height;
         uint8_t bg_color_index, par;
-        ColorTable* global_ct;
+        GIFColorTable* global_ct;
 
 };
 

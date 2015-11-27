@@ -2,6 +2,8 @@
 #define GIF_AUTHOR_LZW_H
 
 #include <ostream>
+#include <cstring>
+#include <stdint.h>
 
 class LZWNode {
     public:
@@ -16,9 +18,7 @@ class LZWNode {
  */
 class LZW {
 public:
-    LZW(std::ostream _stream, 
-        int _minimum_code_size,
-        int _maximum_code_size);
+    LZW(std::ostream& _stream, int _minimum_code_size);
     virtual ~LZW();
 
     /*
@@ -41,7 +41,7 @@ protected:
     uint8_t byte_index, byte;
     uint8_t chunk_index, *chunk;
 
-    int min_code_size, max_code_size, code_size;
+    int min_code_size, code_size;
     uint32_t clear_code, stop_code, max_code;
 
     void write_code(uint32_t code, int length);
@@ -49,7 +49,7 @@ protected:
     void flush_byte();
     void flush_chunk();
 
-    std::ostream out;
+    std::ostream& out;
 
 };
 

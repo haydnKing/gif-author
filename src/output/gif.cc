@@ -4,10 +4,10 @@ RGBColor::RGBColor(){
     std::memset(c,0,3);
 };
 
-RGBColor::RGBColor(uint8_t _r, int8_t _g, uint8_t _b){
-    c[0] = r;
-    c[1] = g;
-    c[2] = b;
+RGBColor::RGBColor(uint8_t _r, uint8_t _g, uint8_t _b){
+    c[0] = _r;
+    c[1] = _g;
+    c[2] = _b;
 };
 
 RGBColor::RGBColor(const RGBColor& rhs){
@@ -23,11 +23,17 @@ RGBColor& RGBColor::operator=(const RGBColor& rhs){
     return *this;
 };
 
-const uint8_t* RGBColor::data() const {
+void RGBColor::rgb(uint8_t _r, uint8_t _g, uint8_t _b) {
+    c[0] = _r;
+    c[1] = _g;
+    c[2] = _b;
+};
+
+const uint8_t* RGBColor::get_data() const {
     return c;
 };
 
-GIFColorTable::GIFColorTable(int _depth = 8, bool _sorted = false) :
+GIFColorTable::GIFColorTable(int _depth, bool _sorted) :
     depth(_depth),
     sorted(_sorted),
     colors(0)
@@ -35,9 +41,9 @@ GIFColorTable::GIFColorTable(int _depth = 8, bool _sorted = false) :
     data = new RGBColor[256];
 };
 
-GIFColorTable::~GifColorTable()
+GIFColorTable::~GIFColorTable()
 {
-    delete data;
+    delete [] data;
 };
 
 uint8_t GIFColorTable::log_colors() const {
@@ -52,10 +58,10 @@ int GIFColorTable::push_color(RGBColor col){
     return -1;
 };
 
-void write(std::ostream& str) const {
+void GIFColorTable::write(std::ostream& str) const {
     int full_colors = std::pow(2, log_colors());
     for(int i = 0; i < full_colors; i++){
-        str.write(data[i].data(), 3);
+        str.write(reinterpret_cast<const char*>(data[i].get_data()), 3);
     }
 }
 
@@ -65,27 +71,29 @@ GIFImage::GIFImage(int _left,
                    int _height, 
                    uint8_t* _data,
                    int _delay_time, 
-                   ColorTable* _ct) :
+                   GIFColorTable* _ct) :
     left(_left),
     top(_top),
     width(_width),
     height(_height),
     data(_data),
-    ct(_ct)
+    ct(_ct),
+    flag_interlaced(false),
+    flag_transparency(false)
 {};
 
 GIFImage::~GIFImage(){
-    delete data;
+    delete [] data;
     if(ct != NULL){
         delete ct;
     }
 };
 
-void GIFImage::write(std::ostream& str, ColorTable* global_ct) const
+void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
 {
     //Graphic Control Extension
     str.put(0x21);
-    srt.put(0xF9);
+    str.put(0xF9);
     str.put(0x04);
 
     str.put((disposal_method&0x07)<<2 + //disposal method
@@ -124,12 +132,12 @@ void GIFImage::write(std::ostream& str, ColorTable* global_ct) const
     
     uint8_t ct_size= 0;
     if(ct){
-        ct_size = ct->pow_colors() - 1;
+        ct_size = ct->log_colors() - 1;
     }
 
-    std.put((ct!=NULL)*0x80 + //ColorTable 
-            flag_interlace * 0x40 + //Interlace 
-            flag_sorted * 0x20 + //Sorted
+    str.put((ct!=NULL)*0x80 + //ColorTable 
+            flag_interlaced * 0x40 + //Interlace 
+            (ct!=NULL && ct->is_sorted()) * 0x20 + //Sorted
             ct_size&0x7); //ColorTable size (3 bytes)
 
     //local color table
@@ -137,15 +145,15 @@ void GIFImage::write(std::ostream& str, ColorTable* global_ct) const
         ct->write(str);
     }
 
-    ColorTable* active_ct = ct;
+    GIFColorTable* active_ct = ct;
     if(active_ct == NULL){
         active_ct = global_ct;
     }
 
     //minimum code size
-    str.put(active_ct->depth());
+    str.put(active_ct->log_colors());
     //Image Data
-    writer = LZW(str, active_ct->depth());
+    LZW writer(str, active_ct->log_colors());
     writer.write(data, width*height);
     writer.flush();
 
@@ -155,7 +163,7 @@ void GIFImage::write(std::ostream& str, ColorTable* global_ct) const
 
 GIF::GIF(int _width, 
          int _height,
-         ColorTable* _global_color_table,
+         GIFColorTable* _global_color_table,
          uint8_t _background_color_index,
          uint8_t _pixel_aspect_ratio):
     width(_width),
@@ -183,10 +191,11 @@ void GIF::write(std::ostream& out) const
     out.put((height>>8) & 0xff);
 
     //packed fields
-    out.put(global_ct!=NULL * 0x80 + 
-            (global_ct ? global_ct->depth()*0x07 : 0)<<4 + 
-            (global_ct ? global_ct->is_sorted() : false) * 0x80 + 
-            (global_ct ? global_ct->pow_colors()-1 : 0) & 0x07);
+    out.put(
+        (global_ct ? 0x80 : 0) + 
+        ((global_ct ? (global_ct->get_depth()-1)&0x07 : 0)<<4) + 
+        ((global_ct ? global_ct->is_sorted() : false) * 0x08) + 
+        ((global_ct ? global_ct->log_colors()-1 : 0) & 0x07));
 
     //background color index
     out.put(bg_color_index);
@@ -201,8 +210,8 @@ void GIF::write(std::ostream& out) const
     //
 
     //write images
-    for(std::list<GIFImage>::iterator i = begin(); i != end; i++){
-        i->write(out);
+    for(std::list<GIFImage>::const_iterator i = begin(); i != end(); i++){
+        i->write(out, global_ct);
     };
 
     //Trailer

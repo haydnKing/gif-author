@@ -1,11 +1,8 @@
 #include "LZW.h"
 
-LZW::LZW(std::ostream _stream, 
-         int _minimum_code_size,
-         int _maximum_code_size):
+LZW::LZW(std::ostream& _stream, int _minimum_code_size):
     out(_stream),
-    min_code_size(_minimum_code_size),
-    max_code_size(_maximum_code_size),
+    min_code_size(_minimum_code_size)
 {
     byte_index = 0;
     byte = 0;
@@ -48,7 +45,7 @@ void LZW::write(const uint8_t* data, uint32_t length){
 
             //if we've just moved up a code size
             if(max_code >= (1 << code_size)){
-                code_size++
+                code_size++;
             }
             //if the dictionary is full
             if(max_code == 4095){
@@ -81,7 +78,6 @@ void LZW::clear_dictionary(){
     write_code(clear_code, code_size);
     code_size = min_code_size + 1;
     max_code = stop_code;
-    cur_code = -1;
 };
 
 void LZW::write_code(uint32_t code, int length){
@@ -113,7 +109,7 @@ void LZW::flush_chunk(){
     if(chunk_index){
         //write the chunk out to the stream
         out.put(chunk_index & 0xff);
-        out.write(chunk, chunk_index);
+        out.write(reinterpret_cast<char*>(chunk), chunk_index);
         //reset the chunk
         chunk_index = 0;
     }
