@@ -126,6 +126,7 @@ class GIFImage
                  int height, 
                  uint8_t* data,
                  int delay_time=0, 
+                 bool transparency=false,
                  GIFColorTable* ct=NULL);
         ~GIFImage();
 
@@ -165,6 +166,7 @@ class GIF : public std::list<GIFImage>
         GIF(int _width, 
             int _height,
             GIFColorTable* _global_color_table=NULL,
+            uint16_t _loop_count=0,
             uint8_t _background_color_index=0,
             uint8_t _pixel_aspect_ratio=0);
         virtual ~GIF();
@@ -173,6 +175,7 @@ class GIF : public std::list<GIFImage>
         int get_width() const {return width;};
         int get_height() const {return height;};
         int get_par() const {return par;};
+        uint16_t get_loop_count() const {return loop_count;};
         uint8_t get_bg_color_index() const {return bg_color_index;};
         GIFColorTable* get_global_colortable() {return global_ct;};
         const GIFColorTable* get_global_colortable() const {return global_ct;};
@@ -183,7 +186,10 @@ class GIF : public std::list<GIFImage>
     private:
         int width, height;
         uint8_t bg_color_index, par;
+        uint16_t loop_count;
         GIFColorTable* global_ct;
+
+        void write_animation_hdr(std::ostream& out) const;
 
 };
 

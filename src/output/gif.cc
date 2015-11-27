@@ -71,6 +71,7 @@ GIFImage::GIFImage(int _left,
                    int _height, 
                    uint8_t* _data,
                    int _delay_time, 
+                   bool transparency,
                    GIFColorTable* _ct) :
     left(_left),
     top(_top),
@@ -78,8 +79,9 @@ GIFImage::GIFImage(int _left,
     height(_height),
     data(_data),
     ct(_ct),
+    delay_time(_delay_time),
     flag_interlaced(false),
-    flag_transparency(false)
+    flag_transparency(transparency)
 {};
 
 GIFImage::~GIFImage(){
@@ -164,11 +166,13 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
 GIF::GIF(int _width, 
          int _height,
          GIFColorTable* _global_color_table,
+         uint16_t _loop_count,
          uint8_t _background_color_index,
          uint8_t _pixel_aspect_ratio):
     width(_width),
     height(_height),
     global_ct(_global_color_table),
+    loop_count(_loop_count),
     bg_color_index(_background_color_index),
     par(_pixel_aspect_ratio)
 {};
@@ -206,8 +210,15 @@ void GIF::write(std::ostream& out) const
         global_ct->write(out);
     }
 
-    //NETSCAPE Extension
-    //
+    //NETSCAPE Animation Extension
+    bool have_anim = false;
+    for(std::list<GIFImage>::const_iterator i = begin(); i != end(); i++){
+        if(i->get_delay_time() > 0)
+            have_anim = true;
+    };
+    if(have_anim){
+        write_animation_hdr(out);
+    }
 
     //write images
     for(std::list<GIFImage>::const_iterator i = begin(); i != end(); i++){
@@ -218,3 +229,23 @@ void GIF::write(std::ostream& out) const
     out.put(0x3B);
 
 }
+
+void GIF::write_animation_hdr(std::ostream& out) const{
+    //Extension Label
+    out.put(0x21);
+    //Application Extension Label
+    out.put(0xff);
+    //block size
+    out.put(0x0B);
+    //App ident + Auth Code
+    out << "NETSCAPE2.0";
+    //sub block size
+    out.put(0x03);
+    //sub-block ID
+    out.put(0x01);
+    //loop count
+    out.put(loop_count & 0xff);
+    out.put((loop_count >> 8) & 0xff);
+    //terminator
+    out.put(0x00);
+};
