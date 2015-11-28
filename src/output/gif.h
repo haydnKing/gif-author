@@ -9,8 +9,6 @@
 #include <stdint.h>
 #include <ostream>
 
-#include <iostream>
-
 class RGBColor {
     public:
         RGBColor();

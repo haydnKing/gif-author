@@ -25,7 +25,6 @@ LZW::~LZW(){
 }
 
 void LZW::write(const uint8_t* data, uint32_t length){
-    std::cout << "writing " << length << " pixels" << std::endl;
     int32_t cur_code = -1;
 
     for(uint32_t i=0; i < length; i++){
@@ -67,7 +66,6 @@ void LZW::write(const uint8_t* data, uint32_t length){
 };
 
 void LZW::flush(){
-    std::cout << "flush()... chunk_index = " << (int)chunk_index << std::endl;
     clear_dictionary();
     write_code(stop_code, code_size);
     flush_byte();
@@ -75,7 +73,6 @@ void LZW::flush(){
 };
 
 void LZW::clear_dictionary(){
-    std::cout << "clear_dictionary()"<< std::endl;
     for(int i = 0; i < 4096; i++){
         std::memset(dict[i].next_value, 0, 256);
     }
@@ -85,7 +82,6 @@ void LZW::clear_dictionary(){
 };
 
 void LZW::write_code(uint32_t code, int length){
-    std::cout << "write_code("<< code <<")" << std::endl;
     for(int i = 0; i < length; i++){
         write_bit(code & (1 << i));
     }
@@ -111,7 +107,6 @@ void LZW::flush_byte(){
 };
 
 void LZW::flush_chunk(){
-    std::cout << "flush_chunk(" << (int)chunk_index << ")" << std::endl;
     if(chunk_index){
         //write the chunk out to the stream
         out.put(chunk_index & 0xff);
