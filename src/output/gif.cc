@@ -72,7 +72,6 @@ GIFImage::GIFImage(int _left,
                    int _top,
                    int _width, 
                    int _height, 
-                   uint8_t* _data,
                    int _delay_time, 
                    bool transparency,
                    GIFColorTable* _ct) :
@@ -80,18 +79,32 @@ GIFImage::GIFImage(int _left,
     top(_top),
     width(_width),
     height(_height),
-    data(_data),
     ct(_ct),
     delay_time(_delay_time),
     flag_interlaced(false),
     flag_transparency(transparency)
-{};
+{
+    data = new uint8_t[width*height];
+    clear_to(0);
+};
 
 GIFImage::~GIFImage(){
     delete [] data;
     if(ct != NULL){
         delete ct;
     }
+};
+
+void GIFImage::clear_to(uint8_t code){
+    std::memset(data, code, width*height);
+};
+
+const uint8_t& GIFImage::get_value(int x, int y) const {
+    return data[x+y*width];
+};
+
+void GIFImage::set_value(int x, int y, uint8_t value) {
+    data[x+y*width] = value;
 };
 
 void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
@@ -166,8 +179,8 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put(0);
 };
 
-GIF::GIF(int _width, 
-         int _height,
+GIF::GIF(uint16_t _width, 
+         uint16_t _height,
          GIFColorTable* _global_color_table,
          uint16_t _loop_count,
          uint8_t _background_color_index,

@@ -5,6 +5,8 @@
 #include <cstring>
 #include <stdint.h>
 
+#include <iostream>
+
 class LZWNode {
     public:
         LZWNode() {};
@@ -38,8 +40,8 @@ protected:
     void clear_dictionary();
 
     //partial byte and index
-    uint8_t byte_index, byte;
-    uint8_t chunk_index, *chunk;
+    uint8_t byte_index, byte, *chunk;
+    uint32_t chunk_index;
 
     int min_code_size, code_size;
     uint32_t clear_code, stop_code, max_code;

@@ -125,7 +125,6 @@ class GIFImage
                  int top,
                  int width, 
                  int height, 
-                 uint8_t* data,
                  int delay_time=0, 
                  bool transparency=false,
                  GIFColorTable* ct=NULL);
@@ -138,6 +137,7 @@ class GIFImage
         int get_width() const {return width;};
         int get_height() const {return height;};
         int get_delay_time() const {return delay_time;};
+        void set_delay_time(int _dt) {delay_time=_dt;};
 
         bool is_interlaced() const {return flag_interlaced;};
         bool has_local_colortable() const {return ct!=NULL;};
@@ -148,6 +148,14 @@ class GIFImage
 
         // methods        
         void write(std::ostream& str, GIFColorTable* global_ct) const;
+
+        uint8_t* get_data() {return data;};
+        const uint8_t* get_data() const {return data;};
+
+        const uint8_t& get_value(int x, int y) const;
+        void set_value(int x, int y, uint8_t value);
+
+        void clear_to(uint8_t code);
 
     private:
         uint16_t left, top, width, height, delay_time;
@@ -164,8 +172,8 @@ class GIFImage
 class GIF : public std::list<GIFImage>
 {
     public:
-        GIF(int _width, 
-            int _height,
+        GIF(uint16_t _width, 
+            uint16_t _height,
             GIFColorTable* _global_color_table=NULL,
             uint16_t _loop_count=0,
             uint8_t _background_color_index=0,
@@ -185,7 +193,7 @@ class GIF : public std::list<GIFImage>
         void write(std::ostream& out) const;
 
     private:
-        int width, height;
+        uint16_t width, height;
         uint8_t bg_color_index, par;
         uint16_t loop_count;
         GIFColorTable* global_ct;
