@@ -65,7 +65,8 @@ class GIFColorTable
         int num_colors() const {return colors;};
 
         /**
-         * \returns the next highest log2(num_colors)
+         * \returns log of the number of colours which will actually be 
+         * written to file, which might be larger than num_colors
          */
         uint8_t log_colors() const;
 

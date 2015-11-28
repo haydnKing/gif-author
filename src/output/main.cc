@@ -27,8 +27,6 @@ GIFColorTable* get_bw_ct(){
     GIFColorTable* ct = new GIFColorTable();
     ct->push_color(RGBColor(0,0,0));
     ct->push_color(RGBColor(255,255,255));
-    ct->push_color(RGBColor(128,128,128));
-    ct->push_color(RGBColor(255,255,255));
     return ct;
 };
     

@@ -47,7 +47,10 @@ GIFColorTable::~GIFColorTable()
 };
 
 uint8_t GIFColorTable::log_colors() const {
-    return uint8_t(std::ceil(std::log(colors)/std::log(2)));
+    if(colors < 4)
+        return 2;
+    else
+        return uint8_t(std::ceil(std::log(colors)/std::log(2)));
 };
 
 int GIFColorTable::push_color(RGBColor col){
