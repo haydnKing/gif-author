@@ -45,6 +45,7 @@ class VideoFile: public Video
          * get the timestamp of the current frame
          */
         int64_t timestamp();
+        int64_t frame_duration_ms();
 
     //inherited functions
 
