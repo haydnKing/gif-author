@@ -187,7 +187,7 @@ void VideoPlayer::on_play_tick() {
     //if we're still playing
     if(w_control.is_playing()){
         frame_next = w_control.is_playing_forwards() ? get_next_frame() : 
-                                                get_next_frame();
+                                                get_prev_frame();
         if(frame_next!=0){
             Glib::signal_timeout().connect_once(
                 sigc::mem_fun(*this,&VideoPlayer::on_play_tick),
