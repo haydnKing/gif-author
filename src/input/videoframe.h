@@ -34,7 +34,8 @@ class VideoFrame : public Glib::Object
                 int height,
                 int rowstride,
                 bool copy=true,
-                int64_t timestamp=-1);
+                int64_t _timestamp=-1,
+                int64_t _position=-1);
 
         /*
          * frame height
@@ -56,6 +57,10 @@ class VideoFrame : public Glib::Object
          * when to display the frame in ms
          */
         int64_t get_timestamp() const; 
+        /*
+         * the position of the frame in the stream
+         */
+        int64_t get_position() const; 
 
         /*
          * get a const pointer to the data
@@ -76,10 +81,10 @@ class VideoFrame : public Glib::Object
         VideoFrame();
 
     private:
-        void init(uint8_t* _data, int w, int h, int r, int64_t t); 
+        void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
 
         int height, width, rowstride;
-        int64_t timestamp;
+        int64_t timestamp, position;
         uint8_t* data;
         
 };

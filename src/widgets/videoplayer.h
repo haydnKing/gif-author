@@ -9,6 +9,8 @@
 #include "videocontrol.h"
 #include "videoscrollbar.h"
 
+#include <iostream>
+
 /**
  * Display and play a video
  */
@@ -38,11 +40,16 @@ class VideoPlayer : public Gtk::Grid
         void on_seek_rv();
         void on_to_start();
         void on_to_end();
+        void on_play_state_changed(bool playing, bool forwards);
+        void on_play_tick();
 
         void on_frame_changed(int64_t frame_index);
         void on_spin_changed();
 
         void update_image();
+
+        Glib::RefPtr<VideoFrame> get_next_frame();
+        Glib::RefPtr<VideoFrame> get_prev_frame();
 
         ImageArea w_image;
         VideoControl w_control;
@@ -50,7 +57,7 @@ class VideoPlayer : public Gtk::Grid
         Gtk::SpinButton w_frame;
         VideoScrollbar w_scrollbar;
 
-        Glib::RefPtr<VideoFrame> frame;
+        Glib::RefPtr<VideoFrame> frame, frame_next;
 
         sigc::signal<void, int64_t> s_frame_changed;
         sigc::signal<void> s_video_changed;

@@ -25,6 +25,7 @@ VideoPlayer::VideoPlayer():
     w_control.signal_seek_backward().connect(sigc::mem_fun(*this, &VideoPlayer::on_seek_rv));
     w_control.signal_to_start().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_start));
     w_control.signal_to_end().connect(sigc::mem_fun(*this, &VideoPlayer::on_to_end));
+    w_control.signal_play_state_changed().connect(sigc::mem_fun(*this, &VideoPlayer::on_play_state_changed));
     
     w_scrollbar.signal_frame_change().connect(sigc::mem_fun(*this, &VideoPlayer::seek_to_frame));
 
@@ -81,33 +82,50 @@ sigc::signal<void> VideoPlayer::signal_video_changed(){
 }
 
 void VideoPlayer::on_frame_next(){
-    if(video_input && video_input->is_ok()){
-        frame = video_input->get_frame();
-        if(!frame->is_ok()){
-            w_control.pause();
-            return;
-        }
+    Glib::RefPtr<VideoFrame> _f = get_next_frame();
+    if(_f != 0)
+    {
+        frame = _f;
         update_image();
-        s_frame_changed.emit(video_input->position());
     }
 };
 
 void VideoPlayer::on_frame_prev(){
-    if(video_input && video_input->is_ok()){
-        if(!video_input->seek_to(video_input->position()-1)){
-            w_control.pause();
-            return;
-        }
-        frame = video_input->get_frame();
-        if(!frame->is_ok()){
-            w_control.pause();
-            return;
-        }
+    Glib::RefPtr<VideoFrame> _f = get_prev_frame();
+    if(_f != 0){
+        frame = _f;
         update_image();
-        s_frame_changed.emit(video_input->position());
     }
 };
 
+Glib::RefPtr<VideoFrame> VideoPlayer::get_next_frame(){
+    Glib::RefPtr<VideoFrame> ret;
+    if(video_input && video_input->is_ok()){
+        ret = video_input->get_frame();
+        if(!ret->is_ok()){
+            w_control.pause();
+            ret.reset();
+        }
+    }
+    return ret;
+};
+
+Glib::RefPtr<VideoFrame> VideoPlayer::get_prev_frame(){
+    Glib::RefPtr<VideoFrame> ret;
+    if(video_input && video_input->is_ok()){
+        if(!video_input->seek_to(video_input->position()-1)){
+            w_control.pause();
+            return ret;
+        }
+        ret = video_input->get_frame();
+        if(!ret->is_ok()){
+            w_control.pause();
+            ret.reset();
+        }
+    }
+    return ret;
+};
+        
 void VideoPlayer::on_frame_changed(int64_t frame_index){
     w_frame.set_value(frame_index);
     w_scrollbar.set_current_frame(frame_index);
@@ -115,6 +133,7 @@ void VideoPlayer::on_frame_changed(int64_t frame_index){
 
 void VideoPlayer::update_image(){
     w_image.update_image(frame);  
+    s_frame_changed.emit(frame->get_position());
 };
     
 void VideoPlayer::seek_to_frame(int64_t frame){
@@ -148,6 +167,38 @@ void VideoPlayer::on_to_end(){
         seek_to_frame(video_input->length()-1);
     }
 };
+
+void VideoPlayer::on_play_state_changed(bool playing, bool forwards){
+    //if the play state isn't playing, we don't need to do anything
+    if(playing && video_input && video_input->is_ok()){
+        //this should already be reset...
+        frame_next.reset();
+        frame_next = forwards ? get_next_frame() : get_prev_frame();
+        if(frame_next!=0)
+            on_play_tick();
+    }
+};
+
+void VideoPlayer::on_play_tick() {
+    //move to the next frame
+    frame = frame_next;
+    update_image();
+    frame_next.reset();
+    //if we're still playing
+    if(w_control.is_playing()){
+        frame_next = w_control.is_playing_forwards() ? get_next_frame() : 
+                                                get_next_frame();
+        if(frame_next!=0){
+            Glib::signal_timeout().connect_once(
+                sigc::mem_fun(*this,&VideoPlayer::on_play_tick),
+                frame_next->get_timestamp() > frame->get_timestamp() ?
+                    frame_next->get_timestamp() - frame->get_timestamp() :
+                    frame->get_timestamp() - frame_next->get_timestamp());
+        }
+    }
+};
+
+        
 
 void VideoPlayer::on_spin_changed(){
     if(video_input && video_input->is_ok()){

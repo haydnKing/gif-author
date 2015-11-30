@@ -30,14 +30,16 @@ Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
                 int height,
                 int rowstride,
                 bool copy,
-                int64_t timestamp){
+                int64_t timestamp,
+                int64_t position)
+{
     uint8_t* cdata = data;
     if(copy){
         cdata = new uint8_t[3*rowstride*height];
         std::memcpy(cdata, data, 3*rowstride*height);
     }
     VideoFrame* f = new VideoFrame();
-    f->init(cdata, width, height, rowstride, timestamp);
+    f->init(cdata, width, height, rowstride, timestamp, position);
     return Glib::RefPtr<VideoFrame>(f);
 };
 
@@ -65,6 +67,10 @@ int64_t VideoFrame::get_timestamp() const {
     return timestamp;
 };
 
+int64_t VideoFrame::get_position() const {
+    return position;
+};
+
 const uint8_t* VideoFrame::get_data() const {
     return data;
 };
@@ -77,7 +83,7 @@ bool VideoFrame::is_ok() const{
     return height>0 && width>0 && rowstride>0 && data!=NULL;
 };
 
-void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t){
+void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p){
     if(data != NULL){
         delete data;
     }
@@ -86,4 +92,5 @@ void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t){
     width = w;
     rowstride = r;
     timestamp = t;
+    position = p;
 };

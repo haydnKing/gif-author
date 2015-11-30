@@ -181,10 +181,6 @@ int64_t VideoFile::length(){
     return numFrames;
 };
 
-int64_t VideoFile::frame_duration_ms(){
-    return frameLength;
-};
-
 bool VideoFile::seek_to(int64_t index, bool wrap){
     //if we're out of bounds and wrap is false
     if(!wrap && (index < 0 || index >= length())){
@@ -249,7 +245,9 @@ Glib::RefPtr<VideoFrame> VideoFile::get_frame(){
                                         out->height,
                                         out->linesize[0],
                                         false,
-                                        timestamp());
+        (1000*formatCtx->streams[videoStream]->time_base.num*timestamp())/
+        formatCtx->streams[videoStream]->time_base.den,
+                                        position());
 };
 
 void VideoFile::init(){
