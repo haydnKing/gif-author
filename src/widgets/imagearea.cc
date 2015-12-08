@@ -75,3 +75,14 @@ bool ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr){
 
     return true;
 }
+        
+bool ImageArea::on_scroll_event(GdkEventScroll* scroll_event){
+    std::cout << "Scroll Event!" << std::endl;
+    return true;
+};
+
+bool ImageArea::on_motion_notify_event(GdkEventMotion* motion_event){
+    std::cout << "Motion()" << std::endl;
+    return true;
+};
+

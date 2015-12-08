@@ -5,7 +5,7 @@ MainWindow::MainWindow()
     : w_file_chooser("Select a Video", Gtk::FILE_CHOOSER_ACTION_OPEN),
     w_label("Source Video")
 {
-    add_events(Gdk::KEY_PRESS_MASK);
+    add_events(Gdk::KEY_PRESS_MASK | Gdk::SCROLL_MASK | Gdk::POINTER_MOTION_MASK );
 
     // Sets the border width of the window.
     set_border_width(10);

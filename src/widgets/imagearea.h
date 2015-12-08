@@ -7,6 +7,8 @@
 
 #include "../input/videoframe.h"
 
+#include <iostream>
+
 /**
  * Display an image, automatically scaled to the available space
  */
@@ -30,6 +32,10 @@ class ImageArea : public Gtk::DrawingArea
     protected:
         //override default on_draw handler
         virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+
+        virtual bool on_scroll_event(GdkEventScroll* scroll_event);
+
+        bool on_motion_notify_event(GdkEventMotion* motion_event);
 
         Glib::RefPtr<Gdk::Pixbuf> orig_image, scaled_image;
         pVideoFrame the_frame;
