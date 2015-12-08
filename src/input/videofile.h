@@ -61,6 +61,8 @@ class VideoFile: public Video
         virtual bool seek_to(int64_t index, bool wrap=true);
 
         virtual pVideoFrame get_frame();
+        
+        virtual std::list<pVideoFrame> extract(int64_t start, int64_t end);
 
     protected:
         void init();

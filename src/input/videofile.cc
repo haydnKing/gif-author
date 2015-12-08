@@ -249,6 +249,31 @@ pVideoFrame VideoFile::get_frame(){
         formatCtx->streams[videoStream]->time_base.den,
                                         position());
 };
+        
+std::list<pVideoFrame> VideoFile::extract(int64_t start, int64_t end){
+    int64_t original_pos = position();
+    std::list<pVideoFrame> ret;
+
+    //end must be greater than start
+    if(end <= start)
+        return ret;
+
+    //make sure start and end are within bounds
+    start = (start < 0) ? 0 : start;
+    end = (end > length()) ? length() : end; 
+
+    //seek to the first frame
+    seek_to(start);
+    //extract subsequent frames
+    while(position() < end){
+        ret.push_back(get_frame());
+    }
+
+    //seek back to where we were so we don't confuse anything
+    seek_to(original_pos);
+
+    return ret;
+};
 
 void VideoFile::init(){
     if(!done_init){

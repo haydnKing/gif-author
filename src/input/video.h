@@ -2,6 +2,7 @@
 #define GTKMM_GIFAUTHOR_VIDEO_H
 
 #include <glibmm/main.h>
+#include <list>
 #include "videoframe.h"
 
 /**
@@ -54,6 +55,15 @@ class Video : public Glib::Object
          * @returns RefPtr to the fetched frame, points to NULL on failure
          */
         virtual pVideoFrame get_frame() = 0;
+
+        /**
+         * Extract a series of several frames, in order. If start and end are 
+         * out of range, Null pointers will be returned
+         * @param start The first frame to extract
+         * @param end The past-the-end frame
+         * @returns list of frames
+         */
+        virtual std::list<pVideoFrame> extract(int64_t start, int64_t end) = 0;
 
 };
          
