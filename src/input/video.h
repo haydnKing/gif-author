@@ -53,7 +53,7 @@ class Video : public Glib::Object
          * one
          * @returns RefPtr to the fetched frame, points to NULL on failure
          */
-        virtual Glib::RefPtr<VideoFrame> get_frame() = 0;
+        virtual pVideoFrame get_frame() = 0;
 
 };
          

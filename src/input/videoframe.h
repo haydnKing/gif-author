@@ -5,6 +5,10 @@
 #include <glibmm/main.h>
 #include <glibmm/object.h>
 
+//forward declaration
+class VideoFrame;
+typedef Glib::RefPtr<VideoFrame> pVideoFrame;
+
 /**
  * Hold a frame of video
  */
@@ -15,7 +19,7 @@ class VideoFrame : public Glib::Object
         /*
          * Create an empty Frame
          */
-        static Glib::RefPtr<VideoFrame> create();
+        static pVideoFrame create();
 
         /*
          * Create a frame from raw data
@@ -28,7 +32,7 @@ class VideoFrame : public Glib::Object
          * delete the data is passed to the VideoFrame
          * @param timestamp the timestamp of the frame, defaults to none
          */
-        static Glib::RefPtr<VideoFrame> create_from_data(
+        static pVideoFrame create_from_data(
                 uint8_t* data,
                 int width,
                 int height,
@@ -88,5 +92,6 @@ class VideoFrame : public Glib::Object
         uint8_t* data;
         
 };
+
 
 #endif // GTKMM_GIFAUTHOR_VIDEOFRAME_H

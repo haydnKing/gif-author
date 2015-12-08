@@ -20,11 +20,11 @@ VideoFrame::~VideoFrame(){
  * CREATE FUNCTIONS
  */
 
-Glib::RefPtr<VideoFrame> VideoFrame::create(){
-    return Glib::RefPtr<VideoFrame>(new VideoFrame());
+pVideoFrame VideoFrame::create(){
+    return pVideoFrame(new VideoFrame());
 };
 
-Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
+pVideoFrame VideoFrame::create_from_data(
                 uint8_t* data,
                 int width,
                 int height,
@@ -40,7 +40,7 @@ Glib::RefPtr<VideoFrame> VideoFrame::create_from_data(
     }
     VideoFrame* f = new VideoFrame();
     f->init(cdata, width, height, rowstride, timestamp, position);
-    return Glib::RefPtr<VideoFrame>(f);
+    return pVideoFrame(f);
 };
 
 /*

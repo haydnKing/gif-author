@@ -48,8 +48,8 @@ class VideoPlayer : public Gtk::Grid
 
         void update_image();
 
-        Glib::RefPtr<VideoFrame> get_next_frame();
-        Glib::RefPtr<VideoFrame> get_prev_frame();
+        pVideoFrame get_next_frame();
+        pVideoFrame get_prev_frame();
 
         ImageArea w_image;
         VideoControl w_control;
@@ -57,7 +57,7 @@ class VideoPlayer : public Gtk::Grid
         Gtk::SpinButton w_frame;
         VideoScrollbar w_scrollbar;
 
-        Glib::RefPtr<VideoFrame> frame, frame_next;
+        pVideoFrame frame, frame_next;
 
         sigc::signal<void, int64_t> s_frame_changed;
         sigc::signal<void> s_video_changed;

@@ -82,7 +82,7 @@ sigc::signal<void> VideoPlayer::signal_video_changed(){
 }
 
 void VideoPlayer::on_frame_next(){
-    Glib::RefPtr<VideoFrame> _f = get_next_frame();
+    pVideoFrame _f = get_next_frame();
     if(_f != 0)
     {
         frame = _f;
@@ -91,15 +91,15 @@ void VideoPlayer::on_frame_next(){
 };
 
 void VideoPlayer::on_frame_prev(){
-    Glib::RefPtr<VideoFrame> _f = get_prev_frame();
+    pVideoFrame _f = get_prev_frame();
     if(_f != 0){
         frame = _f;
         update_image();
     }
 };
 
-Glib::RefPtr<VideoFrame> VideoPlayer::get_next_frame(){
-    Glib::RefPtr<VideoFrame> ret;
+pVideoFrame VideoPlayer::get_next_frame(){
+    pVideoFrame ret;
     if(video_input && video_input->is_ok()){
         ret = video_input->get_frame();
         if(!ret->is_ok()){
@@ -110,8 +110,8 @@ Glib::RefPtr<VideoFrame> VideoPlayer::get_next_frame(){
     return ret;
 };
 
-Glib::RefPtr<VideoFrame> VideoPlayer::get_prev_frame(){
-    Glib::RefPtr<VideoFrame> ret;
+pVideoFrame VideoPlayer::get_prev_frame(){
+    pVideoFrame ret;
     if(video_input && video_input->is_ok()){
         if(!video_input->seek_to(video_input->position()-1)){
             w_control.pause();

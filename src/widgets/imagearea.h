@@ -25,14 +25,14 @@ class ImageArea : public Gtk::DrawingArea
          * Change the displayed image, automatically invoke a redraw
          * @param img The image to display
          */
-        void update_image(Glib::RefPtr<VideoFrame>& img);
+        void update_image(pVideoFrame& img);
 
     protected:
         //override default on_draw handler
         virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 
         Glib::RefPtr<Gdk::Pixbuf> orig_image, scaled_image;
-        Glib::RefPtr<VideoFrame> the_frame;
+        pVideoFrame the_frame;
         int last_width, last_height;
 };
 

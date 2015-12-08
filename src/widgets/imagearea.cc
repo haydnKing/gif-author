@@ -18,7 +18,7 @@ ImageArea::ImageArea(int width, int height) :
 
 ImageArea::~ImageArea() {};
 
-void ImageArea::update_image(Glib::RefPtr<VideoFrame>& img){
+void ImageArea::update_image(pVideoFrame& img){
     if(img->is_ok()){
         //keep a reference to the image so that the data doesn't go out of scope
         the_frame = img;

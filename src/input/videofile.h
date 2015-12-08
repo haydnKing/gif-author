@@ -60,7 +60,7 @@ class VideoFile: public Video
 
         virtual bool seek_to(int64_t index, bool wrap=true);
 
-        virtual Glib::RefPtr<VideoFrame> get_frame();
+        virtual pVideoFrame get_frame();
 
     protected:
         void init();
