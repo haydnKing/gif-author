@@ -35,7 +35,7 @@ class ImageArea : public Gtk::DrawingArea
 
         virtual bool on_scroll_event(GdkEventScroll* scroll_event);
 
-        bool on_motion_notify_event(GdkEventMotion* motion_event);
+        virtual bool on_motion_notify_event(GdkEventMotion* motion_event);
 
         Glib::RefPtr<Gdk::Pixbuf> orig_image, scaled_image;
         pVideoFrame the_frame;

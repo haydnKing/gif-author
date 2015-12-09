@@ -6,6 +6,7 @@ ImageArea::ImageArea(int width, int height) :
     last_width(-1),
     last_height(-1)
 {
+    add_events(Gdk::SCROLL_MASK | Gdk::POINTER_MOTION_MASK);
     set_size_request(width, height);
 
     orig_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB,
@@ -14,6 +15,7 @@ ImageArea::ImageArea(int width, int height) :
                                      width,
                                      height);
     orig_image->fill(0x000000ff);
+
 };
 
 ImageArea::~ImageArea() {};
@@ -76,13 +78,22 @@ bool ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr){
     return true;
 }
         
-bool ImageArea::on_scroll_event(GdkEventScroll* scroll_event){
-    std::cout << "Scroll Event!" << std::endl;
+bool ImageArea::on_scroll_event(GdkEventScroll* ev){
+    switch(ev->direction){
+        case GDK_SCROLL_UP:
+            std::cout << "Zoom(in, " << ev->x << ", " << ev->y << ")" << std::endl;
+            break;
+        case GDK_SCROLL_DOWN:
+            std::cout << "Zoom(out, " << ev->x << ", " << ev->y << ")" << std::endl;
+            break;
+        default:
+            break;
+    }
     return true;
 };
 
 bool ImageArea::on_motion_notify_event(GdkEventMotion* motion_event){
-    std::cout << "Motion()" << std::endl;
+    //std::cout << "Motion()" << std::endl;
     return true;
 };
 
