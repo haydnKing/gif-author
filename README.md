@@ -3,7 +3,6 @@
 
 # TODO List
 
-- Zoomable ImageArea
 - Improve looping before frame selection
 - Frame settings object to store output settings like visibility, colortable etc
 - Image preview for side by side comparisons
