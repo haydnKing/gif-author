@@ -7,8 +7,6 @@
 
 #include "../input/videoframe.h"
 
-#include <iostream>
-
 /**
  * Display an image, automatically scaled to the available space
  */
@@ -51,7 +49,7 @@ class ImageArea : public Gtk::DrawingArea
         pVideoFrame the_frame;
         float zoom;
         double x_off, y_off;
-        int screen_x, screen_y;
+        int screen_x, screen_y, old_w, old_h;
         double last_x, last_y;
 };
 

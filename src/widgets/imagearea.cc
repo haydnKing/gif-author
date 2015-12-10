@@ -5,7 +5,9 @@
 ImageArea::ImageArea(int width, int height) :
     x_off(0),
     y_off(0),
-    zoom(0)
+    zoom(0),
+    old_w(width),
+    old_h(height)
 {
     add_events(Gdk::SCROLL_MASK | Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_PRESS_MASK);
     set_size_request(width, height);
@@ -55,6 +57,11 @@ bool ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr){
     //position of image in screen (aka thickness of black bars)
     screen_x = 0;
     screen_y = 0;
+
+    //adjust zoom if window changed size
+    zoom *= std::min((double)screen_w/old_w, (double)screen_h/old_h);
+    old_w = screen_w;
+    old_h = screen_h;
 
     //set minimum zoom
     float zoom_min = std::min(((float)screen_w)/orig_image->get_width(),
@@ -130,7 +137,6 @@ void ImageArea::change_zoom(float factor, double x, double y){
 };
 bool ImageArea::on_button_press_event(GdkEventButton* ev){
     if(ev->button == 1){
-        std::cout << "1 press" << std::endl;
         last_x = ev->x;
         last_y = ev->y;
     }
