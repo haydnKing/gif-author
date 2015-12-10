@@ -2,11 +2,12 @@
 #include <cairomm/context.h>
 #include <gdkmm/general.h>
 
-ImageArea::ImageArea(int width, int height) : 
-    last_width(-1),
-    last_height(-1)
+ImageArea::ImageArea(int width, int height) :
+    x_off(0),
+    y_off(0),
+    zoom(0)
 {
-    add_events(Gdk::SCROLL_MASK | Gdk::POINTER_MOTION_MASK);
+    add_events(Gdk::SCROLL_MASK | Gdk::POINTER_MOTION_MASK | Gdk::BUTTON_PRESS_MASK);
     set_size_request(width, height);
 
     orig_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB,
@@ -35,44 +36,73 @@ void ImageArea::update_image(pVideoFrame& img){
     else {
         orig_image->fill(0x000000ff);
     }
-    last_width = last_height = -1;
     queue_draw();
+}
+
+void ImageArea::reset_zoom(bool redraw){
+    zoom = 0;
+    if(redraw)
+        queue_draw();
 }
 
 bool ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr){
     Gtk::Allocation allocation = get_allocation();
 
-    int width = allocation.get_width();
-    int height = allocation.get_height();
-    int x_off = 0, y_off = 0;
+    //get screen width and height
+    int screen_w = allocation.get_width();
+    int screen_h = allocation.get_height();
 
-    //keep aspect the same
-    float ratio_width  = (float) width  / (float) orig_image->get_width();
-    float ratio_height = (float) height / (float) orig_image->get_height();
-    if(ratio_width < ratio_height){
-        height = ratio_width * orig_image->get_height();
-        y_off = (allocation.get_height() - height)/2;
-    }
-    else {
-        width = ratio_height * orig_image->get_width();
-        x_off = (allocation.get_width() - width)/2;
-    }
-    
-    if(width != last_width || height != last_height){
-        scaled_image = orig_image->scale_simple(width,
-                                                height,
-                                                Gdk::INTERP_BILINEAR);
-        last_width = width;
-        last_height = height;
-    }
+    //position of image in screen (aka thickness of black bars)
+    screen_x = 0;
+    screen_y = 0;
 
-    //Fill with black
-    cr->set_source_rgb(0.,0.,0.);
-    cr->rectangle(0,0, allocation.get_width(), allocation.get_height());
-    cr->fill();
+    //set minimum zoom
+    float zoom_min = std::min(((float)screen_w)/orig_image->get_width(),
+                              ((float)screen_h)/orig_image->get_height());
+    zoom = std::max(zoom, zoom_min);
+
+    //source width and height rounded to nearest int
+    int src_h = (int) (0.5 + (float)screen_h / zoom),
+        src_w = (int) (0.5 + (float)screen_w / zoom);
+    if(src_h > orig_image->get_height()){
+        src_h = orig_image->get_height();
+        screen_y = (int) (0.5 + 0.5 * (screen_h - src_h * zoom));
+    }
+    if(src_w > orig_image->get_width()){
+        src_w = orig_image->get_width();
+        screen_x = (int) (0.5 + 0.5 * (screen_w - src_w * zoom));
+    }
+    x_off = std::min(std::max(x_off,0.),(double)(orig_image->get_width()-src_w));
+    y_off = std::min(std::max(y_off,0.),(double)(orig_image->get_height()-src_h));
+
+    //crop
+
+    Glib::RefPtr<Gdk::Pixbuf> cropped = Gdk::Pixbuf::create_subpixbuf(
+            orig_image,
+            x_off,
+            y_off,
+            src_w,
+            src_h);
+
+
+    //scale
+    scaled_image = cropped->scale_simple(screen_w - 2*screen_x,
+                                         screen_h - 2*screen_y,
+                                         Gdk::INTERP_BILINEAR);
+
+    //if black bars are visible
+    if(screen_x > 0 || screen_y > 0){
+        //Fill with black
+        cr->set_source_rgb(0.,0.,0.);
+        cr->rectangle(0,
+                      0,
+                      allocation.get_width(),
+                      allocation.get_height());
+        cr->fill();
+    }
     
     //draw the image
-    Gdk::Cairo::set_source_pixbuf(cr, scaled_image, x_off, y_off);
+    Gdk::Cairo::set_source_pixbuf(cr, scaled_image, screen_x, screen_y);
     cr->paint();
 
     return true;
@@ -81,19 +111,39 @@ bool ImageArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr){
 bool ImageArea::on_scroll_event(GdkEventScroll* ev){
     switch(ev->direction){
         case GDK_SCROLL_UP:
-            std::cout << "Zoom(in, " << ev->x << ", " << ev->y << ")" << std::endl;
+            change_zoom(1.25, ev->x, ev->y);
             break;
         case GDK_SCROLL_DOWN:
-            std::cout << "Zoom(out, " << ev->x << ", " << ev->y << ")" << std::endl;
+            change_zoom(0.8, ev->x, ev->y);
             break;
         default:
             break;
     }
     return true;
 };
+        
+void ImageArea::change_zoom(float factor, double x, double y){
+    x_off += (factor*(x-screen_x)-x) / (factor*zoom);
+    y_off += (factor*(y-screen_y)-y) / (factor*zoom);
+    zoom *= factor;
+    queue_draw();
+};
+bool ImageArea::on_button_press_event(GdkEventButton* ev){
+    if(ev->button == 1){
+        std::cout << "1 press" << std::endl;
+        last_x = ev->x;
+        last_y = ev->y;
+    }
+};
 
-bool ImageArea::on_motion_notify_event(GdkEventMotion* motion_event){
-    //std::cout << "Motion()" << std::endl;
+bool ImageArea::on_motion_notify_event(GdkEventMotion* ev){
+    if(ev->state & GDK_BUTTON1_MASK){
+        x_off -= (ev->x - last_x)/zoom;
+        y_off -= (ev->y - last_y)/zoom;
+        last_x = ev->x;
+        last_y = ev->y;
+        queue_draw();
+    }
     return true;
 };
 

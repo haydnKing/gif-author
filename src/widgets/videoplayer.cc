@@ -54,6 +54,7 @@ bool VideoPlayer::open_from_file(const char* filename){
 
     w_frame.set_range(0, video_input->length());
     w_scrollbar.set_frame_count(video_input->length());
+    w_image.reset_zoom();
     w_control.next_frame();
     set_sensitive(true);
 
