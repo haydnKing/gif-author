@@ -186,9 +186,11 @@ void VideoPlayer::on_play_tick() {
     frame_next.reset();
     //if we're still playing
     if(w_control.is_playing()){
+        //decode the frame after
         frame_next = w_control.is_playing_forwards() ? get_next_frame() : 
                                                 get_prev_frame();
         if(frame_next!=0){
+            //set a timeout for the difference between the frames
             Glib::signal_timeout().connect_once(
                 sigc::mem_fun(*this,&VideoPlayer::on_play_tick),
                 frame_next->get_timestamp() > frame->get_timestamp() ?
@@ -196,6 +198,7 @@ void VideoPlayer::on_play_tick() {
                     frame->get_timestamp() - frame_next->get_timestamp());
         }
     }
+    //display the current image
     update_image();
 };
 
