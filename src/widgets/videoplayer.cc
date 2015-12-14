@@ -183,7 +183,6 @@ void VideoPlayer::on_play_state_changed(bool playing, bool forwards){
 void VideoPlayer::on_play_tick() {
     //move to the next frame
     frame = frame_next;
-    update_image();
     frame_next.reset();
     //if we're still playing
     if(w_control.is_playing()){
@@ -197,13 +196,14 @@ void VideoPlayer::on_play_tick() {
                     frame->get_timestamp() - frame_next->get_timestamp());
         }
     }
+    update_image();
 };
 
         
 
 void VideoPlayer::on_spin_changed(){
     if(video_input && video_input->is_ok()){
-        if(static_cast<int64_t>(w_frame.get_value()) != video_input->position()){
+        if(static_cast<int64_t>(w_frame.get_value()) != frame->get_position()){
             seek_to_frame(w_frame.get_value());
         }
     }
