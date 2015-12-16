@@ -144,6 +144,14 @@ void VideoPlayer::seek_to_frame(int64_t frame){
         if(!w_control.is_playing()){
             w_control.next_frame();
         }
+        //if we're playing we have to decode the next frame ready
+        else {
+            frame_next = w_control.is_playing_forwards() ? get_next_frame() : 
+                                                get_prev_frame();
+            if(frame_next==0){
+                w_control.pause();
+            }
+        }
     }
 };
 

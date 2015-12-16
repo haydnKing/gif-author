@@ -80,15 +80,9 @@ void VideoClipper::on_end_changed(){
 
 void VideoClipper::on_frame_changed(int64_t frame_index){
     if(w_control.is_playing()){
-        if(frame_index < w_spin_start.get_value()){
-            if(!video_input->seek_to(w_spin_end.get_value(), false)) 
-                return;
-            frame_next = get_next_frame();
-        }
-        else if(frame_index > w_spin_end.get_value()){
-            if(!video_input->seek_to(w_spin_start.get_value(), false)) 
-                return;
-            frame_next = get_next_frame();
+        if(frame_index < w_spin_start.get_value() ||
+           frame_index > w_spin_end.get_value()){
+            seek_to_frame(w_spin_start.get_value()); 
         }
     }
 };
