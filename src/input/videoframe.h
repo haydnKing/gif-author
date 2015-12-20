@@ -5,6 +5,87 @@
 #include <glibmm/main.h>
 #include <glibmm/object.h>
 
+/**
+ * Affine 2D Transform
+ */
+class Affine2D
+{
+    public:
+        Affine2D(const Affine2D& rhs);
+        virtual ~Affine2D();
+
+        /**
+         * Create an Identity
+         */
+        static Affine2D I();
+        /**
+         * Create a scale
+         * @param x_ratio final_x / original_x
+         * @param y_ratio final_y / original_y
+         */
+        static Affine2D Scale(double x_ratio, double y_ratio);
+        /**
+         * Create a translation
+         * @param x x position of the new origin
+         * @param y y position of the new origin
+         */
+        static Affine2D Transform(double x, double y);
+        /**
+         * Create a rotation
+         * @param a angle of rotation (radians)
+         * @param x center of rotation 
+         * @param y center of rotation
+         */
+        static Affine2D Rotation(double a, double x, double y);
+        /**
+         * Create a rotation
+         * @param a angle of rotation (degrees)
+         * @param x center of rotation
+         * @param y center of rotation
+         */
+        static Affine2D RotationDegrees(double a, double x, double y);
+        /**
+         * Create the product of two Affine2Ds
+         * @param left
+         * @param right
+         * @returns left * right
+         */
+        static Affine2D Product(const Affine2D& left, const Affine2D& right);
+
+        /**
+         * Multiply two affine transformations
+         * @param rhs the other transform
+         * @returns a new Affine2D
+         */
+        Affine2D operator*(const Affine2D& rhs) const;
+
+        /**
+         * Invert the transformation
+         * @returns M^-1
+         */
+        Affine2D invert() const;
+
+        /**
+         * get the result of applying the transformation in the X direction
+         * @returns the new x
+         */
+        double get_x(const double& x, const double& y) const;
+
+        /**
+         * get the result of applying the transformation in the Y direction
+         * @returns the new y
+         */
+        double get_y(const double& x, const double& y) const;
+
+        const double* get_A() const {return A;};
+        const double* get_b() const {return b;};
+
+    protected:
+        Affine2D();
+        double A[4];
+        double b[2];
+};
+
 //forward declaration
 class VideoFrame;
 typedef Glib::RefPtr<VideoFrame> pVideoFrame;
@@ -81,6 +162,36 @@ class VideoFrame : public Glib::Object
          */
         bool is_ok() const;
 
+
+        // ############################################## Operations
+
+        /**
+         * Return a crop of the VideoFrame (don't duplicate data)
+         * @param left 
+         * @param right
+         * @param width pass -1 to preserve image
+         * @param height pass -1 to preserve image
+         * @returns the new frame, a subset of the current frame, or NULL if 
+         *          parameters were out of bounds
+         */
+        pVideoFrame crop(int left, int right, int width, int height) const;
+
+        /**
+         * Return a scaled version of the VideoFrame
+         * @param width target width
+         * @param height target height
+         * @returns the new frame
+         */
+        pVideoFrame scale(int width, int height) const;
+
+        /**
+         * Return a transformed version of the VideoFrame
+         * @param transform The transform to apply
+         * @returns the new frame
+         */
+        pVideoFrame transform(const Affine2D& tr);
+
+
     protected:
         VideoFrame();
 
@@ -90,7 +201,8 @@ class VideoFrame : public Glib::Object
         int height, width, rowstride;
         int64_t timestamp, position;
         uint8_t* data;
-        
+        //keep a pointer to the data parent (if any) so that the data isn't deleted
+        pVideoFrame data_parent;
 };
 
 

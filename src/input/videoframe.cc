@@ -1,5 +1,26 @@
 #include "videoframe.h"
 #include <cstring> //for memcpy
+        
+Affine2D::Affine2D(){
+    std::memset(&A, 0, 4 * sizeof(double));
+    std::memset(&b, 0, 2 * sizeof(double));
+};
+
+Affine2D::Affine2D(const Affine2D& rhs){
+    std::memcpy(&A, rhs.get_A(), 4 * sizeof(double));
+    std::memcpy(&b, rhs.get_B(), 2 * sizeof(double));
+};
+
+Affine2D Affine2D::I(){
+    Affine2D ret;
+    ret.A[0] = 1.;
+    ret.A[3] = 1.;
+    return ret;
+};
+
+Affine2D Affine2D::Scale(double x_ratio, double y_ratio);
+
+    
 
 VideoFrame::VideoFrame():
     width(-1),
