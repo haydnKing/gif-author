@@ -5,6 +5,42 @@
 #include <glibmm/main.h>
 #include <glibmm/object.h>
 
+class Color
+{
+public:
+    Color(uint8_t _r=0, uint8_t _g=0, uint8_t _b=0):
+        red(_r),
+        green(_g),
+        blue(_b)
+    {};
+    Color(const Color& rhs):
+        red(rhs.r()),
+        green(rhs.g()),
+        blue(rhs.b())
+    {};
+    ~Color() {};
+
+    uint8_t r() const {return red;};
+    uint8_t g() const {return green;};
+    uint8_t b() const {return blue;};
+
+    void r(uint8_t _r) {red = _r;};
+    void g(uint8_t _g) {green = _g;};
+    void b(uint8_t _b) {blue = _b;};
+
+    const Color& operator=(const Color& rhs){
+        red = rhs.r();
+        green = rhs.g();
+        blue = rhs.b();
+        return *this;
+    };
+
+protected:
+    uint8_t red, green, blue;
+};
+    
+
+
 /**
  * Affine 2D Transform
  */
@@ -89,6 +125,15 @@ class Affine2D
 //forward declaration
 class VideoFrame;
 typedef Glib::RefPtr<VideoFrame> pVideoFrame;
+
+/**
+ * Interpolation Method
+ */
+enum InterpolationMethod {
+    INTERPOLATION_NEAREST,
+    INTERPOLATION_BILINEAR,
+    INTERPOLATION_BICUBIC,
+    INTERPOLATION_LANCZOS};
 
 /**
  * Hold a frame of video
@@ -191,12 +236,26 @@ class VideoFrame : public Glib::Object
          */
         pVideoFrame transform(const Affine2D& tr);
 
+        /**
+         * Interpolate to estimate a value at an arbitrary position
+         * @param x x position
+         * @param y y position
+         * @param mode the Interpolation mode to use
+         * @returns uint8_t[red, green, blue] or NULL if (x,y) is outside the image bounds
+         */
+        Color value_at(double x, 
+                       double y, 
+                       InterpolationMode mode=INTERPOLATION_BILINEAR) const;
 
     protected:
         VideoFrame();
 
     private:
         void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
+        Color interpolate_nearest(double x, double y) const;
+        Color interpolate_bilinear(double x, double y) const;
+        Color interpolate_cubic(double x, double y) const;
+        Color interpolate_lanczos(double x, double y) const;
 
         int height, width, rowstride;
         int64_t timestamp, position;

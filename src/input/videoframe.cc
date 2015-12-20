@@ -102,7 +102,35 @@ uint8_t* VideoFrame::get_data(){
 
 bool VideoFrame::is_ok() const{
     return height>0 && width>0 && rowstride>0 && data!=NULL;
+}; 
+
+uint8_t* value_at(double x, double y, InterpolationMode mode){
+    //check bounds
+    if(x<0. || y<0. || x>=width || y>=height){
+        return NULL;
+    }
+    //check if both x and y are whole numbers
+    if( x-int(x) ==0 && y - int(y) == 0 ){
+        int p = 3*(int(x)+rowstride*int(y));
+        return Color(data[p], data[p+1], data[p+2]);
+    }
+    //otherwise, interpolate
+    switch(mode){
+        case INTERPOLATE_NEAREST:
+            return interpolate_nearest(x,y);
+        case INTERPOLATE_BILINEAR:
+            return interpolate_bilinear(x,y);
+        case INTERPOLATE_CUBIC:
+            return interpolate_cubic(x,y);
+        case INTERPOLATE_LANCZOS:
+            return interpolate_lanczos(x,y);
+    }
 };
+    
+Color VideoFrame::interpolate_nearest(double x, double y) const;
+Color VideoFrame::interpolate_bilinear(double x, double y) const;
+Color VideoFrame::interpolate_cubic(double x, double y) const;
+Color VideoFrame::interpolate_lanczos(double x, double y) const;
 
 void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p){
     if(data != NULL){
