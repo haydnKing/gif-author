@@ -5,13 +5,19 @@
 #include <glibmm/main.h>
 #include <glibmm/object.h>
 
+template<class ValueType>
 class Color
 {
 public:
-    Color(uint8_t _r=0, uint8_t _g=0, uint8_t _b=0):
+    color(ValueType _r=0, ValueType _g=0, ValueType _b=0):
         red(_r),
         green(_g),
         blue(_b)
+    {};
+    Color(const uint8_t* rhs):
+        red(rhs[0]),
+        green(rhs[1]),
+        blue(rhs[2])
     {};
     Color(const Color& rhs):
         red(rhs.r()),
@@ -20,23 +26,24 @@ public:
     {};
     ~Color() {};
 
-    uint8_t r() const {return red;};
-    uint8_t g() const {return green;};
-    uint8_t b() const {return blue;};
+    ValueType r() const {return red;};
+    ValueType g() const {return green;};
+    ValueType b() const {return blue;};
 
-    void r(uint8_t _r) {red = _r;};
-    void g(uint8_t _g) {green = _g;};
-    void b(uint8_t _b) {blue = _b;};
+    void r(ValueType _r) {red = _r;};
+    void g(ValueType _g) {green = _g;};
+    void b(ValueType _b) {blue = _b;};
 
-    const Color& operator=(const Color& rhs){
-        red = rhs.r();
-        green = rhs.g();
-        blue = rhs.b();
+    template <class RHSType>
+    const Color<ValueType>& operator=(const Color<RHSType>& rhs){
+        red = (ValueType)rhs.r();
+        green = (ValueType)rhs.g();
+        blue = (ValueType)rhs.b();
         return *this;
     };
 
 protected:
-    uint8_t red, green, blue;
+    ValueType red, green, blue;
 };
     
 
@@ -125,6 +132,15 @@ class Affine2D
 //forward declaration
 class VideoFrame;
 typedef Glib::RefPtr<VideoFrame> pVideoFrame;
+
+/**
+ * Extrapolation Method
+ */
+enum ExtrapolationMethod{
+    EXTRAPOLATION_NONE,
+    EXTRAPOLATION_CONST,
+    EXTRAPOLATION_LINEAR
+};
 
 /**
  * Interpolation Method
@@ -237,25 +253,44 @@ class VideoFrame : public Glib::Object
         pVideoFrame transform(const Affine2D& tr);
 
         /**
+         * Retrieve the color at (x,y)
+         * @param x
+         * @param y
+         * @param mode how to handle (x,y) outside image. 
+         *  INTERPOLATION_NONE: return black
+         *  INTERPOLATION_CONST: return the value of the nearest pixel in the image
+         *  INTERPOLATION_LINEAR: linearly extrapolate from the last two pixels
+         *  @returns the color
+         */
+        Color<uint8_t> value_at(int x, 
+                int y, 
+                ExtrapolationMode mode=EXTRAPOLATION_NONE);
+         
+
+        /**
          * Interpolate to estimate a value at an arbitrary position
          * @param x x position
          * @param y y position
          * @param mode the Interpolation mode to use
-         * @returns uint8_t[red, green, blue] or NULL if (x,y) is outside the image bounds
+         * @returns interpolated color. black if (x,y) is outside image 
          */
-        Color value_at(double x, 
-                       double y, 
-                       InterpolationMode mode=INTERPOLATION_BILINEAR) const;
+        Color<uint8_t> value_at(double x, 
+                                double y, 
+                                InterpolationMode mode=INTERPOLATION_BILINEAR) const;
 
     protected:
         VideoFrame();
 
     private:
         void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
-        Color interpolate_nearest(double x, double y) const;
-        Color interpolate_bilinear(double x, double y) const;
-        Color interpolate_cubic(double x, double y) const;
-        Color interpolate_lanczos(double x, double y) const;
+        Color<uint8_t> interpolate_nearest(double x, double y) const;
+        Color<uint8_t> interpolate_bilinear(double x, double y) const;
+        Color<uint8_t> interpolate_cubic(double x, double y) const;
+        Color<uint8_t> interpolate_lanczos(double x, double y) const;
+
+        Color<uint8_t> extrapolate_linear(int x, int y) const;
+
+        uint8_t offset(int x, int y) const;
 
         int height, width, rowstride;
         int64_t timestamp, position;
