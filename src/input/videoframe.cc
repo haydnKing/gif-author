@@ -154,7 +154,7 @@ Color<uint8_t> VideoFrame::value_at(double x, double y, InterpolationMode mode)
         case INTERPOLATE_BILINEAR:
             return interpolate_bilinear(x,y);
         case INTERPOLATE_CUBIC:
-            return interpolate_cubic(x,y);
+            return interpolate_bicubic(x,y);
         case INTERPOLATE_LANCZOS:
             return interpolate_lanczos(x,y);
     }
@@ -196,28 +196,52 @@ Color<uint8_t> VideoFrame::interpolate_bilinear(double x, double y) const
     return a;
 };
 
-Color<uint8_t> VideoFrame::interpolate_cubic(double x, double y) const
+void bicubic_p(double t, 
+               const Color& a0, 
+               const Color& a1, 
+               const Color& a2, 
+               const Color& a3,
+               double* out);
+
+Color<uint8_t> VideoFrame::interpolate_bicubic(double x, double y) const
 {
     int ix = int(x),
         iy = int(y);
     Color<uint8_t> f[16] = {
-        value_at(ix-1, iy-1),
-        value_at(ix  , iy-1),
-        value_at(ix+1, iy-1),
-        value_at(ix+2, iy-1),
-        value_at(ix-1, iy  ),
-        value_at(ix  , iy  ),
-        value_at(ix+1, iy  ),
-        value_at(ix+2, iy  ),
-        value_at(ix-1, iy+1),
-        value_at(ix  , iy+1),
-        value_at(ix+1, iy+1),
-        value_at(ix+2, iy+1),
-        value_at(ix-1, iy+2),
-        value_at(ix  , iy+2),
-        value_at(ix+1, iy+2),
-        value_at(ix+2, iy+2),
+        value_at(ix-1, iy-1), //0
+        value_at(ix  , iy-1), //1
+        value_at(ix+1, iy-1), //2
+        value_at(ix+2, iy-1), //3
+
+        value_at(ix-1, iy  ), //4
+        value_at(ix  , iy  ), //5
+        value_at(ix+1, iy  ), //6
+        value_at(ix+2, iy  ), //7
+
+        value_at(ix-1, iy+1), //8
+        value_at(ix  , iy+1), //9
+        value_at(ix+1, iy+1), //10
+        value_at(ix+2, iy+1), //11
+
+        value_at(ix-1, iy+2), //12
+        value_at(ix  , iy+2), //13
+        value_at(ix+1, iy+2), //14
+        value_at(ix+2, iy+2), //15
     };
+
+    double b[4*3];
+    
+    bicubic_p(x-ix, f + 0, f+ 1, f+ 2, f+ 3, b  );
+    bicubic_p(x-ix, f + 4, f+ 5, f+ 6, f+ 7, b+3);
+    bicubic_p(x-ix, f + 8, f+ 9, f+10, f+11, b+6);
+    bicubic_p(x-ix, f +12, f+13, f+14, f+15, b+9);
+
+    double r[3];
+    bicubic_p(y-iy, b, b+3, b+6, b+9, r);
+
+    return Color<uint8_t>(uint8_t(std::min(std::max(r[0]+0.5, 0), UINT8_MAX)),
+                          uint8_t(std::min(std::max(r[1]+0.5, 0), UINT8_MAX)),
+                          uint8_t(std::min(std::max(r[2]+0.5, 0), UINT8_MAX)));
 };
 
 Color<uint8_t> VideoFrame::interpolate_lanczos(double x, double y) const;
