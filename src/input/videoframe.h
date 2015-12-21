@@ -5,49 +5,6 @@
 #include <glibmm/main.h>
 #include <glibmm/object.h>
 
-template<class ValueType>
-class Color
-{
-public:
-    color(ValueType _r=0, ValueType _g=0, ValueType _b=0):
-        red(_r),
-        green(_g),
-        blue(_b)
-    {};
-    Color(const uint8_t* rhs):
-        red(rhs[0]),
-        green(rhs[1]),
-        blue(rhs[2])
-    {};
-    Color(const Color& rhs):
-        red(rhs.r()),
-        green(rhs.g()),
-        blue(rhs.b())
-    {};
-    ~Color() {};
-
-    ValueType r() const {return red;};
-    ValueType g() const {return green;};
-    ValueType b() const {return blue;};
-
-    void r(ValueType _r) {red = _r;};
-    void g(ValueType _g) {green = _g;};
-    void b(ValueType _b) {blue = _b;};
-
-    template <class RHSType>
-    const Color<ValueType>& operator=(const Color<RHSType>& rhs){
-        red = (ValueType)rhs.r();
-        green = (ValueType)rhs.g();
-        blue = (ValueType)rhs.b();
-        return *this;
-    };
-
-protected:
-    ValueType red, green, blue;
-};
-    
-
-
 /**
  * Affine 2D Transform
  */
@@ -256,39 +213,43 @@ class VideoFrame : public Glib::Object
          * Retrieve the color at (x,y)
          * @param x
          * @param y
+         * @param out will point to the data
          * @param mode how to handle (x,y) outside image. 
          *  INTERPOLATION_NONE: return black
          *  INTERPOLATION_CONST: return the value of the nearest pixel in the image
          *  INTERPOLATION_LINEAR: linearly extrapolate from the last two pixels
-         *  @returns the color
+         * @returns whether or not out should be deleted after use
          */
-        Color<uint8_t> value_at(int x, 
-                int y, 
-                ExtrapolationMode mode=EXTRAPOLATION_NONE);
+        bool extrapolate(int x, 
+                         int y, 
+                         uint8_t*& out,
+                         ExtrapolationMode mode=EXTRAPOLATION_CONST);
          
 
         /**
          * Interpolate to estimate a value at an arbitrary position
          * @param x x position
          * @param y y position
+         * @param out location to store output, just return it if NULL
          * @param mode the Interpolation mode to use
          * @returns interpolated color. black if (x,y) is outside image 
          */
-        Color<uint8_t> value_at(double x, 
-                                double y, 
-                                InterpolationMode mode=INTERPOLATION_BILINEAR) const;
+        uint8_t* value_at(double x, 
+                          double y,
+                          uint8_t* out,
+                          InterpolationMode mode=INTERPOLATION_BILINEAR) const;
 
     protected:
         VideoFrame();
 
     private:
         void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
-        Color<uint8_t> interpolate_nearest(double x, double y) const;
-        Color<uint8_t> interpolate_bilinear(double x, double y) const;
-        Color<uint8_t> interpolate_cubic(double x, double y) const;
-        Color<uint8_t> interpolate_lanczos(double x, double y) const;
+        void interpolate_nearest(double x, double y, uint8_t* out) const;
+        void interpolate_bilinear(double x, double y, uint8_t* out) const;
+        void interpolate_cubic(double x, double y, uint8_t* out) const;
+        void interpolate_lanczos(double x, double y, uint8_t* out) const;
 
-        Color<uint8_t> extrapolate_linear(int x, int y) const;
+        void extrapolate_linear(int x, int y, uint8_t* out) const;
 
         uint8_t offset(int x, int y) const;
 

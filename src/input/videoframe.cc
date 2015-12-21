@@ -3,21 +3,17 @@
        
 // ------------------- Useful Functions
 
-Color<uint8_t> extrapolate_linear(const uint8_t* a, 
-                                  const uint8_t* b,
-                                  int distance){
-    return extrapolate_linear(Color<uint8_t>(a), Color<uint8_t>(b), distance);
-};
-    
-Color<uint8_t> extrapolate_linear(const Color<uint8_t>& a, 
-                                  const Color<uint8_t>& b,
-                                  int distance){
-    double R = b.r() + distance * (double(b.r()) - double(a.r())),
-           G = b.g() + distance * (double(b.g()) - double(a.g())),
-           B = b.b() + distance * (double(b.b()) - double(a.b()));
-    return Color<uint8_t>(uint8_t(std::min(std::max(0,R), UINT8_MAX)),
-                          uint8_t(std::min(std::max(0,G), UINT8_MAX)),
-                          uint8_t(std::min(std::max(0,B), UINT8_MAX)));
+void ext_lin(const uint8_t* a, 
+             const uint8_t* b,
+             int distance,
+             uint8_t* out)
+{
+    double R = b[0] + distance * (double(b[0]) - double(a[0])),
+           G = b[1] + distance * (double(b[1]) - double(a[1])),
+           B = b[2] + distance * (double(b[2]) - double(a[2]));
+    out[0] = uint8_t(std::min(std::max(0,R), UINT8_MAX));
+    out[1] = uint8_t(std::min(std::max(0,G), UINT8_MAX));
+    out[2] = uint8_t(std::min(std::max(0,B), UINT8_MAX));
 };
 
 Affine2D::Affine2D(){
@@ -123,44 +119,62 @@ bool VideoFrame::is_ok() const{
     return height>0 && width>0 && rowstride>0 && data!=NULL;
 }; 
 
-Color<uint8_t> VideoFrame::value_at(int x, int y, ExtrapolationMode mode){
+bool VideoFrame::extrapolate(int x, int y, uint8_t*& out, ExtrapolationMode mode){
     //if we're within the image
-    if(x>=0 && x < width && y>=0 && y < height){
-        return Color<uint8_t>(data+3*(x+rowstride*y));
-    };
+    if(x>=0 && x < width && y>=0 && y < height)
+    {
+        out = data+3*(x+rowstride*y);
+        return false;
+    }
     //otherwise extrapolate
-    switch mode{
+    switch mode
+    {
         case EXTRAPOLATION_NONE:
-            return Color<uint8_t>(0,0,0);
+            out = new uint8_t[3];
+            std::set(out, 0, 3*sizeof(uint8_t));
+            return true;
         case EXTRAPOLATION_CONST:
             x = std::min(std::max(x, 0), width-1);
             y = std::min(std::max(y, 0), height-1);
-            return Color<uint8_t>(data+3*(x+rowstride*y));
+            out = data+3*(x+rowstride*y);
+            return false;
         case EXTRAPOLATION_LINEAR:
-            return extrapolate_linear(x,y);
+            out = new uint8_t[3];
+            extrapolate_linear(x,y,out);
+            return true;
     }
 };
 
-Color<uint8_t> VideoFrame::value_at(double x, double y, InterpolationMode mode)
+uint8_t* VideoFrame::value_at(double x, double y, uint8_t out, InterpolationMode mode)
 {
+    if(out == NULL)
+    {
+        out = new uint8_t[3];
+    }
     //Check (x,y) is within the image
-    if(x<0 && y < 0 && x >= width && y>= height){
-        return Color();
+    if(x<0 && y < 0 && x >= width && y>= height)
+    {
+        std::memset(out, 0, 3*sizeof(uint8_t));
+        return out;
     }
     //interpolate
     switch(mode){
         case INTERPOLATE_NEAREST:
-            return interpolate_nearest(x,y);
+            interpolate_nearest(x, y, out);
+            return;
         case INTERPOLATE_BILINEAR:
-            return interpolate_bilinear(x,y);
+            interpolate_bilinear(x, y, out);
+            return;
         case INTERPOLATE_CUBIC:
-            return interpolate_bicubic(x,y);
+            interpolate_bicubic(x, y, out);
+            return;
         case INTERPOLATE_LANCZOS:
-            return interpolate_lanczos(x,y);
+            interpolate_lanczos(x, y, out);
+            return;
     }
 };
     
-Color<uint8_t> VideoFrame::interpolate_nearest(double x, double y) const 
+void VideoFrame::interpolate_nearest(double x, double y, uint8_t* out) const 
 {
     int ix = int(x+0.5),
         iy = int(y+0.5);
@@ -168,32 +182,36 @@ Color<uint8_t> VideoFrame::interpolate_nearest(double x, double y) const
     //which could cause a seg-fault
     if(ix == width) ix--;
     if(iy == height) iy--;
-    return Color(data+3*(ix+rowstride*iy));
+    std::memcpy(out, data+3*(ix+rowstride*iy), 3*sizeof(uint8_t));
 };
 
-Color<uint8_t> VideoFrame::interpolate_bilinear(double x, double y) const
+void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
 {
     int ix = int(x),
         iy = int(y);
-    Color<uint8_t> a = value_at(ix  , iy  ),
-                   b = value_at(ix+1, iy  ),
-                   c = value_at(ix  , iy+1),
-                   d = value_at(ix+1, iy+1);
+    uint8_t *a, *b, *c, *d;
+    bool da = extrapolate(ix  , iy  , a),
+         db = extrapolate(ix+1, iy  , b),
+         dc = extrapolate(ix  , iy+1, c),
+         dd = extrapolate(ix+1, iy+1, d);
     double fx = x - ix,
            fy = y - iy;
     //x-axis
-    a.r(fx*a.r() + (1.-fx)*b.r());
-    a.g(fx*a.g() + (1.-fx)*b.g());
-    a.b(fx*a.b() + (1.-fx)*b.b());
-    c.r(fx*c.r() + (1.-fx)*d.r());
-    c.g(fx*c.g() + (1.-fx)*d.g());
-    c.b(fx*c.b() + (1.-fx)*d.b());
+    a[0] = fx*a[0] + (1.-fx)*b[0];
+    a[1] = fx*a[1] + (1.-fx)*b[1];
+    a[2] = fx*a[2] + (1.-fx)*b[2];
+    c[0] = fx*c[0] + (1.-fx)*d[0];
+    c[1] = fx*c[1] + (1.-fx)*d[1];
+    c[2] = fx*c[2] + (1.-fx)*d[2];
     //y-axis
-    a.r(fy*a.r() + (1.-fy)*c.r());
-    a.g(fy*a.g() + (1.-fy)*c.g());
-    a.b(fy*a.b() + (1.-fy)*c.b());
+    out[0] = fy*a[0] + (1.-fy)*c[0];
+    out[1] = fy*a[1] + (1.-fy)*c[1];
+    out[2] = fy*a[2] + (1.-fy)*c[2];
     
-    return a;
+    if(da) delete[] a;
+    if(db) delete[] b;
+    if(dc) delete[] c;
+    if(dd) delete[] d;
 };
 
 void bicubic_p(double t, 
@@ -246,68 +264,79 @@ Color<uint8_t> VideoFrame::interpolate_bicubic(double x, double y) const
 
 Color<uint8_t> VideoFrame::interpolate_lanczos(double x, double y) const;
 
-Color<uint8_t> VideoFrame::extrapolate_linear(int x, int y) const
+void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
 {
     //if y in image
     if(y>=0 && y < height)
     {
         //extrapolate left
         if(x < 0)
-            return extrapolate_linear(data+3*(1+rowstride*y),
+            ext_lin(data+3*(1+rowstride*y),
                     data+3*(0+rowstride*y),
-                    -x);
+                    -x,
+                    out);
         //extrapolate right
-        if(x >= width)
-            return extrapolate_linear(data+3*(width-2+rowstride*y),
-                                      data+3*(width-1+rowstride*y),
-                                      1+x-width);
+        else if(x >= width)
+            ext_lin(data+3*(width-2+rowstride*y),
+                    data+3*(width-1+rowstride*y),
+                    1+x-width,
+                    out);
+        return;
     }
     //if x in image
-    if(x>=0 && x<width)
+    else if(x>=0 && x<width)
     {
         //extrapolate up
         if(y < 0)
-            return extrapolate_linear(data+3*(x+rowstride),
-                                      data+3*x,
-                                      -y);
+            ext_lin(data+3*(x+rowstride),
+                    data+3*x,
+                    -y,
+                    out);
         //extrapolate down
-        if(y >= height)
-            return extrapolate_linear(data+3*(x+(height-2)*rowstride),
-                                      data+3*(x+(height-1)*rowstride),
-                                      1+y-height);
+        else if(y >= height)
+            ext_lin(data+3*(x+(height-2)*rowstride),
+                    data+3*(x+(height-1)*rowstride),
+                    1+y-height,
+                    out);
+        return;
     }
     //if we're still here, niether are in the image, corner.
+    double a[3], b[3];
     //left
-    if(x<0)
+    else if(x<0)
     {
         //top
         if(y<0)
-            return extrapolate_linear(
-                    extrapolate_linear(offset(1,1), offset(0,1), -x), 
-                    extrapolate_linear(offset(1,0), offset(0,0), -x), 
-                    -y);
+        {
+            ext_lin(offset(1,1), offset(0,1), -x, a); 
+            ext_lin(offset(1,0), offset(0,0), -x, b); 
+            ext_lin(a, b, -y, out);
+        }
         //bottom
-        if(y>=height)
-            return extrapolate_linear(
-                    extrapolate_linear(offset(1,height-2), offset(0,height-2), -x), 
-                    extrapolate_linear(offset(1,height-1), offset(0,height-1), -x), 
-                    1+y-height);
+        else if(y>=height)
+        {
+            ext_lin(offset(1,height-2), offset(0,height-2), -x, a); 
+            ext_lin(offset(1,height-1), offset(0,height-1), -x, b); 
+            ext_lin(a, b, 1+y-height, out);
+        }
+        return;
     }
     //right
-    if(x>=width)
+    else if(x>=width)
     {
         //top
         if(y<0)
-            return extrapolate_linear(
-                    extrapolate_linear(offset(width-2,1), offset(width-1,1), -x), 
-                    extrapolate_linear(offset(width-2,0), offset(width-1,0), -x), 
-                    -y);
+        {
+            ext_lin(offset(width-2,1), offset(width-1,1), -x, a); 
+            ext_lin(offset(width-2,0), offset(width-1,0), -x, b);
+            ext_lin(a, b, -y, out);
+        }
         //bottom
-        if(y>=height)
-            return extrapolate_linear(
-                    extrapolate_linear(offset(width-2,height-2), offset(width-1,height-2), -x), 
-                    extrapolate_linear(offset(width-2,height-1), offset(width-1,height-1), -x), 
-                    1+y-height);
+        else if(y>=height)
+        {
+            ext_lin(offset(width-2,height-2), offset(width-1,height-2), -x, a); 
+            ext_lin(offset(width-2,height-1), offset(width-1,height-1), -x, b);
+            ext_lin(a, b, 1+y-height, out);
     }
 };
 
