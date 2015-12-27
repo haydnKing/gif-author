@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include <gtkmm/image.h>
-#include <gtkmm/grid.h>
+#include <gtkmm/assistant.h>
 #include <gtkmm/filechooserbutton.h>
 #include <gtkmm/window.h>
 #include <gtkmm/scrolledwindow.h>
@@ -17,7 +17,9 @@
 #include "widgets/videocontrol.h"
 #include "widgets/videoclipper.h"
 
-class MainWindow : public Gtk::Window
+#include <iostream>
+
+class MainWindow : public Gtk::Assistant
 {
 
 public:
@@ -32,14 +34,13 @@ protected:
   //Signal handlers:
   void on_file_set();
   bool on_key_press_event(GdkEventKey* event);
+  virtual void on_cancel();
+  virtual void on_close();
 
   //Member widgets:
-  Gtk::Grid w_grid;
   Gtk::FileChooserButton w_file_chooser;
 
   VideoClipper w_player;
-
-  Gtk::Label w_label;
 };
 
 #endif // GTKMM_MAINWINDOW_H
