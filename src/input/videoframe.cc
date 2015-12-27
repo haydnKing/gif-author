@@ -33,12 +33,94 @@ Affine2D Affine2D::I(){
     return ret;
 };
 
-Affine2D Affine2D::Scale(double x_ratio, double y_ratio);
-Affine2D Transform(double x, double y);
-static Affine2D Rotation(double a, double x, double y);
-static Affine2D RotationDegrees(double a, double x, double y);
-static Affine2D Product(const Affine2D& left, const Affine2D& right);
-Affine2D operator*(const Affine2D& rhs) const;
+Affine2D Affine2D::Scale(double x_ratio, double y_ratio)
+{
+    Affine2D ret;
+    ret.A[0] = x_ratio;
+    ret.A[3] = x_ratio;
+    return ret;
+};
+
+Affine2D Affine2D::Transform(double x, double y)
+{
+    Affine2D ret;
+    ret.b[0] = x;
+    ret.b[1] = y;
+    return ret;
+};
+
+Affine2D Affine2D::Rotation(double a, double x, double y)
+{
+    Affine2D ret;
+    ret.A[0] = std::cos(a);
+    ret.A[1] = -std::sin(a);
+    ret.A[2] = std::sin(a);
+    ret.A[3] = std::cos(a);
+    ret.b[0] = x * (std::cos(a)-1) - y*std::sin(a);
+    ret.b[1] = x * std::sin(a) + y * (std::cos(a)-1);
+    return ret;
+};
+
+
+Affine2D Affine2D::RotationDegrees(double a, double x, double y)
+{
+    return Affine2D::Rotaion(2*std::PI*a/360.);
+};
+
+
+Affine2D Affine2D::Product(const Affine2D& left, const Affine2D& right)
+{
+    Affine2D ret;
+    ret.A[0] = left.A[0] * right.A[0] + left.A[1] * right.A[2];
+    ret.A[1] = left.A[0] * right.A[1] + left.A[1] * right.A[3];
+    ret.A[0] = left.A[2] * right.A[0] + left.A[3] * right.A[2];
+    ret.A[1] = left.A[2] * right.A[1] + left.A[3] * right.A[3];
+    ret.b[0] = left.A[0] * right.b[0] + left.A[1] * right.b[1] + left.b[0];
+    ret.b[1] = left.A[2] * right.b[0] + left.A[3] * right.b[1] + left.b[1];
+    return ret;
+};
+        
+Affine2D Affine2D::Invert(const Affine2D& rhs)
+{
+    Affine2D ret;
+    double det = rhs.A[0] * rhs.A[3] - rhs.A[1] * rhs.A[2];
+    ret.A[0] =   rhs.A[3] / det;
+    ret.A[1] = - rhs.A[1] / det;
+    ret.A[2] =   rhs.A[2] / det;
+    ret.A[3] = - rhs.A[0] / det;
+    ret.b[0] = ret.A[0] * rhs.b[0] + ret.b[1] * ret.b[1];
+    ret.b[1] = ret.A[2] * rhs.b[0] + ret.b[3] * ret.b[1];
+    return ret;
+}
+
+
+Affine2D Affine2D::operator*(const Affine2D& rhs) const
+{
+    return Affine2D::Product(*this, rhs);
+};
+
+Affine2D Affine2D::invert() const
+{
+    return Affine2D::Invert(*this);    
+};
+
+double Affine2D::get_x(const double& x, const double& y) const
+{
+    return A[0] * x + A[1] * y + b[0];
+};
+
+double Affine2D::get_y(const double& x, const double& y) const
+{
+    return A[2] * x + A[3] * y + b[0];
+};
+
+void Affine2D::get(const double& u, const double& v, 
+                         double& x,       double& y) const
+{
+    x = A[0] * u + A[1] * v + b[0];
+    y = A[2] * u + A[3] * v + b[1];
+};
+
 
 VideoFrame::VideoFrame():
     width(-1),

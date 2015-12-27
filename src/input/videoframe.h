@@ -51,6 +51,12 @@ class Affine2D
          * @returns left * right
          */
         static Affine2D Product(const Affine2D& left, const Affine2D& right);
+        /**
+         * Invert a transform
+         * @param rhs 
+         * @returns inverted transform
+         */
+        static Affine2D Invert(const Affine2D& rhs);
 
         /**
          * Multiply two affine transformations
