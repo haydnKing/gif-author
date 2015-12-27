@@ -246,8 +246,8 @@ class VideoFrame : public Glib::Object
         void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
         void interpolate_nearest(double x, double y, uint8_t* out) const;
         void interpolate_bilinear(double x, double y, uint8_t* out) const;
-        void interpolate_cubic(double x, double y, uint8_t* out) const;
-        void interpolate_lanczos(double x, double y, uint8_t* out) const;
+        void interpolate_bicubic(double x, double y, uint8_t* out) const;
+        //void interpolate_lanczos(double x, double y, uint8_t* out) const;
 
         void extrapolate_linear(int x, int y, uint8_t* out) const;
 
