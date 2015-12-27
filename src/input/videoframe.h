@@ -12,7 +12,7 @@ class Affine2D
 {
     public:
         Affine2D(const Affine2D& rhs);
-        virtual ~Affine2D();
+        virtual ~Affine2D(){};
 
         /**
          * Create an Identity
@@ -117,8 +117,8 @@ enum ExtrapolationMethod{
 enum InterpolationMethod {
     INTERPOLATION_NEAREST,
     INTERPOLATION_BILINEAR,
-    INTERPOLATION_BICUBIC,
-    INTERPOLATION_LANCZOS};
+    INTERPOLATION_BICUBIC/*,
+    INTERPOLATION_LANCZOS*/};
 
 /**
  * Hold a frame of video
@@ -151,7 +151,7 @@ class VideoFrame : public Glib::Object
                 bool copy=true,
                 int64_t _timestamp=-1,
                 int64_t _position=-1,
-                pVideoFrame _data_parent=NULL);
+                pVideoFrame _data_parent=pVideoFrame());
 
         /*
          * frame height
@@ -205,7 +205,7 @@ class VideoFrame : public Glib::Object
          * @returns the new frame, a subset of the current frame, or NULL if 
          *          parameters were out of bounds
          */
-        pVideoFrame crop(int left, int top, int width, int height) const;
+        pVideoFrame crop(int left, int top, int width, int height);
 
         /**
          * Return a scaled version of the VideoFrame
@@ -221,7 +221,7 @@ class VideoFrame : public Glib::Object
          * @returns the new frame
          */
         pVideoFrame transform(const Affine2D& tr,
-                              InterpolationMode mode=INTERPOLATION_BILINEAR);
+                              InterpolationMethod mode=INTERPOLATION_BILINEAR);
 
         /**
          * Retrieve the color at (x,y)
@@ -234,10 +234,10 @@ class VideoFrame : public Glib::Object
          *  INTERPOLATION_LINEAR: linearly extrapolate from the last two pixels
          * @returns whether or not out should be deleted after use
          */
-        bool extrapolate(int x, 
+        void extrapolate(int x, 
                          int y, 
-                         uint8_t*& out,
-                         ExtrapolationMode mode=EXTRAPOLATION_CONST);
+                         uint8_t* out,
+                         ExtrapolationMethod mode=EXTRAPOLATION_CONST) const;
          
 
         /**
@@ -248,10 +248,10 @@ class VideoFrame : public Glib::Object
          * @param mode the Interpolation mode to use
          * @returns interpolated color. black if (x,y) is outside image 
          */
-        uint8_t* interpolate(double x, 
-                             double y,
-                             uint8_t* out,
-                             InterpolationMode mode=INTERPOLATION_BILINEAR) const;
+        void interpolate(double x, 
+                         double y,
+                         uint8_t* out,
+                         InterpolationMethod mode=INTERPOLATION_BILINEAR) const;
 
     protected:
         VideoFrame();
@@ -265,7 +265,7 @@ class VideoFrame : public Glib::Object
 
         void extrapolate_linear(int x, int y, uint8_t* out) const;
 
-        uint8_t offset(int x, int y) const;
+        uint8_t* offset(int x, int y) const;
 
         int height, width, rowstride;
         int64_t timestamp, position;

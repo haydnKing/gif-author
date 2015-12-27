@@ -1,5 +1,7 @@
 #include "videoframe.h"
 #include <cstring> //for memcpy
+#include <cmath>
+#include <limits>
        
 // ------------------- Useful Functions
 
@@ -11,9 +13,9 @@ void ext_lin(const uint8_t* a,
     double R = b[0] + distance * (double(b[0]) - double(a[0])),
            G = b[1] + distance * (double(b[1]) - double(a[1])),
            B = b[2] + distance * (double(b[2]) - double(a[2]));
-    out[0] = uint8_t(std::min(std::max(0,R), UINT8_MAX));
-    out[1] = uint8_t(std::min(std::max(0,G), UINT8_MAX));
-    out[2] = uint8_t(std::min(std::max(0,B), UINT8_MAX));
+    out[0] = uint8_t(std::min(std::max(0.,R), double(UINT8_MAX)));
+    out[1] = uint8_t(std::min(std::max(0.,G), double(UINT8_MAX)));
+    out[2] = uint8_t(std::min(std::max(0.,B), double(UINT8_MAX)));
 };
 
 Affine2D::Affine2D(){
@@ -23,7 +25,7 @@ Affine2D::Affine2D(){
 
 Affine2D::Affine2D(const Affine2D& rhs){
     std::memcpy(&A, rhs.get_A(), 4 * sizeof(double));
-    std::memcpy(&b, rhs.get_B(), 2 * sizeof(double));
+    std::memcpy(&b, rhs.get_b(), 2 * sizeof(double));
 };
 
 Affine2D Affine2D::I(){
@@ -64,7 +66,7 @@ Affine2D Affine2D::Rotation(double a, double x, double y)
 
 Affine2D Affine2D::RotationDegrees(double a, double x, double y)
 {
-    return Affine2D::Rotaion(2*std::PI*a/360.);
+    return Affine2D::Rotation(2*M_PI*a/360., x, y);
 };
 
 
@@ -218,7 +220,7 @@ pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
             pVideoFrame(this));
 };
 
-pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMode mode){
+pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode){
     int i;
     //get inverse transform
     Affine2D inv = tr.invert();
@@ -230,15 +232,15 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMode mode){
     tr.get(height,    0., cx[2], cy[2]);
     tr.get(height, width, cx[3], cy[3]);
     //find the limits of the image
-    double limits[4] = {std::numeric_limits<double>::max,
-                        std::numeric_limits<double>::max,
-                        std::numeric_limits<double>::min,
-                        std::numeric_limits<double>::min};
+    double limits[4] = {std::numeric_limits<double>::max(),
+                        std::numeric_limits<double>::max(),
+                        std::numeric_limits<double>::min(),
+                        std::numeric_limits<double>::min()};
     for(i = 0; i < 4; i++){
-        if(limits[0] > x[i]) limits[0] = x[i];
-        if(limits[1] > y[i]) limits[1] = y[i];
-        if(limits[2] < x[i]) limits[2] = x[i];
-        if(limits[3] < y[i]) limits[3] = y[i];
+        if(limits[0] > cx[i]) limits[0] = cx[i];
+        if(limits[1] > cy[i]) limits[1] = cy[i];
+        if(limits[2] < cx[i]) limits[2] = cx[i];
+        if(limits[3] < cy[i]) limits[3] = cy[i];
     }
     int _width = int(limits[2] - limits[0]);
     int _height = int(limits[3] - limits[1]); 
@@ -252,7 +254,7 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMode mode){
         {
             //find location of (x,y) in the original image
             inv.get(limits[0]+u, limits[1]+v, x, y);
-            interpolate(x,y,_data+3*(x+_width*y), mode);
+            interpolate(x,y,_data+3*(u+_width*v), mode);
         }
     }
 
@@ -265,33 +267,32 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMode mode){
                                         position);
 };
 
-bool VideoFrame::extrapolate(int x, int y, uint8_t*& out, ExtrapolationMode mode){
+void VideoFrame::extrapolate(int x, int y, uint8_t* out, ExtrapolationMethod mode) const
+{
     //if we're within the image
     if(x>=0 && x < width && y>=0 && y < height)
     {
-        out = data+3*(x+rowstride*y);
-        return false;
+        std::memcpy(out, data+3*(x+rowstride*y), 3*sizeof(uint8_t));
+        return;
     }
     //otherwise extrapolate
-    switch mode
+    switch(mode)
     {
         case EXTRAPOLATION_NONE:
-            out = new uint8_t[3];
-            std::set(out, 0, 3*sizeof(uint8_t));
-            return true;
+            std::memset(out, 0, 3*sizeof(uint8_t));
+            return;
         case EXTRAPOLATION_CONST:
             x = std::min(std::max(x, 0), width-1);
             y = std::min(std::max(y, 0), height-1);
-            out = data+3*(x+rowstride*y);
-            return false;
+            std::memcpy(out, data+3*(x+rowstride*y), 3*sizeof(uint8_t));
+            return;
         case EXTRAPOLATION_LINEAR:
-            out = new uint8_t[3];
             extrapolate_linear(x,y,out);
-            return true;
+            return;
     }
 };
 
-uint8_t* VideoFrame::value_at(double x, double y, uint8_t out, InterpolationMode mode)
+void VideoFrame::interpolate(double x, double y, uint8_t* out, InterpolationMethod mode) const
 {
     if(out == NULL)
     {
@@ -301,22 +302,22 @@ uint8_t* VideoFrame::value_at(double x, double y, uint8_t out, InterpolationMode
     if(x<0 && y < 0 && x >= width && y>= height)
     {
         std::memset(out, 0, 3*sizeof(uint8_t));
-        return out;
+        return;
     }
     //interpolate
     switch(mode){
-        case INTERPOLATE_NEAREST:
+        case INTERPOLATION_NEAREST:
             interpolate_nearest(x, y, out);
             return;
-        case INTERPOLATE_BILINEAR:
+        case INTERPOLATION_BILINEAR:
             interpolate_bilinear(x, y, out);
             return;
-        case INTERPOLATE_CUBIC:
+        case INTERPOLATION_BICUBIC:
             interpolate_bicubic(x, y, out);
             return;
-        case INTERPOLATE_LANCZOS:
+       /* case INTERPOLATION_LANCZOS:
             interpolate_lanczos(x, y, out);
-            return;
+            return;*/
     }
 };
     
@@ -335,11 +336,11 @@ void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
 {
     int ix = int(x),
         iy = int(y);
-    uint8_t *a, *b, *c, *d;
-    bool da = extrapolate(ix  , iy  , a),
-         db = extrapolate(ix+1, iy  , b),
-         dc = extrapolate(ix  , iy+1, c),
-         dd = extrapolate(ix+1, iy+1, d);
+    uint8_t a[3], b[3], c[3], d[3];
+    extrapolate(ix  , iy  , a),
+    extrapolate(ix+1, iy  , b),
+    extrapolate(ix  , iy+1, c),
+    extrapolate(ix+1, iy+1, d);
     double fx = x - ix,
            fy = y - iy;
     //x-axis
@@ -353,11 +354,6 @@ void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
     out[0] = fy*a[0] + (1.-fy)*c[0];
     out[1] = fy*a[1] + (1.-fy)*c[1];
     out[2] = fy*a[2] + (1.-fy)*c[2];
-    
-    if(da) delete[] a;
-    if(db) delete[] b;
-    if(dc) delete[] c;
-    if(dd) delete[] d;
 };
 
 void bicubic_p(double t, 
@@ -365,13 +361,15 @@ void bicubic_p(double t,
                const uint8_t* a0, 
                const uint8_t* a1, 
                const uint8_t* a2,
-               double* out){
+               uint8_t* out){
     for(int i = 0; i < 2; i++){
-        out[i] = 0.5 * (
-                    (2.* a0[i]) + 
+        out[i] = uint8_t(std::min(std::max(
+              0.5 * (
+                    (2.*a0[i]) + 
                     (1.*a_1[i] - 1.*a_1[i]) * t + 
                     (2.*a_1[i] - 5.*a0[i] + 4.*a1[i] - 1.*a2[i]) * t*t +
-                    (-1.*a_1[i] + 3.*a0[i] - 3.*a1[i] +1.*a2[i]) * t*t*t);
+                    (-1.*a_1[i] + 3.*a0[i] - 3.*a1[i] +1.*a2[i]) * t*t*t),
+              0.), double(UINT8_MAX)));
     }
 };
 
@@ -380,28 +378,29 @@ void VideoFrame::interpolate_bicubic(double x, double y, uint8_t* out) const
 {
     int ix = int(x),
         iy = int(y);
-    uint8_t* f = new uint8_t[48];
-    value_at(ix-1, iy-1, f+ 0); //0
-    value_at(ix  , iy-1, f+ 3); //1
-    value_at(ix+1, iy-1, f+ 6); //2
-    value_at(ix+2, iy-1, f+ 9); //3
+    uint8_t b[4*3];
+    uint8_t f[48];
 
-    value_at(ix-1, iy  , f+12); //4
-    value_at(ix  , iy  , f+15); //5
-    value_at(ix+1, iy  , f+18); //6
-    value_at(ix+2, iy  , f+21); //7
+    extrapolate(ix-1, iy-1, f+ 0); //0
+    extrapolate(ix  , iy-1, f+ 3); //1
+    extrapolate(ix+1, iy-1, f+ 6); //2
+    extrapolate(ix+2, iy-1, f+ 9); //3
 
-    value_at(ix-1, iy+1, f+24); //8
-    value_at(ix  , iy+1, f+27); //9
-    value_at(ix+1, iy+1, f+30); //10
-    value_at(ix+2, iy+1, f+33); //11
+    extrapolate(ix-1, iy  , f+12); //4
+    extrapolate(ix  , iy  , f+15); //5
+    extrapolate(ix+1, iy  , f+18); //6
+    extrapolate(ix+2, iy  , f+21); //7
 
-    value_at(ix-1, iy+2, f+36); //12
-    value_at(ix  , iy+2, f+39); //13
-    value_at(ix+1, iy+2, f+42); //14
-    value_at(ix+2, iy+2, f+45); //15
+    extrapolate(ix-1, iy+1, f+24); //8
+    extrapolate(ix  , iy+1, f+27); //9
+    extrapolate(ix+1, iy+1, f+30); //10
+    extrapolate(ix+2, iy+1, f+33); //11
 
-    double b[4*3];
+    extrapolate(ix-1, iy+2, f+36); //12
+    extrapolate(ix  , iy+2, f+39); //13
+    extrapolate(ix+1, iy+2, f+42); //14
+    extrapolate(ix+2, iy+2, f+45); //15
+
     
     //apply horizontally
     bicubic_p(x-ix, f + 0, f+ 3, f+ 6, f+ 9, b  );
@@ -410,14 +409,7 @@ void VideoFrame::interpolate_bicubic(double x, double y, uint8_t* out) const
     bicubic_p(x-ix, f +36, f+39, f+42, f+45, b+9);
 
     //apply vertically
-    double r[3];
-    bicubic_p(y-iy, b, b+3, b+6, b+9, r);
-
-    out[0] = uint8_t(std::min(std::max(r[0]+0.5, 0), UINT8_MAX));
-    out[1] = uint8_t(std::min(std::max(r[1]+0.5, 0), UINT8_MAX));
-    out[2] = uint8_t(std::min(std::max(r[2]+0.5, 0), UINT8_MAX));
-
-    delete [] f;
+    bicubic_p(y-iy, b, b+3, b+6, b+9, out);
 };
 
 //uint8_t VideoFrame::interpolate_lanczos(double x, double y, uint8_t* out) const;
@@ -459,9 +451,9 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
         return;
     }
     //if we're still here, niether are in the image, corner.
-    double a[3], b[3];
+    uint8_t a[3], b[3];
     //left
-    else if(x<0)
+    if(x<0)
     {
         //top
         if(y<0)
@@ -495,6 +487,7 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
             ext_lin(offset(width-2,height-2), offset(width-1,height-2), -x, a); 
             ext_lin(offset(width-2,height-1), offset(width-1,height-1), -x, b);
             ext_lin(a, b, 1+y-height, out);
+        }
     }
 };
 
