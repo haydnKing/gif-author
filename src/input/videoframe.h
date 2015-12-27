@@ -77,6 +77,12 @@ class Affine2D
          */
         double get_y(const double& x, const double& y) const;
 
+        /**
+         * get the result of transforming (u,v) and store it in (x,y)
+         */
+        void get(const double& u, const double& v, 
+                 double& x, double& y) const;
+
         const double* get_A() const {return A;};
         const double* get_b() const {return b;};
 
@@ -138,7 +144,8 @@ class VideoFrame : public Glib::Object
                 int rowstride,
                 bool copy=true,
                 int64_t _timestamp=-1,
-                int64_t _position=-1);
+                int64_t _position=-1,
+                pVideoFrame _data_parent=NULL);
 
         /*
          * frame height
@@ -192,7 +199,7 @@ class VideoFrame : public Glib::Object
          * @returns the new frame, a subset of the current frame, or NULL if 
          *          parameters were out of bounds
          */
-        pVideoFrame crop(int left, int right, int width, int height) const;
+        pVideoFrame crop(int left, int top, int width, int height) const;
 
         /**
          * Return a scaled version of the VideoFrame
@@ -207,7 +214,8 @@ class VideoFrame : public Glib::Object
          * @param transform The transform to apply
          * @returns the new frame
          */
-        pVideoFrame transform(const Affine2D& tr);
+        pVideoFrame transform(const Affine2D& tr,
+                              InterpolationMode mode=INTERPOLATION_BILINEAR);
 
         /**
          * Retrieve the color at (x,y)
@@ -234,16 +242,16 @@ class VideoFrame : public Glib::Object
          * @param mode the Interpolation mode to use
          * @returns interpolated color. black if (x,y) is outside image 
          */
-        uint8_t* value_at(double x, 
-                          double y,
-                          uint8_t* out,
-                          InterpolationMode mode=INTERPOLATION_BILINEAR) const;
+        uint8_t* interpolate(double x, 
+                             double y,
+                             uint8_t* out,
+                             InterpolationMode mode=INTERPOLATION_BILINEAR) const;
 
     protected:
         VideoFrame();
 
     private:
-        void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
+        void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp); 
         void interpolate_nearest(double x, double y, uint8_t* out) const;
         void interpolate_bilinear(double x, double y, uint8_t* out) const;
         void interpolate_bicubic(double x, double y, uint8_t* out) const;

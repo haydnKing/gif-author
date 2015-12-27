@@ -34,8 +34,11 @@ Affine2D Affine2D::I(){
 };
 
 Affine2D Affine2D::Scale(double x_ratio, double y_ratio);
-
-    
+Affine2D Transform(double x, double y);
+static Affine2D Rotation(double a, double x, double y);
+static Affine2D RotationDegrees(double a, double x, double y);
+static Affine2D Product(const Affine2D& left, const Affine2D& right);
+Affine2D operator*(const Affine2D& rhs) const;
 
 VideoFrame::VideoFrame():
     width(-1),
@@ -67,7 +70,8 @@ pVideoFrame VideoFrame::create_from_data(
                 int rowstride,
                 bool copy,
                 int64_t timestamp,
-                int64_t position)
+                int64_t position,
+                pVideoFrame data_parent)
 {
     uint8_t* cdata = data;
     if(copy){
@@ -75,7 +79,7 @@ pVideoFrame VideoFrame::create_from_data(
         std::memcpy(cdata, data, 3*rowstride*height);
     }
     VideoFrame* f = new VideoFrame();
-    f->init(cdata, width, height, rowstride, timestamp, position);
+    f->init(cdata, width, height, rowstride, timestamp, position, data_parent);
     return pVideoFrame(f);
 };
 
@@ -118,6 +122,66 @@ uint8_t* VideoFrame::get_data(){
 bool VideoFrame::is_ok() const{
     return height>0 && width>0 && rowstride>0 && data!=NULL;
 }; 
+
+pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
+{
+    return VideoFrame::create_from_data(
+            data+3*(left+width*height),
+            width,
+            height,
+            rowstride,
+            false,
+            timestamp,
+            position,
+            pVideoFrame(this));
+};
+
+pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMode mode){
+    int i;
+    //get inverse transform
+    Affine2D inv = tr.invert();
+    //find out where the image corners transform to
+    double cx[4];
+    double cy[4];
+    tr.get(    0.,    0., cx[0], cy[0]);
+    tr.get(    0., width, cx[1], cy[1]);
+    tr.get(height,    0., cx[2], cy[2]);
+    tr.get(height, width, cx[3], cy[3]);
+    //find the limits of the image
+    double limits[4] = {std::numeric_limits<double>::max,
+                        std::numeric_limits<double>::max,
+                        std::numeric_limits<double>::min,
+                        std::numeric_limits<double>::min};
+    for(i = 0; i < 4; i++){
+        if(limits[0] > x[i]) limits[0] = x[i];
+        if(limits[1] > y[i]) limits[1] = y[i];
+        if(limits[2] < x[i]) limits[2] = x[i];
+        if(limits[3] < y[i]) limits[3] = y[i];
+    }
+    int _width = int(limits[2] - limits[0]);
+    int _height = int(limits[3] - limits[1]); 
+
+    //allocate data
+    uint8_t *_data = new uint8_t[3*_width*_height];
+    double x,y;
+    for(int u=0; u < _width; u++)
+    {
+        for(int v=0; v < _width; v++)
+        {
+            //find location of (x,y) in the original image
+            inv.get(limits[0]+u, limits[1]+v, x, y);
+            interpolate(x,y,_data+3*(x+_width*y), mode);
+        }
+    }
+
+    return VideoFrame::create_from_data(_data, 
+                                        _width, 
+                                        _height, 
+                                        _width,
+                                        false,
+                                        timestamp,
+                                        position);
+};
 
 bool VideoFrame::extrapolate(int x, int y, uint8_t*& out, ExtrapolationMode mode){
     //if we're within the image
@@ -357,7 +421,7 @@ uint8_t* VideoFrame::offset(int x, int y) const
     return data+3*(x+rowstride*y);
 };
 
-void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p){
+void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp){
     if(data != NULL){
         delete data;
     }
@@ -367,4 +431,5 @@ void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p)
     rowstride = r;
     timestamp = t;
     position = p;
+    data_parent = dp;
 };
