@@ -4,7 +4,9 @@
 #include <stdint.h>
 
 #include <gtkmm/image.h>
-#include <gtkmm/assistant.h>
+#include <gtkmm/window.h>
+#include <gtkmm/stack.h>
+#include <gtkmm/stacksidebar.h>
 #include <gtkmm/filechooserbutton.h>
 #include <gtkmm/window.h>
 #include <gtkmm/scrolledwindow.h>
@@ -19,7 +21,7 @@
 
 #include <iostream>
 
-class MainWindow : public Gtk::Assistant
+class MainWindow : public Gtk::Window
 {
 
 public:
@@ -34,13 +36,15 @@ protected:
   //Signal handlers:
   void on_file_set();
   bool on_key_press_event(GdkEventKey* event);
-  virtual void on_cancel();
-  virtual void on_close();
 
   //Member widgets:
   Gtk::FileChooserButton w_file_chooser;
 
   VideoClipper w_player;
+
+  Gtk::Stack w_stack;
+  Gtk::StackSidebar w_sidebar;
+  Gtk::Grid w_grid;
 };
 
 #endif // GTKMM_MAINWINDOW_H
