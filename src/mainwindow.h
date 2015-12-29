@@ -12,6 +12,7 @@
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/label.h>
 #include <gdkmm/pixbuf.h>
+#include <gtkmm/hvseparator.h>
 #include <gdk/gdkkeysyms.h>
 
 #include <glibmm/main.h>
@@ -45,6 +46,7 @@ protected:
   Gtk::Stack w_stack;
   Gtk::StackSidebar w_sidebar;
   Gtk::Grid w_grid;
+  Gtk::VSeparator w_vsep;
 };
 
 #endif // GTKMM_MAINWINDOW_H
