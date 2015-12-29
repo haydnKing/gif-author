@@ -9,6 +9,7 @@ MainWindow::MainWindow() :
     // Sets the border width of the window.
     set_border_width(10);
     w_grid.set_column_spacing(10);
+    w_grid.set_row_spacing(10);
 
     //setup file chooser
     w_file_chooser.set_width_chars(32);
@@ -30,9 +31,11 @@ MainWindow::MainWindow() :
     w_sidebar.set_stack(w_stack);
 
     //add to grid
-    w_grid.attach(w_sidebar, 0, 0, 1, 1);
-    w_grid.attach(w_vsep, 1,0,1,1);
-    w_grid.attach(w_stack, 2, 0, 2, 1);
+    w_grid.attach(w_navigation, 0, 0, 3, 1);
+    w_grid.attach(w_hsep,       0, 1, 3, 1);
+    w_grid.attach(w_sidebar,    0, 2, 1, 1);
+    w_grid.attach(w_vsep,       1, 2, 1, 1);
+    w_grid.attach(w_stack,      2, 2, 1, 1);
 
     //add grid
     add(w_grid);
