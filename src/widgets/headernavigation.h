@@ -1,18 +1,16 @@
-#ifndef GIF_AUTHOR_STACK_NAVIGATION_H
-#define GIF_AUTHOR_STACK_NAVIGATION_H
+#ifndef GIF_AUTHOR_HEADER_NAVIGATION_H
+#define GIF_AUTHOR_HEADER_NAVIGATION_H
 
 #include <gtkmm/button.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/label.h>
 #include <gtkmm/stack.h>
 
-#include <iostream>
-
-class StackNavigation : public Gtk::HeaderBar
+class HeaderNavigation : public Gtk::HeaderBar
 {
 public:
-    StackNavigation();
-    virtual ~StackNavigation() {};
+    HeaderNavigation();
+    virtual ~HeaderNavigation() {};
 
     void set_stack(Gtk::Stack& stack);
 
