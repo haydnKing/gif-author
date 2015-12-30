@@ -48,7 +48,6 @@ protected:
   Gtk::StackSidebar w_sidebar;
   Gtk::Grid w_grid;
   Gtk::VSeparator w_vsep;
-  Gtk::HSeparator w_hsep;
   StackNavigation w_navigation;
 };
 

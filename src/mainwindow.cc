@@ -6,21 +6,18 @@ MainWindow::MainWindow() :
 {
     add_events(Gdk::KEY_PRESS_MASK | Gdk::SCROLL_MASK | Gdk::POINTER_MOTION_MASK );
 
-    // Sets the border width of the window.
-    set_border_width(10);
-    w_grid.set_column_spacing(10);
-    w_grid.set_row_spacing(10);
-
     //setup file chooser
     w_file_chooser.set_width_chars(32);
     w_file_chooser.set_halign(Gtk::ALIGN_CENTER);
     w_file_chooser.set_valign(Gtk::ALIGN_START);
+    w_file_chooser.set_border_width(20);
     w_file_chooser.set_vexpand(false);
 
     w_stack.add(w_file_chooser, "input", "Choose input video");
 
     //setup videoplayer
     w_player.connect_window_keypress(*this);
+    w_player.set_border_width(10);
     w_stack.add(w_player, "extract", "Extract Clip");
 
     //connect to events
@@ -32,10 +29,10 @@ MainWindow::MainWindow() :
 
     //add to grid
     w_grid.attach(w_navigation, 0, 0, 3, 1);
-    w_grid.attach(w_hsep,       0, 1, 3, 1);
-    w_grid.attach(w_sidebar,    0, 2, 1, 1);
-    w_grid.attach(w_vsep,       1, 2, 1, 1);
-    w_grid.attach(w_stack,      2, 2, 1, 1);
+
+    w_grid.attach(w_sidebar,    0, 1, 1, 1);
+    w_grid.attach(w_vsep,       1, 1, 1, 1);
+    w_grid.attach(w_stack,      2, 1, 1, 1);
 
     //add grid
     add(w_grid);
