@@ -6,15 +6,22 @@
 #include <gtkmm/label.h>
 #include <gtkmm/stack.h>
 
+#include <iostream>
+
 class StackNavigation : public Gtk::HeaderBar
 {
 public:
     StackNavigation();
     virtual ~StackNavigation() {};
 
+    void set_stack(Gtk::Stack& stack);
+
 private:
+    void on_stack_update();
     Gtk::Button w_left_btn, w_right_btn;
-    //Gtk::Label w_label;
+
+    Gtk::Stack* the_stack;
+    sigc::connection conn;
 };
 
 #endif //GIF_AUTHOR_STACK_NAVIGATION_H

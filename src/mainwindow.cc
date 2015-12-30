@@ -24,8 +24,9 @@ MainWindow::MainWindow() :
     w_file_chooser.signal_file_set().connect(sigc::mem_fun(*this,
                 &MainWindow::on_file_set));
 
-    //sidebar
+    //sidebar & nav
     w_sidebar.set_stack(w_stack);
+    w_navigation.set_stack(w_stack);
 
     //add to grid
     w_grid.attach(w_navigation, 0, 0, 3, 1);
