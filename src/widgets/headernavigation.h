@@ -44,11 +44,11 @@ class Page
         sigc::signal<void, Glib::ustring> s_title;
 };
 
-class PageNavigation : public Gtk::HeaderBar
+class NavigationBar : public Gtk::HeaderBar
 {
 public:
-    PageNavigation();
-    virtual ~PageNavigation() {};
+    NavigationBar();
+    virtual ~NavigationBar() {};
 
     void set_page(Page& p);
 
@@ -61,11 +61,11 @@ private:
     sigc::connection conn;
 };
 
-class PageSidebar : public Gtk::ListBox
+class SideBar : public Gtk::ListBox
 {
     public:
-        PageSidebar();
-        virtual ~PageSidebar() {};
+        SideBar();
+        virtual ~SideBar() {};
 
         void add_page(Page& new_page);
 

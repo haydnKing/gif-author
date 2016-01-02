@@ -54,7 +54,7 @@ sigc::signal<void, Glib::ustring> Page::signal_title_changed()
     return s_title;
 };
 
-PageNavigation::PageNavigation()
+NavigationBar::NavigationBar()
 {
     w_left_btn.set_label("Back");
     w_left_btn.set_halign(Gtk::ALIGN_START);
@@ -65,7 +65,7 @@ PageNavigation::PageNavigation()
     pack_end(w_right_btn);
 };
 
-void PageNavigation::set_page(Page& p)
+void NavigationBar::set_page(Page& p)
 {
     set_title(p.get_title());
     switch (p.get_type())
@@ -87,42 +87,42 @@ void PageNavigation::set_page(Page& p)
     //disconnect from the old page and connect to the new one
     conn.disconnect();
     conn = p.signal_completed_changed().connect(
-            sigc::mem_fun(*this, &PageNavigation::on_completed_changed));
+            sigc::mem_fun(*this, &NavigationBar::on_completed_changed));
 };
 
-sigc::signal<void> PageNavigation::signal_left()
+sigc::signal<void> NavigationBar::signal_left()
 {
     return w_left_button.signal_clicked();
 };
 
-sigc::signal<void> PageNavigation::signal_right()
+sigc::signal<void> NavigationBar::signal_right()
 {
     return w_right_button.signal_clicked();
 };
     
-void PageNavigation::on_completed_changed(bool c)
+void NavigationBar::on_completed_changed(bool c)
 {
     w_right_btn.set_sensitive(c);
 };
 
-PageSidebar::PageSidebar()
+SideBar::SideBar()
 {};
 
-void PageSidebar::add_page(Page& new_page)
+void SideBar::add_page(Page& new_page)
 {
     v_pages.push_back(&new_page);
     new_page.signal_completed_changed().connect(
-            sigc::mem_fun(*this, &PageSidebar::on_completed_changed));
+            sigc::mem_fun(*this, &SideBar::on_completed_changed));
     Gtk::Label *label = new Gtk::Label(new_page.get_title());
     append(*label);
 };
 
-sigc::signal<void, Page*> PageSidebar::signal_page_selected()
+sigc::signal<void, Page*> SideBar::signal_page_selected()
 {
     return s_page_selected;
 };
 
-void PageSidebar::on_row_selected(Gtk::ListBoxRow* row)
+void SideBar::on_row_selected(Gtk::ListBoxRow* row)
 {
     if(row)
     {
@@ -130,12 +130,12 @@ void PageSidebar::on_row_selected(Gtk::ListBoxRow* row)
     }
 };
 
-void PageSidebar::on_completed_changed(bool)
+void SideBar::on_completed_changed(bool)
 {
     update_selectable();
 };
 
-void PageSidebar::update_selectable()
+void SideBar::update_selectable()
 {
     //disable all pages after an incomplete page
     bool selectable = true;
