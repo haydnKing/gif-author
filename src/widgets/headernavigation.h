@@ -68,8 +68,9 @@ class SideBar : public Gtk::ListBox
         virtual ~SideBar() {};
 
         void add_page(Page& new_page);
+        void select_page(Page* page);
 
-        sigc::signal<void, Page*> signal_page_selected();
+        sigc::signal<void, Page*> signal_user_selected_page();
 
     private:
         void on_row_selected(Gtk::ListBoxRow* row);
@@ -78,6 +79,30 @@ class SideBar : public Gtk::ListBox
 
         std::vector<Page*> v_pages;
         sigc::signal<void, Page*> s_page_selected;
+};
+
+class Wizzard : public Gtk::Window
+{
+    public:
+        Wizzard();
+        virtual ~Wizzard();
+
+        void add_page(Page& new_page);
+        void select_page(Page* page);
+
+    private:
+        void on_next();
+        void on_prev();
+
+        int index_of(Page* p);
+
+        NavigationBar w_nav;
+        SideBar w_side;
+        Gtk::Stack w_stack;
+        Gtk::Grid w_grid;
+
+        std::vector<Page*> my_pages;
+        Page* curr_page;
 };
 
 #endif //GIF_AUTHOR_STACK_NAVIGATION_H

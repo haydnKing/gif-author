@@ -147,3 +147,81 @@ void SideBar::update_selectable()
     }
 };
 
+Wizzard::Wizzard()
+{
+    //attach everything to the grid
+    w_grid.attach(w_nav,   0, 0, 2, 1);
+    w_grid.attach(w_side,  0, 1, 1, 1);
+    w_grid.attach(w_stack, 1, 1, 1, 1);
+
+    //add the grid to the window
+    add(w_grid);
+
+    //connect to events
+    w_nav.signal_right().connect(sigc::mem_fun(*this, &Wizzard::on_next));
+    w_nav.signal_left().connect(sigc::mem_fun(*this, &Wizzard::on_prev));
+    w_side.signal_user_selected_page().connect(sigc::mem_fun(*this, &Wizzard::select_page));
+
+    curr_page = my_pages.begin();
+};
+
+Wizzard::~Wizzard()
+{
+    for(std::vector<Page*>::iterator it = my_pages.begin();
+        it != my_pages.end();
+        it++)
+    {
+        delete *it;
+    }
+};
+
+void Wizzard::add_page(Page& new_page)
+{
+    my_pages.push_back(&new_page);
+    w_stack.add(new_page.get_widget());
+    curr_page = my_pages.begin();
+};
+
+void Wizzard::select_page(Page* page)
+{
+    if(index_of(page) >= 0)
+    {
+        w_nav.set_page(page);
+        w_side.set_page(page);
+        w_stack.set_visible_child(*page->get_widget());
+        curr_page = page;
+    }
+};
+
+void Wizzard::on_next()
+{
+    int idx = index_of(curr_page);
+    if(idx+1 < my_pages.size())
+    {
+        select_page(my_pages[idx+1]);
+    }
+    else
+    {
+        //s_on_wizzard_complete.emit();
+    }
+};
+
+void Wizzard::on_prev()
+{
+    int idx = index_of(curr_page);
+    if(idx-1 > 0)
+    {
+        select_page(my_pages[idx-1]);
+    }
+};
+        
+int Wizzard::index_of(Page* p)
+{
+    int i;
+    for(i = 0; i < my_pages.size(); i++)
+    {
+        if(my_pages[i] == p)
+            return i;
+    }
+    return -1;
+};
