@@ -1,11 +1,63 @@
 #include "headernavigation.h"
 
-HeaderNavigation::HeaderNavigation() :
-    the_stack(NULL)
+Page::Page() :
+    pt(PAGETYPE_NORMAL),
+    completed(false),
+    w(NULL)
+{};
+
+Glib::ustring Page::get_title() const
 {
-    w_left_btn.set_label("Previous");
+    return title;
+};
+
+void Page::set_title(const Glib::ustring& t)
+{
+    if(title != t)
+    {
+        title = t;
+        s_title.emit(t);
+    }
+};
+
+bool Page::is_completed() const
+{
+    return completed;
+};
+
+void Page::set_completed(bool c)
+{
+    if(completed != c)
+    {
+        completed = c;
+        s_completed.emit(c);
+    }
+};
+
+PageType Page::get_type() const
+{
+    return pt;
+};
+
+void Page::set_type(PageType type)
+{
+    pt = type;
+};
+
+sigc::signal<void, bool> Page::signal_completed_changed()
+{
+    return s_completed;
+};
+
+sigc::signal<void, Glib::ustring> Page::signal_title_changed()
+{
+    return s_title;
+};
+
+PageNavigation::PageNavigation()
+{
+    w_left_btn.set_label("Back");
     w_left_btn.set_halign(Gtk::ALIGN_START);
-    set_title("Title");
     w_right_btn.set_label("Next");
     w_right_btn.set_halign(Gtk::ALIGN_END);
 
@@ -13,22 +65,85 @@ HeaderNavigation::HeaderNavigation() :
     pack_end(w_right_btn);
 };
 
-void HeaderNavigation::set_stack(Gtk::Stack& stack)
+void PageNavigation::set_page(Page& p)
 {
-    the_stack = &stack;
-    //disconnect from any previous stack
+    set_title(p.get_title());
+    switch (p.get_type())
+    {
+        case PAGETYPE_FIRST:
+            w_left_btn.set_sensitive(false);
+            w_right_btn.set_label("Next");
+            break;
+        case PAGETYPE_LAST:
+            w_left_btn.set_sensitive(true);
+            w_right_btn.set_label("Finish");
+            break;
+        case PAGETYPE_NORMAL:
+            w_left_btn.set_sensitive(true);
+            w_right_btn.set_label("Next");
+            break;
+    }
+    w_right_btn.set_sensitive(p.is_completed());
+    //disconnect from the old page and connect to the new one
     conn.disconnect();
-    //connect to the new one
-    conn = stack.connect_property_changed_with_return(
-            "visible-child",
-            sigc::mem_fun(*this, &HeaderNavigation::on_stack_update));
+    conn = p.signal_completed_changed().connect(
+            sigc::mem_fun(*this, &PageNavigation::on_completed_changed));
+};
+
+sigc::signal<void> PageNavigation::signal_left()
+{
+    return w_left_button.signal_clicked();
+};
+
+sigc::signal<void> PageNavigation::signal_right()
+{
+    return w_right_button.signal_clicked();
 };
     
-void HeaderNavigation::on_stack_update()
+void PageNavigation::on_completed_changed(bool c)
 {
-    Gtk::Widget* w = the_stack->get_visible_child();
-    if(w)
+    w_right_btn.set_sensitive(c);
+};
+
+PageSidebar::PageSidebar()
+{};
+
+void PageSidebar::add_page(Page& new_page)
+{
+    v_pages.push_back(&new_page);
+    new_page.signal_completed_changed().connect(
+            sigc::mem_fun(*this, &PageSidebar::on_completed_changed));
+    Gtk::Label *label = new Gtk::Label(new_page.get_title());
+    append(*label);
+};
+
+sigc::signal<void, Page*> PageSidebar::signal_page_selected()
+{
+    return s_page_selected;
+};
+
+void PageSidebar::on_row_selected(Gtk::ListBoxRow* row)
+{
+    if(row)
     {
-        set_title(the_stack->child_property_title(*w));
+        s_page_selected.emit(v_pages[row->get_index()]);
     }
 };
+
+void PageSidebar::on_completed_changed(bool)
+{
+    update_selectable();
+};
+
+void PageSidebar::update_selectable()
+{
+    //disable all pages after an incomplete page
+    bool selectable = true;
+    Gtk::ListBoxRow* lb;
+    for(int i=0; i < v_pages.size(); i++)
+    {
+        get_row_at_index(i)->set_selectable(selectable);
+        if(!v_pages[i]->is_completed()) selectable = false;
+    }
+};
+
