@@ -1,4 +1,4 @@
-#include "headernavigation.h"
+#include "navigation.h"
 
 Page::Page() :
     pt(PAGETYPE_NORMAL),

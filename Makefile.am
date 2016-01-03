@@ -9,7 +9,7 @@ gif_author_SOURCES =  src/main.cc  \
 					  src/input/videofile.cc src/input/videofile.h \
 					  src/output/LZW.cc src/output/LZW.h \
 					  src/output/gif.cc src/output/gif.h \
-					  src/widgets/headernavigation.cc src/widgets/headernavigation.h \
+					  src/navigation.cc src/widgets/navigation.h \
 					  src/widgets/videocontrol.cc src/widgets/videocontrol.h \
 					  src/widgets/videoplayer.cc src/widgets/videoplayer.h \
 					  src/widgets/videoclipper.cc src/widgets/videoclipper.h \
