@@ -1,6 +1,7 @@
 #include "pages.h"
 
-GetFile::GetFile()
+GetFile::GetFile() : 
+    w_file_chooser("Select a Video", Gtk::FILE_CHOOSER_ACTION_OPEN)
 {
     //setup file chooser
     w_file_chooser.set_width_chars(32);

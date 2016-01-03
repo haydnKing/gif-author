@@ -4,6 +4,7 @@
 #include "navigation.h"
 
 #include <gtkmm/filechooserbutton.h>
+#include "widgets/videoclipper.h"
 
 class GetFile : public Page
 {

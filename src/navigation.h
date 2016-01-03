@@ -1,6 +1,8 @@
 #ifndef GIF_AUTHOR_NAVIGATION_H
 #define GIF_AUTHOR_NAVIGATION_H
 
+#include <gtkmm/window.h>
+#include <gtkmm/grid.h>
 #include <gtkmm/button.h>
 #include <gtkmm/headerbar.h>
 #include <gtkmm/label.h>
