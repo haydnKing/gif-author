@@ -5,6 +5,7 @@
 #include <gtkmm/headerbar.h>
 #include <gtkmm/label.h>
 #include <gtkmm/stack.h>
+#include <gtkmm/listbox.h>
 
 #include <vector>
 
@@ -20,7 +21,7 @@ class Page
         Page();
         virtual ~Page() {};
 
-        Gtk::Widget* get_widget() = 0;
+        virtual Gtk::Widget* get_widget() = 0;
 
         Glib::ustring get_title() const;
         void set_title(const Glib::ustring& t);

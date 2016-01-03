@@ -19,7 +19,7 @@
 
 #include "widgets/videocontrol.h"
 #include "widgets/videoclipper.h"
-#include "widgets/headernavigation.h"
+#include "navigation.h"
 
 #include <iostream>
 
@@ -48,7 +48,7 @@ protected:
   Gtk::StackSidebar w_sidebar;
   Gtk::Grid w_grid;
   Gtk::VSeparator w_vsep;
-  HeaderNavigation w_navigation;
+  NavigationBar w_navigation;
 };
 
 #endif // GTKMM_MAINWINDOW_H
