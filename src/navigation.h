@@ -28,7 +28,6 @@ class Page
         sigc::signal<void, Glib::ustring> signal_title_changed();
 
     private:
-        PageType pt;
         bool completed;
         Glib::ustring title;
         sigc::signal<void, bool> s_completed;
@@ -41,7 +40,7 @@ public:
     NavigationBar();
     virtual ~NavigationBar() {};
 
-    void set_page(Page& p);
+    void set_page(Page& p, bool is_first, bool is_last);
 
     sigc::signal<void> signal_left();
     sigc::signal<void> signal_right();
@@ -80,6 +79,9 @@ class Wizzard : public Gtk::Window
 
         void add_page(Page& new_page);
         void select_page(Page* page);
+
+        bool is_first(Page* p);
+        bool is_last(Page* p);
 
     private:
         void on_next();

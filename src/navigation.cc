@@ -1,7 +1,6 @@
 #include "navigation.h"
 
 Page::Page() :
-    pt(PAGETYPE_NORMAL),
     completed(false),
     w(NULL)
 {};
@@ -34,16 +33,6 @@ void Page::set_completed(bool c)
     }
 };
 
-PageType Page::get_type() const
-{
-    return pt;
-};
-
-void Page::set_type(PageType type)
-{
-    pt = type;
-};
-
 sigc::signal<void, bool> Page::signal_completed_changed()
 {
     return s_completed;
@@ -65,24 +54,18 @@ NavigationBar::NavigationBar()
     pack_end(w_right_btn);
 };
 
-void NavigationBar::set_page(Page& p)
+void NavigationBar::set_page(Page& p, bool is_first, bool is_last)
 {
     set_title(p.get_title());
-    switch (p.get_type())
-    {
-        case PAGETYPE_FIRST:
-            w_left_btn.set_sensitive(false);
-            w_right_btn.set_label("Next");
-            break;
-        case PAGETYPE_LAST:
-            w_left_btn.set_sensitive(true);
-            w_right_btn.set_label("Finish");
-            break;
-        case PAGETYPE_NORMAL:
-            w_left_btn.set_sensitive(true);
-            w_right_btn.set_label("Next");
-            break;
-    }
+    if(is_first)
+        w_left_btn.set_sensitive(false);
+    else
+        w_left_btn.set_sensitive(true);
+    if(is_last)
+        w_right_btn.set_label("Finish");
+    else
+        w_right_btn.set_label("Next");
+
     w_right_btn.set_sensitive(p.is_completed());
     //disconnect from the old page and connect to the new one
     conn.disconnect();
@@ -186,11 +169,25 @@ void Wizzard::select_page(Page* page)
 {
     if(index_of(page) >= 0)
     {
-        w_nav.set_page(page);
+        w_nav.set_page(page, is_first(page), is_last(page));
         w_side.set_page(page);
         w_stack.set_visible_child(*page->get_widget());
         curr_page = page;
     }
+};
+
+bool Wizzard::is_first(Page* p)
+{
+    if(!my_pages.empty())
+        return p == my_pages.front();
+    return false;
+};
+
+bool Wizzard::is_last(Page* p)
+{
+    if(!my_pages.empty())
+        return p == my_pages.back();
+    return false;
 };
 
 void Wizzard::on_next()
