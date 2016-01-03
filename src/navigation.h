@@ -1,5 +1,5 @@
-#ifndef GIF_AUTHOR_HEADER_NAVIGATION_H
-#define GIF_AUTHOR_HEADER_NAVIGATION_H
+#ifndef GIF_AUTHOR_NAVIGATION_H
+#define GIF_AUTHOR_NAVIGATION_H
 
 #include <gtkmm/button.h>
 #include <gtkmm/headerbar.h>
@@ -9,11 +9,6 @@
 
 #include <vector>
 
-enum PageType {
-    PAGETYPE_FIRST,
-    PAGETYPE_NORMAL,
-    PAGETYPE_LAST
-};
 
 class Page
 {
@@ -29,13 +24,8 @@ class Page
         bool is_completed() const;
         void set_completed(bool c=true);
 
-        PageType get_type() const;
-
         sigc::signal<void, bool> signal_completed_changed();
         sigc::signal<void, Glib::ustring> signal_title_changed();
-
-    protected:
-        void set_type(PageType type);
 
     private:
         PageType pt;
