@@ -2,31 +2,29 @@
 #define GTKMM_MAINWINDOW_H
 
 #include <stdint.h>
-
 #include <gdk/gdkkeysyms.h>
-
 #include <glibmm/main.h>
 
-#include "navigation.h"
-#include "pages.h"
+#include <gtkmm/window.h>
+#include <gtkmm/flowbox.h>
 
 #include <iostream>
 
-class MainWindow : public Wizzard
+class MainWindow : public Window
 {
 
 public:
   MainWindow();
   virtual ~MainWindow();
 
-  void play(bool reverse=false);
-  void pause();
-  bool isPlaying();
+ 
 
 protected:
   //Signal handlers:
 
   //Member widgets:
+  
+  Gtk::FrameBox w_framebox;
 
 };
 
