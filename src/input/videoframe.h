@@ -153,6 +153,11 @@ class VideoFrame : public Glib::Object
                 int64_t _position=-1,
                 pVideoFrame _data_parent=pVideoFrame());
 
+        /**
+         * Get a Gdk::Pixbuf of the image with the same underlying data
+         */
+        Gtk::RefPtr<Gtk::Pixbuf> get_pixbuf();
+
         /*
          * frame height
          */

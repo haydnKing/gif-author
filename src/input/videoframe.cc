@@ -166,6 +166,16 @@ pVideoFrame VideoFrame::create_from_data(
     f->init(cdata, width, height, rowstride, timestamp, position, data_parent);
     return pVideoFrame(f);
 };
+        
+Gtk::RefPtr<Gtk::Pixbuf> VideoFrame::get_pixbuf(){
+    return Gdk::Pixbuf::create_from_data(get_data(),
+                                         Gdk::COLORSPACE_RGB,
+                                         false,
+                                         8,
+                                         get_width(),
+                                         get_height(),
+                                         get_rowstride());
+};
 
 /*
  * Accessors

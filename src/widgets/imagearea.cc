@@ -27,13 +27,7 @@ void ImageArea::update_image(pVideoFrame& img){
     if(img->is_ok()){
         //keep a reference to the image so that the data doesn't go out of scope
         the_frame = img;
-        orig_image = Gdk::Pixbuf::create_from_data(img->get_data(),
-                                    Gdk::COLORSPACE_RGB,
-                                    false,
-                                    8,
-                                    img->get_width(),
-                                    img->get_height(),
-                                    img->get_rowstride());
+        orig_image = img->get_pixbuf();
     }
     else {
         orig_image->fill(0x000000ff);

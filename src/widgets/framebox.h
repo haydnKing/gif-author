@@ -8,29 +8,38 @@
 
 /**
  * visual representation of a Frame
+ * Displays a thumbnail of the frame, scaled down by 2^scale,
+ * surrounded by a filmstrip skeuomorph
  */
-class FrameStrip : public Gtk::DrawingArea
+class FrameBox : public Gtk::DrawingArea
 {
     public:
-        FrameStrip(pVideoFrame & _vf);
-        virtual ~FrameStrip();
+        FrameBox(pVideoFrame & _vf);
+        virtual ~FrameBox();
+
+        void set_scale(int _scale);
+        int get_scale() const;
+        void zoom_in();
+        void zoom_out();
 
     protected:
-        bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+        bool on_draw(const Cairo::RefPtr<Cairo::Context>& ctx);
+
+        void update_thumbnail();
 
         pVideoFrame frame;
-
-        int height;
+        Glib::RefPtr<Gdk::Pixbuf> thumb;
+        int scale;
 };
 
 /**
- * display a series of FrameStrips
+ * display a series of FrameBoxes
  */
-class FrameBox : public Gtk::FlowBox
+class FrameFlow : public Gtk::FlowBox
 {
     public:
-        FrameBox();
-        virtual ~FrameBox();
+        FrameFlow();
+        virtual ~FrameFlow();
 
     protected: 
 };
