@@ -5,8 +5,8 @@
 
 - Frame widget and FlowBox for displaying them, ImportFrames dialog
 - VideoScrollbar should be zoomable
-- Frame settings object to store output settings like visibility, colortable etc
+- GIFFrame object to store Gif specific settings like visibility, colortable etc
+    points to original VideoFrame
 - Basic Processing chain:
-  - (background detection), (stabilise), rotate, crop, scale, palette creation,
-    dither, gif output.
+  - crop, scale, palette creation, (dither), gif output.
 
