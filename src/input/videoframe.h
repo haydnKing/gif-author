@@ -192,6 +192,11 @@ class VideoFrame : public Glib::Object
          * get a pointer to the data
          */
         uint8_t* get_data();
+        
+        /**
+         * get a pixel value
+         */
+        const uint8_t* get_pixel(int x, int y) const;
 
         /*
          * Check if the VideoFrame is initiated
@@ -270,7 +275,6 @@ class VideoFrame : public Glib::Object
 
         void extrapolate_linear(int x, int y, uint8_t* out) const;
 
-        uint8_t* offset(int x, int y) const;
 
         int height, width, rowstride;
         int64_t timestamp, position;

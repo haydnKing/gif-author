@@ -468,15 +468,15 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
         //top
         if(y<0)
         {
-            ext_lin(offset(1,1), offset(0,1), -x, a); 
-            ext_lin(offset(1,0), offset(0,0), -x, b); 
+            ext_lin(get_pixel(1,1), offset(0,1), -x, a); 
+            ext_lin(get_pixel(1,0), offset(0,0), -x, b); 
             ext_lin(a, b, -y, out);
         }
         //bottom
         else if(y>=height)
         {
-            ext_lin(offset(1,height-2), offset(0,height-2), -x, a); 
-            ext_lin(offset(1,height-1), offset(0,height-1), -x, b); 
+            ext_lin(get_pixel(1,height-2), offset(0,height-2), -x, a); 
+            ext_lin(get_pixel(1,height-1), offset(0,height-1), -x, b); 
             ext_lin(a, b, 1+y-height, out);
         }
         return;
@@ -487,21 +487,21 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
         //top
         if(y<0)
         {
-            ext_lin(offset(width-2,1), offset(width-1,1), -x, a); 
-            ext_lin(offset(width-2,0), offset(width-1,0), -x, b);
+            ext_lin(get_pixel(width-2,1), offset(width-1,1), -x, a); 
+            ext_lin(get_pixel(width-2,0), offset(width-1,0), -x, b);
             ext_lin(a, b, -y, out);
         }
         //bottom
         else if(y>=height)
         {
-            ext_lin(offset(width-2,height-2), offset(width-1,height-2), -x, a); 
-            ext_lin(offset(width-2,height-1), offset(width-1,height-1), -x, b);
+            ext_lin(get_pixel(width-2,height-2), offset(width-1,height-2), -x, a); 
+            ext_lin(get_pixel(width-2,height-1), offset(width-1,height-1), -x, b);
             ext_lin(a, b, 1+y-height, out);
         }
     }
 };
 
-uint8_t* VideoFrame::offset(int x, int y) const
+const uint8_t* VideoFrame::get_pixel(int x, int y) const
 {
     return data+3*(x+rowstride*y);
 };

@@ -98,7 +98,10 @@ class GIFColorTable
          */
         void write(std::ostream& str) const;
 
-        
+        /**
+         * Get the index of the closest colour in the table (euclidian norm)
+         */
+        int get_closest_index(const uint8_t* rgb);
 
     private:
         int depth, colors;

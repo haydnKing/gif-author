@@ -15,6 +15,8 @@
  * Which method to use when dithering an image
  */
 enum DitherMethod {
+    DITHER_NONE,
+    DITHER_FLOYD_STEINBERG
 };
 
 enum ColorTableMethod {
@@ -100,7 +102,10 @@ class GAFrame
         /*
          * Use colour table to produce a dithered image
          */
-        bool dither_image(GIFImage& out, GIFColorTable& ct, pVideoFrame scaled_vf) const;
+        Glib::RefPtr<GIFImage> dither_image(GIFColorTable& ct, pVideoFrame scaled_vf) const;
+
+        void dither_FS(GIFImage* out, GIFColorTable& ct, pVideoFrame scaled_vf) const;
+        void dither_none(GIFImage* out, GIFColorTable& ct, pVideoFrame scaled_vf) const;
 
         pVideoFrame pVF;
         int delay_t;
