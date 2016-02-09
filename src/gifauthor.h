@@ -19,8 +19,6 @@ enum DitherMethod {
     DITHER_FLOYD_STEINBERG
 };
 
-enum ColorTableMethod {
-};
 
 /**
  * Hold information on an intermediary video frame.
