@@ -6,19 +6,35 @@ class MMCQuantizer : public ColorQuantizer
         MMCQuantizer();
         virtual ~MMCQuantizer();
 
-        void build_ct(std::vector<uint8_t*> colors);
-        int map_to_ct(uint8_t* color);
+        void add_color(const uint8_t* color);
+        void build_ct();
+        int map_to_ct(const uint8_t* color) const;
         GIFColorTable get_ct();
 
     protected:
-
+        uint32_t *hist;
 };
+
+MMCQuantizerMMCQuantizer()
+{
+    //2^17, number of quantum spaces
+    hist = new uint32_t[131072];
+};
+
+virtual MMCQuantizer~MMCQuantizer()
+{
+    delete [] hist;
+};
+
+void MMCQuantizer::add_color(uint8_t* color)
+{
+}
 
 void MMCQuantizer::build_ct(std::vector<uint8_t*> colors)
 {
 };
 
-int MMCQuantizer::map_to_ct(uint8_t* color)
+int MMCQuantizer::map_to_ct(uint8_t* color) const
 {
 };
 

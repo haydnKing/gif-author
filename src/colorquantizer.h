@@ -21,8 +21,9 @@ class ColorQuantizer
 
         static pColorQuantizer get_quantizer(QuantizerMethod m);
 
-        virtual void build_ct(std::vector<uint8_t*> colors) = 0;
-        virtual int map_to_ct(uint8_t* color) const = 0;
+        virtual void add_color(const uint8_t* color) = 0;
+        virtual void build_ct() = 0;
+        virtual int map_to_ct(const uint8_t* color) const = 0;
         virtual GIFColorTable get_ct() const = 0;
 };
 
