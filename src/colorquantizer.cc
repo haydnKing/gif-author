@@ -71,7 +71,7 @@ class MMCQuantizer : public ColorQuantizer
 
             private:
                 void swap_px(const int& a, const int& b);
-                int partition(int pivot, int channel);
+                int partition(int start, int end, int pivot, int channel);
 
                 vbox *left, *right;
                 uint8_t *px;
@@ -147,14 +147,15 @@ void MMCQuantizer::vbox::swap_px(const int& a, const int& b)
     }
 };
 
-int MMCQuantizer::vbox::partition(int pivot, int channel)
+int MMCQuantizer::vbox::partition(int start, int end, int pivot, int channel)
 {
     //partition for Quicksort
-    //move pivor to end
-    swap_px(pivot, num_colors-1);
-    uint8_t pivot_val = px[3*(num_colors-1)+channel];
-    int i = 0;
-    for(int j = 0; j < num_colors; j++)
+    uint8_t pivot_val = px[3*pivot+channel];
+    int i = start;
+    //move pivot to end
+    swap_px(pivot, end-1);
+    //scan along the range, swapping if value is less than pivot
+    for(int j = start; j < end; j++)
     {
         if(px[3*j+channel] < pivot_val)
         {
@@ -163,7 +164,7 @@ int MMCQuantizer::vbox::partition(int pivot, int channel)
         }
     }
     //move the pivot to the middle
-    swap_px(i, num_colors-1);
+    swap_px(i, end-1);
 
     return i+1;
 };
