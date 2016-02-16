@@ -21,10 +21,16 @@ class ColorQuantizer
 
         static pColorQuantizer get_quantizer(QuantizerMethod m);
 
-        virtual void add_color(const uint8_t* color) = 0;
+        void set_max_colors(int max_colors);
+        void add_color(const uint8_t* color);
+
         virtual void build_ct() = 0;
         virtual int map_to_ct(const uint8_t* color) const = 0;
-        virtual GIFColorTable get_ct() const = 0;
+        virtual GIFColorTable *get_ct() const = 0;
+
+    protected:
+        uint8_t* colors;
+        int max_colors, num_colors;
 };
 
 
