@@ -1,5 +1,9 @@
 #include "colorquantizer.h"
 
+/* *************************************************************
+ *                                         ColorQuantizer
+ * *************************************************************/
+
 ColorQuantizer::ColorQuantizer() :
     colors(NULL),
     max_colors(0),
@@ -69,9 +73,12 @@ class MMCQuantizer : public ColorQuantizer
                 unsigned int get_volume() const;
                 int get_count() const;
 
+                void split();
+
             private:
                 void swap_px(const int& a, const int& b);
                 int partition(int start, int end, int pivot, int channel);
+                int find_median(int channel);
 
                 vbox *left, *right;
                 uint8_t *px;
@@ -149,7 +156,7 @@ void MMCQuantizer::vbox::swap_px(const int& a, const int& b)
 
 int MMCQuantizer::vbox::partition(int start, int end, int pivot, int channel)
 {
-    //partition for Quicksort
+    //partition from Quicksort
     uint8_t pivot_val = px[3*pivot+channel];
     int i = start;
     //move pivot to end
@@ -168,3 +175,69 @@ int MMCQuantizer::vbox::partition(int start, int end, int pivot, int channel)
 
     return i+1;
 };
+
+
+int MMCQuantizer::vbox::find_median(int ch)
+{
+    int start = 0, 
+        end = num_pixels, 
+        median = num_pixels / 2, 
+        mid, 
+        pivot;
+
+    while(end - start > 1)
+    {
+        mid = (start + end) / 2;
+        // Choose a pivot - the median of the start, middle and end.
+        // unlikely to be a rubbish pivot
+        if(
+            (px[3*start+ch] >= px[3*mid+ch] && px[3*start+ch] <= px[3*end+ch]) ||
+            (px[3*start+ch] <= px[3*mid+ch] && px[3*start+ch] >= px[3*end+ch]))
+            pivot = start;
+        else if(
+            (px[3*mid+ch] > px[3*start+ch] && px[3*mid+ch] < px[3*end+ch]) ||
+            (px[3*mid+ch] < px[3*start+ch] && px[3*mid+ch] > px[3*end+ch]))
+            pivot = mid;
+        else
+            pivot = end;
+
+        //partition using that pivot
+        pivot = partition(start, end, pivot, ch);
+        //if the pivot is below the median, we only need to partition the upper part
+        if(pivot < median)
+            start = pivot;
+        //if the pivot is above the median, we only need to partition the lower part
+        else if(pivot > median)
+            end = pivot;
+        //special case where we happened to get the median
+        else if(pivot == median)
+            return pivot;
+
+    }
+
+    return start;
+};
+
+
+void MMCQuantizer::vbox::split()
+{
+    int ch = 0;
+    uint8_t val = 0;
+    //get largest dimension
+    for(int i = 0; i < 3; i++)
+    {
+        if(max[i] - min[i] > val)
+        {
+            val = max[i] - min[i];
+            ch = i;
+        }
+    }
+
+    //find the index of the median pixel in that channel
+    int median = find_median(ch);
+    //if the largest span is the left hand side
+    if(px[3*median+ch] - min[ch] > max[ch] - px[3*median+ch])
+    {
+    }
+};
+
