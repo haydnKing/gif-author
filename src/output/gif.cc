@@ -1,44 +1,11 @@
 #include "gif.h"
 
-RGBColor::RGBColor(){
-    std::memset(c,0,3);
-};
-
-RGBColor::RGBColor(uint8_t _r, uint8_t _g, uint8_t _b){
-    c[0] = _r;
-    c[1] = _g;
-    c[2] = _b;
-};
-
-RGBColor::RGBColor(const RGBColor& rhs){
-    c[0] = rhs.r();
-    c[1] = rhs.g();
-    c[2] = rhs.b();
-};
-
-RGBColor& RGBColor::operator=(const RGBColor& rhs){
-    c[0] = rhs.r();
-    c[1] = rhs.g();
-    c[2] = rhs.b();
-    return *this;
-};
-
-void RGBColor::rgb(uint8_t _r, uint8_t _g, uint8_t _b) {
-    c[0] = _r;
-    c[1] = _g;
-    c[2] = _b;
-};
-
-const uint8_t* RGBColor::get_data() const {
-    return c;
-};
-
 GIFColorTable::GIFColorTable(int _depth, bool _sorted) :
     depth(_depth),
     sorted(_sorted),
     colors(0)
 {
-    data = new RGBColor[256];
+    data = new uint8_t[256*3];
 };
 
 GIFColorTable::~GIFColorTable()
@@ -53,9 +20,24 @@ uint8_t GIFColorTable::log_colors() const {
         return uint8_t(std::ceil(std::log(colors)/std::log(2)));
 };
 
-int GIFColorTable::push_color(RGBColor col){
+int GIFColorTable::push_color(const uint8_t *col)
+{
     if(colors < 256){
-        data[colors++] = col;
+        for(int i=0; i<3; i++)
+            data[3*colors+i] = col[i];
+        colors++;
+        return colors-1;
+    }
+    return -1;
+};
+        
+int GIFColorTable::push_color(uint8_t r, uint8_t g, uint8_t b)
+{
+    if(colors < 256){
+        data[3*colors+0] = r;
+        data[3*colors+1] = g;
+        data[3*colors+2] = b;
+        colors++;
         return colors-1;
     }
     return -1;
@@ -63,9 +45,7 @@ int GIFColorTable::push_color(RGBColor col){
 
 void GIFColorTable::write(std::ostream& str) const {
     int full_colors = std::pow(2, log_colors());
-    for(int i = 0; i < full_colors; i++){
-        str.write(reinterpret_cast<const char*>(data[i].get_data()), 3);
-    }
+    str.write(reinterpret_cast<const char*>(data), 3*full_colors);
 }
 
 GIFImage::GIFImage(int _left, 

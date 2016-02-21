@@ -9,44 +9,16 @@
 #include <stdint.h>
 #include <ostream>
 
-class RGBColor {
-    public:
-        RGBColor();
-        RGBColor(uint8_t _r,
-                 uint8_t _g,
-                 uint8_t _b);
-        RGBColor(const RGBColor& rhs);
-        virtual ~RGBColor() {};
-
-        const uint8_t& r() const {return c[0];};
-        const uint8_t& g() const {return c[1];};
-        const uint8_t& b() const {return c[2];};
-
-        void r(uint8_t r) {c[0]=r;};
-        void g(uint8_t g) {c[1]=g;};
-        void b(uint8_t b) {c[2]=b;};
-        
-        void rgb(uint8_t _r, uint8_t _g, uint8_t _b);
-        RGBColor& operator=(const RGBColor& rhs);
-        
-        const uint8_t* get_data() const;
-
-    protected:
-        uint8_t c[3];
-
-};
-
 /**
  * Store a GIF Color Table
  *
- * TOTO: Expand colors to nearest power of two
+ * TODO: Expand colors to nearest power of two
  */
 class GIFColorTable
 {
     public:
         /**
          * \param _depth number of bits per color channel
-         * \param _colors log_2 of the number of colors
          * \param _sorted is the color table ordered according to priority
          */
         GIFColorTable(int _depth = 8, bool _sorted = false);
@@ -74,19 +46,19 @@ class GIFColorTable
         bool is_sorted() const {return sorted;};
 
         /**
-         * get an RGBColor from the table
+         * get a colour from the table
          * \param index the index of the color
-         * \returns RGBColor
+         * \returns uint8_t[3]
          */
-        RGBColor& operator[](int index) {return data[index];};
-        const RGBColor& operator[](int index) const {return data[index];};
+        uint8_t *operator[](int index) {return data+3*index;};
+        const uint8_t *operator[](int index) const {return data+3*index;};
 
-        RGBColor& operator=(const RGBColor& rhs);
         /**
          * add a color to the colorscheme
          * \returns index on success, -1 on failure
          */
-        int push_color(RGBColor col);
+        int push_color(const uint8_t *col);
+        int push_color(uint8_t r, uint8_t g, uint8_t b);
 
         /**
          * /returns the size of the saved color table in bytes
@@ -101,7 +73,7 @@ class GIFColorTable
     private:
         int depth, colors;
         bool sorted;
-        RGBColor* data;
+        uint8_t *data;
 };
 
 
