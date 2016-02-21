@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-class MainWindow : public Window
+class MainWindow : public Gtk::Window
 {
 
 public:
@@ -24,7 +24,7 @@ protected:
 
   //Member widgets:
   
-  Gtk::FrameBox w_framebox;
+  Gtk::FlowBox w_flowbox;
 
 };
 

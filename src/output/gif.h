@@ -134,6 +134,8 @@ class GIFImage
         uint8_t* data;
 };
 
+typedef Glib::RefPtr<GIFImage> pGIFImage;
+
 /**
  * Store an entire GIF
  */

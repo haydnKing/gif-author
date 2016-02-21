@@ -7,7 +7,7 @@
 ColorQuantizer::ColorQuantizer() :
     colors(NULL),
     max_colors(0),
-    num_color(0)
+    num_colors(0)
 {};
 
 
@@ -69,7 +69,7 @@ class MMCQuantizer : public ColorQuantizer
         {
             public:
                 vbox(uint8_t* px, int num_pixels);
-                ~vbox() {};
+                ~vbox();
 
                 bool is_leaf() const;
                 vbox *get_left() {return left;};
@@ -80,7 +80,7 @@ class MMCQuantizer : public ColorQuantizer
                 unsigned int get_volume() const;
                 int get_count() const;
 
-                int quantize(uint8_t *color);
+                int quantize(const uint8_t *color);
 
                 void split();
 
@@ -91,7 +91,7 @@ class MMCQuantizer : public ColorQuantizer
 
                 vbox *left, *right;
                 int split_channel, ct_index;
-                uint8_t split_point;
+                uint8_t split_value;
                 uint8_t *px;
                 int num_pixels;
                 uint8_t min[3], max[3];
@@ -176,15 +176,15 @@ bool MMCQuantizer::vbox::is_leaf() const
     return (left == NULL && right ==NULL);
 };
 
-vbox *MMCQuantizer::get_largest(float volume_coef, float count_coef)
+MMCQuantizer::vbox *MMCQuantizer::vbox::get_largest(float volume_coef, float count_coef)
 {
     if(is_leaf())
         return this;
     vbox *l = left->get_largest(volume_coef, count_coef), 
          *r =right->get_largest(volume_coef, count_coef);
 
-    if((volume_coef * l->get_volume() + count_coef * l.get_count()) > 
-       (volume_coef * r->get_volume() + count_coef * r.get_count()))
+    if((volume_coef * l->get_volume() + count_coef * l->get_count()) > 
+       (volume_coef * r->get_volume() + count_coef * r->get_count()))
         return l;
     return r;
 };
@@ -198,10 +198,10 @@ unsigned int MMCQuantizer::vbox::get_volume() const
 
 int MMCQuantizer::vbox::get_count() const
 {
-    return num_colors;
+    return num_pixels;
 };
 
-int MMCQuantizer::vbox::quantize(uint8_t *color)
+int MMCQuantizer::vbox::quantize(const uint8_t *color)
 {
     if(is_leaf())
     {
@@ -334,7 +334,7 @@ void MMCQuantizer::vbox::split()
     //find the index of the median pixel in that channel
     int median = find_median(ch);
     split_channel = ch;
-    split_point = px[median+ch];
+    split_value = px[median+ch];
     
     left = new vbox(px, median);
     right = new vbox(px+median, num_pixels - median);
