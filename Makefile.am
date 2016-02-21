@@ -4,6 +4,8 @@ AM_CXXFLAGS = $(GTKMM_CFLAGS) $(CV2_CFLAGS) $(FFMPEG_CFLAGS) -D__STDC_CONSTANT_M
 
 gif_author_SOURCES =  src/main.cc  \
 					  src/mainwindow.cc  src/mainwindow.h \
+					  src/colorquantizer.cc  src/colorquantizer.h \
+					  src/gifauthor.cc  src/gitauthor.h \
 					  src/widgets/imagearea.cc src/widgets/imagearea.h \
 					  src/input/videoframe.cc src/input/videoframe.h \
 					  src/input/videofile.cc src/input/videofile.h \
