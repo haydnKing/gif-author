@@ -40,6 +40,14 @@ void ColorQuantizer::add_color(const uint8_t* color)
     }
 };
 
+void ColorQuantizer::add_colors(const uint8_t* color, int count)
+{
+    for(int i = 0; i < count; i++)
+    {
+        add_color(color+3*i);
+    }
+};
+
 
 
 /* *************************************************************
