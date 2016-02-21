@@ -31,9 +31,12 @@ bool extract(std::string fname, int frame)
 
     GIFAuthor ga;
     ga.add_frame(vfile.get_frame());
+    std::cout << "Got frame" << std::endl;
     ga.update_output();
+    std::cout << "Opening file" << std::endl;
 
     std::ofstream outfile("out.gif");
+    std::cout << "Writing" << std::endl;
     ga.get_output()->write(outfile);
 };
 

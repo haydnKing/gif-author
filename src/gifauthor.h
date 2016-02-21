@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include <iostream>
+
 /**
  * Which method to use when dithering an image
  */

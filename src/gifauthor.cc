@@ -4,8 +4,7 @@ GIFAuthor::GIFAuthor() :
     out(NULL),
     dm(DITHER_FLOYD_STEINBERG),
     qm(QUANT_MMC)
-{
-};
+{};
 
 GIFAuthor::~GIFAuthor() 
 {
@@ -73,20 +72,33 @@ void GIFAuthor::update_output()
     out = new GIF(frames[0]->get_width(),
                   frames[0]->get_height());
     std::vector<pVideoFrame>::iterator it;
-    int y;
+    int x, y;
     for(it = frames.begin(); it < frames.end(); it++)
     {
+        std::cout << "get_quantizer" << std::endl;
+        std::cout << "frame " << (*it)->get_width() << "x"
+                              << (*it)->get_height() << " rs "
+                              << (*it)->get_rowstride() << std::endl;
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
+        cq->set_max_colors((*it)->get_height() * (*it)->get_width());
+        std::cout << "adding colours" << std::endl;
         for(y = 0; y < (*it)->get_height(); y++)
         {
-            cq->add_colors((*it)->get_pixel(0,y), (*it)->get_width());
+            for(x = 0; x < (*it)->get_width(); x++)
+            {
+                //std::cout << "add_color(" << x << ", " << y << ")" << std::endl;
+                cq->add_color((*it)->get_pixel(x,y));
+            }
         }
+        std::cout << "build_ct" << std::endl;
         cq->build_ct();
 
         //Dither the image
+        std::cout << "dither image" << std::endl;
         pGIFImage img = dither_image(*it, cq);
         //TODO: set delay_time
+        std::cout << "done with image" << std::endl;
         out->push_back(img);
     }
 };

@@ -27,7 +27,7 @@ void ColorQuantizer::set_max_colors(int _max_colors)
     }
     max_colors = _max_colors;
     num_colors = 0;
-    colors = new uint8_t[max_colors*3];
+    colors = new uint8_t[3*max_colors];
 };
 
 void ColorQuantizer::add_color(const uint8_t* color)
@@ -122,7 +122,6 @@ void MMCQuantizer::build_ct(int quantized_colors)
     {
         root->get_largest(1.0,1.0)->split();
     }
-
     root->add_to_ct(ct);
 };
 
@@ -299,14 +298,16 @@ int MMCQuantizer::vbox::find_median(int ch)
         else
             pivot = end;
 
+
         //partition using that pivot
         pivot = partition(start, end, pivot, ch);
+
         //if the pivot is below the median, we only need to partition the upper part
         if(pivot < median)
             start = pivot;
         //if the pivot is above the median, we only need to partition the lower part
         else if(pivot > median)
-            end = pivot;
+            end = pivot-1;
         //special case where we happened to get the median
         else if(pivot == median)
             return pivot;
@@ -334,7 +335,7 @@ void MMCQuantizer::vbox::split()
     //find the index of the median pixel in that channel
     int median = find_median(ch);
     split_channel = ch;
-    split_value = px[median+ch];
+    split_value = px[3*median+ch];
     
     left = new vbox(px, median);
     right = new vbox(px+median, num_pixels - median);

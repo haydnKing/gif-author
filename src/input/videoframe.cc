@@ -159,8 +159,8 @@ pVideoFrame VideoFrame::create_from_data(
 {
     uint8_t* cdata = data;
     if(copy){
-        cdata = new uint8_t[3*rowstride*height];
-        std::memcpy(cdata, data, 3*rowstride*height);
+        cdata = new uint8_t[rowstride*height];
+        std::memcpy(cdata, data, rowstride*height);
     }
     VideoFrame* f = new VideoFrame();
     f->init(cdata, width, height, rowstride, timestamp, position, data_parent);
@@ -194,7 +194,7 @@ int VideoFrame::get_rowstride() const {
 };
 
 int VideoFrame::get_datasize() const {
-    return 3*rowstride*height;
+    return rowstride*height;
 };
 
 int64_t VideoFrame::get_timestamp() const {
@@ -282,7 +282,7 @@ void VideoFrame::extrapolate(int x, int y, uint8_t* out, ExtrapolationMethod mod
     //if we're within the image
     if(x>=0 && x < width && y>=0 && y < height)
     {
-        std::memcpy(out, data+3*(x+rowstride*y), 3*sizeof(uint8_t));
+        std::memcpy(out, get_pixel(x,y), 3*sizeof(uint8_t));
         return;
     }
     //otherwise extrapolate
@@ -294,7 +294,7 @@ void VideoFrame::extrapolate(int x, int y, uint8_t* out, ExtrapolationMethod mod
         case EXTRAPOLATION_CONST:
             x = std::min(std::max(x, 0), width-1);
             y = std::min(std::max(y, 0), height-1);
-            std::memcpy(out, data+3*(x+rowstride*y), 3*sizeof(uint8_t));
+            std::memcpy(out, get_pixel(x,y), 3*sizeof(uint8_t));
             return;
         case EXTRAPOLATION_LINEAR:
             extrapolate_linear(x,y,out);
@@ -339,7 +339,7 @@ void VideoFrame::interpolate_nearest(double x, double y, uint8_t* out) const
     //which could cause a seg-fault
     if(ix == width) ix--;
     if(iy == height) iy--;
-    std::memcpy(out, data+3*(ix+rowstride*iy), 3*sizeof(uint8_t));
+    std::memcpy(out, get_pixel(ix,iy), 3*sizeof(uint8_t));
 };
 
 void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
@@ -431,14 +431,14 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
     {
         //extrapolate left
         if(x < 0)
-            ext_lin(data+3*(1+rowstride*y),
-                    data+3*(0+rowstride*y),
+            ext_lin(get_pixel(1,y),
+                    get_pixel(0,y),
                     -x,
                     out);
         //extrapolate right
         else if(x >= width)
-            ext_lin(data+3*(width-2+rowstride*y),
-                    data+3*(width-1+rowstride*y),
+            ext_lin(get_pixel(width-2, y),
+                    get_pixel(width-1, y),
                     1+x-width,
                     out);
         return;
@@ -448,14 +448,14 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
     {
         //extrapolate up
         if(y < 0)
-            ext_lin(data+3*(x+rowstride),
-                    data+3*x,
+            ext_lin(get_pixel(x,1),
+                    get_pixel(x,0),
                     -y,
                     out);
         //extrapolate down
         else if(y >= height)
-            ext_lin(data+3*(x+(height-2)*rowstride),
-                    data+3*(x+(height-1)*rowstride),
+            ext_lin(get_pixel(x, height-2),
+                    get_pixel(x, height-1),
                     1+y-height,
                     out);
         return;
@@ -503,7 +503,7 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
 
 const uint8_t* VideoFrame::get_pixel(int x, int y) const
 {
-    return data+3*(x+rowstride*y);
+    return data + (3*x + rowstride*y);
 };
 
 void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp){
