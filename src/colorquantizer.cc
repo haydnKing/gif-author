@@ -61,7 +61,7 @@ class MMCQuantizer : public ColorQuantizer
 
         virtual void build_ct(int quantized_colors=256);
         virtual int map_to_ct(const uint8_t* color) const;
-        virtual GIFColorTable *get_ct();
+        virtual const GIFColorTable *get_ct() const;
 
     protected:
 
@@ -131,7 +131,7 @@ int MMCQuantizer::map_to_ct(const uint8_t* color) const
     return root->quantize(color);
 };
 
-GIFColorTable *MMCQuantizer::get_ct()
+const GIFColorTable *MMCQuantizer::get_ct() const
 {
     return ct;
 };
@@ -340,3 +340,15 @@ void MMCQuantizer::vbox::split()
     right = new vbox(px+median, num_pixels - median);
 };
 
+
+pColorQuantizer ColorQuantizer::get_quantizer(QuantizerMethod m)
+{
+    ColorQuantizer *cq;
+    switch(m)
+    {
+        case QUANT_MMC:
+            cq = new MMCQuantizer();
+            break;
+    }
+    return pColorQuantizer(cq);
+};

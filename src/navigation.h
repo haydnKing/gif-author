@@ -44,8 +44,8 @@ public:
 
     void set_page(Page& p, bool is_first, bool is_last);
 
-    sigc::signal<void> signal_left();
-    sigc::signal<void> signal_right();
+    Glib::SignalProxy0<void> signal_left();
+    Glib::SignalProxy0<void> signal_right();
 
 private:
     void on_completed_changed(bool c);
@@ -60,7 +60,7 @@ class SideBar : public Gtk::ListBox
         virtual ~SideBar() {};
 
         void add_page(Page& new_page);
-        void select_page(Page* page);
+        void set_page(Page* page);
 
         sigc::signal<void, Page*> signal_user_selected_page();
 

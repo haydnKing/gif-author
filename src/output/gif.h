@@ -8,6 +8,7 @@
 #include <list>
 #include <stdint.h>
 #include <ostream>
+#include <glibmm/object.h>
 
 /**
  * Store a GIF Color Table
@@ -52,6 +53,8 @@ class GIFColorTable
          */
         uint8_t *operator[](int index) {return data+3*index;};
         const uint8_t *operator[](int index) const {return data+3*index;};
+        uint8_t *get_index(int index) {return data+3*index;};
+        const uint8_t *get_index(int index) const {return data+3*index;};
 
         /**
          * add a color to the colorscheme
@@ -86,7 +89,7 @@ enum DisposalMethod {
 /**
  * Store an individual GIF Image
  */
-class GIFImage
+class GIFImage : public Glib::Object
 {
     public:
         GIFImage(int left, 
@@ -95,7 +98,7 @@ class GIFImage
                  int height, 
                  int delay_time=0, 
                  bool transparency=false,
-                 GIFColorTable* ct=NULL);
+                 const GIFColorTable* ct=NULL);
         ~GIFImage();
 
         // accessors
@@ -130,7 +133,7 @@ class GIFImage
         bool flag_interlaced, flag_transparency, flag_user_input;
         uint8_t t_color_index;
         DisposalMethod disposal_method;
-        GIFColorTable* ct;
+        const GIFColorTable* ct;
         uint8_t* data;
 };
 

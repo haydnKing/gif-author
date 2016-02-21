@@ -60,7 +60,7 @@ class GIFAuthor
         /**
          * get the list of frames
          */
-        const std::list<pVideoFrame> get_frames() const;
+        const std::vector<pVideoFrame> get_frames() const;
         /**
          * get the number of frames
          */
@@ -83,7 +83,7 @@ class GIFAuthor
         DitherMethod dm;
         QuantizerMethod qm;
         
-        std::list<pVideoFrame> frames;
+        std::vector<pVideoFrame> frames;
         GIF *out;
 
 

@@ -54,7 +54,7 @@ GIFImage::GIFImage(int _left,
                    int _height, 
                    int _delay_time, 
                    bool transparency,
-                   GIFColorTable* _ct) :
+                   const GIFColorTable* _ct) :
     left(_left),
     top(_top),
     width(_width),
@@ -143,7 +143,7 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
         ct->write(str);
     }
 
-    GIFColorTable* active_ct = ct;
+    const GIFColorTable* active_ct = ct;
     if(active_ct == NULL){
         active_ct = global_ct;
     }
@@ -208,8 +208,8 @@ void GIF::write(std::ostream& out) const
 
     //NETSCAPE Animation Extension
     bool have_anim = false;
-    for(std::list<GIFImage>::const_iterator i = begin(); i != end(); i++){
-        if(i->get_delay_time() > 0)
+    for(const_iterator i = begin(); i != end(); i++){
+        if((*i)->get_delay_time() > 0)
             have_anim = true;
     };
     if(have_anim){
@@ -217,8 +217,8 @@ void GIF::write(std::ostream& out) const
     }
 
     //write images
-    for(std::list<GIFImage>::const_iterator i = begin(); i != end(); i++){
-        i->write(out, global_ct);
+    for(const_iterator i = begin(); i != end(); i++){
+        (*i)->write(out, global_ct);
     };
 
     //Trailer

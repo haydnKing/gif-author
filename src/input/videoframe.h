@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <glibmm/main.h>
 #include <glibmm/object.h>
+#include <gdkmm/pixbuf.h>
+#include <glibmm/refptr.h>
 
 /**
  * Affine 2D Transform
@@ -156,7 +158,7 @@ class VideoFrame : public Glib::Object
         /**
          * Get a Gdk::Pixbuf of the image with the same underlying data
          */
-        Gtk::RefPtr<Gtk::Pixbuf> get_pixbuf();
+        Glib::RefPtr<Gdk::Pixbuf> get_pixbuf();
 
         /*
          * frame height

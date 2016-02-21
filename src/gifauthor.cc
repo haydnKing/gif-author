@@ -43,7 +43,7 @@ void GIFAuthor::add_frame(pVideoFrame f)
     frames.push_back(f);
 };
 
-const std::list<pVideoFrame> GIFAuthor::get_frames() const
+const std::vector<pVideoFrame> GIFAuthor::get_frames() const
 {
     return frames;
 };
@@ -70,24 +70,24 @@ void GIFAuthor::update_output()
     //
     //
 
-    out = new GIF(frames[0].get_width(),
-                  frames[0].get_height());
-    std::list<pVideoFrame>::iterator it;
+    out = new GIF(frames[0]->get_width(),
+                  frames[0]->get_height());
+    std::vector<pVideoFrame>::iterator it;
     int y;
     for(it = frames.begin(); it < frames.end(); it++)
     {
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
-        for(y = 0; < it->get_height(); y++)
+        for(y = 0; y < (*it)->get_height(); y++)
         {
-            cq->add_colors(it->get_pixel(0,y), it->get_width());
+            cq->add_colors((*it)->get_pixel(0,y), (*it)->get_width());
         }
         cq->build_ct();
 
         //Dither the image
         pGIFImage img = dither_image(*it, cq);
         //TODO: set delay_time
-        out.push_back(img);
+        out->push_back(img);
     }
 };
 
@@ -105,7 +105,7 @@ Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
                                  false,
                                  cq->get_ct());
 
-    switch(dither_method)
+    switch(dm)
     {
         case DITHER_FLOYD_STEINBERG:
             dither_FS(vf, ret, cq);
@@ -124,11 +124,11 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
 {
     //store 2 rows of RGB errors, set to zero
     int16_t* errors = new int16_t[6*vf->get_width()];
-    std::memset(errors, 6*vf->get_width()*sizeof(int16_t));
-    int16_t* this_row = errors, 
-             next_row = error + 3*vf->get_width(), 
-             swap;
-    uint8_t* pixel, * color;
+    std::memset(errors, 0, 6*vf->get_width()*sizeof(int16_t));
+    int16_t *this_row = errors, 
+            *next_row = errors + 3*vf->get_width(), 
+            *swap;
+    uint8_t pixel[3], * color;
     int16_t error[3];
 
     int x, y, index, i;
@@ -138,7 +138,7 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
         for(x = 0; x < vf->get_width(); x++)
         {
             //get the pixel
-            pixel = vf->get_pixel(x,y);
+            std::memcpy(pixel, vf->get_pixel(x,y), 3*sizeof(uint8_t));
             //add the errors, being wary of overflow
             for(i = 0; i < 3; i++)
                 pixel[i] = (uint8_t) std::min(UINT8_MAX,
@@ -148,7 +148,7 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
             index = cq->map_to_ct(pixel);
             //calculate the errors. Shift 4 places so that we're accurate to 1/16 of a colour gradation
             for(i = 0; i < 3; i++)
-                error[i] = (int16_t(ct[index][i]) - int16_t(pixel[i])) << 4;
+                error[i] = (int16_t(cq->get_ct()->get_index(index)[i]) - int16_t(pixel[i])) << 4;
             //set the pixel
             out->set_value(x, y, index);
 
@@ -174,7 +174,7 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
         swap = this_row;
         this_row = next_row;
         next_row = this_row;
-        memset(0, next_row, 3*vf->get_width()*sizeof(int16_t));
+        memset(next_row, 0, 3*vf->get_width()*sizeof(int16_t));
     }
 
     //the best way to cover up mistakes ;)
@@ -183,16 +183,14 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
 
 void GIFAuthor::dither_none(const pVideoFrame vf,
                          GIFImage* out, 
-                         const pColorQuantizer cq) constst
+                         const pColorQuantizer cq) const
 {
     int x,y,index;
-    uint8_t* px;
     for(y = 0; y < vf->get_width(); y++)
     {
         for(x = 0; x < vf->get_height(); x++)
         {
-            px = vf->get_pixel(x,y);
-            index = cq->map_to_ct(px);
+            index = cq->map_to_ct(vf->get_pixel(x,y));
             out->set_value(x, y, index);
         }
     }

@@ -13,7 +13,7 @@ class ColorQuantizer;
 
 typedef Glib::RefPtr<ColorQuantizer> pColorQuantizer;
 
-class ColorQuantizer
+class ColorQuantizer : public Glib::Object
 {
     public:
         ColorQuantizer();
@@ -27,7 +27,7 @@ class ColorQuantizer
 
         virtual void build_ct(int quantized_colors=256) = 0;
         virtual int map_to_ct(const uint8_t* color) const = 0;
-        virtual GIFColorTable *get_ct() const = 0;
+        virtual const GIFColorTable *get_ct() const = 0;
 
     protected:
         uint8_t* colors;

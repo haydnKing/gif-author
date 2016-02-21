@@ -13,7 +13,7 @@ class GetFile : public Page
         virtual ~GetFile() {};
 
         virtual Gtk::Widget* get_widget();
-        char* get_filename() const;
+        const char* get_filename() const;
 
     private:
         void on_file_set();

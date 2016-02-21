@@ -1,8 +1,7 @@
 #include "navigation.h"
 
 Page::Page() :
-    completed(false),
-    w(NULL)
+    completed(false)
 {};
 
 Glib::ustring Page::get_title() const
@@ -73,14 +72,14 @@ void NavigationBar::set_page(Page& p, bool is_first, bool is_last)
             sigc::mem_fun(*this, &NavigationBar::on_completed_changed));
 };
 
-sigc::signal<void> NavigationBar::signal_left()
+Glib::SignalProxy0<void> NavigationBar::signal_left()
 {
-    return w_left_button.signal_clicked();
+    return w_left_btn.signal_clicked();
 };
 
-sigc::signal<void> NavigationBar::signal_right()
+Glib::SignalProxy0<void> NavigationBar::signal_right()
 {
-    return w_right_button.signal_clicked();
+    return w_right_btn.signal_clicked();
 };
     
 void NavigationBar::on_completed_changed(bool c)
@@ -100,7 +99,11 @@ void SideBar::add_page(Page& new_page)
     append(*label);
 };
 
-sigc::signal<void, Page*> SideBar::signal_page_selected()
+void SideBar::set_page(Page *page)
+{
+};
+
+sigc::signal<void, Page*> SideBar::signal_user_selected_page()
 {
     return s_page_selected;
 };
@@ -145,7 +148,7 @@ Wizzard::Wizzard()
     w_nav.signal_left().connect(sigc::mem_fun(*this, &Wizzard::on_prev));
     w_side.signal_user_selected_page().connect(sigc::mem_fun(*this, &Wizzard::select_page));
 
-    curr_page = my_pages.begin();
+    curr_page = *my_pages.begin();
 };
 
 Wizzard::~Wizzard()
@@ -161,15 +164,15 @@ Wizzard::~Wizzard()
 void Wizzard::add_page(Page& new_page)
 {
     my_pages.push_back(&new_page);
-    w_stack.add(new_page.get_widget());
-    curr_page = my_pages.begin();
+    w_stack.add(*new_page.get_widget());
+    curr_page = *my_pages.begin();
 };
 
 void Wizzard::select_page(Page* page)
 {
     if(index_of(page) >= 0)
     {
-        w_nav.set_page(page, is_first(page), is_last(page));
+        w_nav.set_page(*page, is_first(page), is_last(page));
         w_side.set_page(page);
         w_stack.set_visible_child(*page->get_widget());
         curr_page = page;

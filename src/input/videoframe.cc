@@ -167,7 +167,7 @@ pVideoFrame VideoFrame::create_from_data(
     return pVideoFrame(f);
 };
         
-Gtk::RefPtr<Gtk::Pixbuf> VideoFrame::get_pixbuf(){
+Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf(){
     return Gdk::Pixbuf::create_from_data(get_data(),
                                          Gdk::COLORSPACE_RGB,
                                          false,
@@ -468,15 +468,15 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
         //top
         if(y<0)
         {
-            ext_lin(get_pixel(1,1), offset(0,1), -x, a); 
-            ext_lin(get_pixel(1,0), offset(0,0), -x, b); 
+            ext_lin(get_pixel(1,1), get_pixel(0,1), -x, a); 
+            ext_lin(get_pixel(1,0), get_pixel(0,0), -x, b); 
             ext_lin(a, b, -y, out);
         }
         //bottom
         else if(y>=height)
         {
-            ext_lin(get_pixel(1,height-2), offset(0,height-2), -x, a); 
-            ext_lin(get_pixel(1,height-1), offset(0,height-1), -x, b); 
+            ext_lin(get_pixel(1,height-2), get_pixel(0,height-2), -x, a); 
+            ext_lin(get_pixel(1,height-1), get_pixel(0,height-1), -x, b); 
             ext_lin(a, b, 1+y-height, out);
         }
         return;
@@ -487,15 +487,15 @@ void VideoFrame::extrapolate_linear(int x, int y, uint8_t* out) const
         //top
         if(y<0)
         {
-            ext_lin(get_pixel(width-2,1), offset(width-1,1), -x, a); 
-            ext_lin(get_pixel(width-2,0), offset(width-1,0), -x, b);
+            ext_lin(get_pixel(width-2,1), get_pixel(width-1,1), -x, a); 
+            ext_lin(get_pixel(width-2,0), get_pixel(width-1,0), -x, b);
             ext_lin(a, b, -y, out);
         }
         //bottom
         else if(y>=height)
         {
-            ext_lin(get_pixel(width-2,height-2), offset(width-1,height-2), -x, a); 
-            ext_lin(get_pixel(width-2,height-1), offset(width-1,height-1), -x, b);
+            ext_lin(get_pixel(width-2,height-2), get_pixel(width-1,height-2), -x, a); 
+            ext_lin(get_pixel(width-2,height-1), get_pixel(width-1,height-1), -x, b);
             ext_lin(a, b, 1+y-height, out);
         }
     }

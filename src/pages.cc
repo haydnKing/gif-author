@@ -26,7 +26,7 @@ void GetFile::on_file_set()
     set_completed(true);
 }
 
-char* GetFile::get_filename() const
+const char* GetFile::get_filename() const
 {
     return w_file_chooser.get_filename().c_str();
 };
@@ -35,7 +35,7 @@ Clipper::Clipper(Gtk::Window* wnd, GetFile* file):
     the_file(file)
 {
     //setup videoplayer
-    w_player.connect_window_keypress(wnd);
+    w_player.connect_window_keypress(*wnd);
     w_player.set_border_width(10);
 
     w_player.signal_show().connect(sigc::mem_fun(
@@ -53,5 +53,5 @@ Gtk::Widget* Clipper::get_widget()
 
 void Clipper::on_show()
 {
-    w_player.load_from_file(the_file->get_filename());
+    w_player.open_from_file(the_file->get_filename());
 };
