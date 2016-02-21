@@ -1,48 +1,126 @@
 #include "gifauthor.h"
 
-GAFrame::GAFrame(pVideoFrame& _pVF, int _delay_t) 
+GIFAuthor::GIFAuthor() :
+    out(NULL),
+    dm(DITHER_FLOYD_STEINBERG),
+    qm(QUANT_MMC)
 {
 };
 
-GAFrame::~GAFrame()
+GIFAuthor::~GIFAuthor() 
 {
+    delete out;
 };
 
-std::vector<pGIFImage> GAFrame::process(int w, int h, InterpolationMethod im)
+
+DitherMethod GIFAuthor::get_dm() const
 {
+    return dm;
 };
 
-bool GAFrame::get_color_table(GIFColorTable *& ct, pVideoFrame scaled_vf) const
+void GIFAuthor::set_dm(DitherMethod _dm)
 {
+    dm = _dm;
 };
 
-Glib::RefPtr<GIFImage> GAFrame::dither_image(GIFColorTable& ct, pVideoFrame scaled_vf) const
+QuantizerMethod GIFAuthor::get_qm() const
+{
+    return qm;
+};
+
+void GIFAuthor::set_dm(QuantizerMethod _qm)
+{
+    qm = _qm;
+};
+
+void GIFAuthor::clear_frames()
+{
+    frames.clear();
+};
+
+void GIFAuthor::add_frame(pVideoFrame f)
+{
+    frames.push_back(f);
+};
+
+const std::list<pVideoFrame> GIFAuthor::get_frames() const
+{
+    return frames;
+};
+
+int GIFAuthor::count_frames() const
+{
+    return frames.size();
+};
+
+const GIF *GIFAuthor::get_output() const
+{
+    return out;
+};
+
+void GIFAuthor::update_output()
+{
+    //delete the old;
+    delete out;
+    out = NULL;
+
+    if(frames.size()==0)
+        return;
+    //preprocess frames here
+    //
+    //
+
+    out = new GIF(frames[0].get_width(),
+                  frames[0].get_height());
+    std::list<pVideoFrame>::iterator it;
+    int y;
+    for(it = frames.begin(); it < frames.end(); it++)
+    {
+        //create a quantizer
+        pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
+        for(y = 0; < it->get_height(); y++)
+        {
+            cq->add_colors(it->get_pixel(0,y), it->get_width());
+        }
+        cq->build_ct();
+
+        //Dither the image
+        pGIFImage img = dither_image(*it, cq);
+        //TODO: set delay_time
+        out.push_back(img);
+    }
+};
+
+
+
+Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
+                                               pColorQuantizer cq) const
 {
     //Create the output image
     GIFImage *ret = new GIFImage(0,
                                  0, 
-                                 scaled_vf->get_width(), 
-                                 scaled_vf->get_height(),
-                                 delay_t,
+                                 vf->get_width(), 
+                                 vf->get_height(),
+                                 0,
                                  false,
-                                 &ct);
+                                 cq->get_ct());
 
     switch(dither_method)
     {
         case DITHER_FLOYD_STEINBERG:
-            dither_FS(ret, ct, scaled_vf);
+            dither_FS(vf, ret, cq);
             break;
         case DITHER_NONE:
-            dither_none(ret, ct, scaled_vf);
+            dither_none(vf, ret, cq);
             break;
     }
 
     return Glib::RefPtr<GIFImage>(ret);
 };
 
-void GAFrame::dither_FS(GIFImage* out, 
-                        GIFColorTable& ct, 
-                        pVideoFrame vf) const
+void GIFAuthor::dither_FS(const pVideoFrame vf,
+                       GIFImage* out, 
+                       pColorQuantizer cq) const
 {
     //store 2 rows of RGB errors, set to zero
     int16_t* errors = new int16_t[6*vf->get_width()];
@@ -67,12 +145,11 @@ void GAFrame::dither_FS(GIFImage* out,
                         std::max(0,this_row[3*x+i]>>4 + uint16_t(pixel[i])));
 
             //get the closest ct
-            index = ct.get_closest_index(pixel);
+            index = cq->map_to_ct(pixel);
             //calculate the errors. Shift 4 places so that we're accurate to 1/16 of a colour gradation
             for(i = 0; i < 3; i++)
                 error[i] = (int16_t(ct[index][i]) - int16_t(pixel[i])) << 4;
             //set the pixel
-            memcpy(pixel, ct[index], 3*sizeof(uint8_t));
             out->set_value(x, y, index);
 
             //propagate the errors
@@ -104,9 +181,9 @@ void GAFrame::dither_FS(GIFImage* out,
     delete [] errors;
 };
 
-void GAFrame::dither_none(GIFImage* out, 
-                          GIFColorTable& ct, 
-                          pVideoFrame vf) const
+void GIFAuthor::dither_none(const pVideoFrame vf,
+                         GIFImage* out, 
+                         const pColorQuantizer cq) constst
 {
     int x,y,index;
     uint8_t* px;
@@ -115,9 +192,8 @@ void GAFrame::dither_none(GIFImage* out,
         for(x = 0; x < vf->get_height(); x++)
         {
             px = vf->get_pixel(x,y);
-            index = ct.get_closest_index(px);
+            index = cq->map_to_ct(px);
             out->set_value(x, y, index);
-            std::memcpy(px, ct[index], 3*sizeof(uint8_t));
         }
     }
 };

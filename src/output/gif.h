@@ -137,7 +137,7 @@ class GIFImage
 /**
  * Store an entire GIF
  */
-class GIF : public std::list<GIFImage>
+class GIF : public std::list<pGIFImage>
 {
     public:
         GIF(uint16_t _width, 

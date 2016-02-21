@@ -7,6 +7,7 @@
 
 #include "input/videoframe.h"
 #include "output/gif.h"
+#include "colorquantizer.h"
 
 #include <stdint.h>
 #include <vector>
@@ -21,95 +22,81 @@ enum DitherMethod {
 
 
 /**
- * Hold information on an intermediary video frame.
- * Once settings are applied, can the produce the final GIFImage
+ * Central class. Contains all the information required to write out a GIF
  */
-class GAFrame
+class GIFAuthor
 {
     public:
-        /**
-         * @param _pVF RefPtr to the VideoFrame
-         * @param _delay_t delay until next frame in microseconds -ve values
-         * are snapped to zero
-         */
-        GAFrame(pVideoFrame& _pVF, int _delay_t);
-        virtual ~GAFrame();
+        GIFAuthor();
+        ~GIFAuthor();
 
         /**
-         * get the time until the next frame is shown
+         * get the method used for dithering
          */
-        int get_delay() const {return delay_t;};
+        DitherMethod get_dm() const;
         /**
-         * set the time until the next frame is shown
-         * @param t milliseconds
+         * set the method used for dithering
          */
-        void set_delay(int t) {delay_t = t;};
+        void set_dm(DitherMethod _dm);
 
         /**
-         * Get the method used for dithering
+         * get the method used for quantizing
          */
-        DitherMethod get_dither_method() const {return dither_method;};
+        QuantizerMethod get_qm() const;
         /**
-         * Set the method used for dithering
-         * @param m
+         * set the method used for quantizing
          */
-        void set_dither_method(DitherMethod m) {dither_method = m;};
-
-        /**
-         * Set the method for creating a local colour table. Ignored if a
-         * global color table is set.
-         */
-        ColorTableMethod get_ct_method() const {return ct_method;};
-        /**
-         * Set the method for choosing a colour table. Ignored if a global
-         * colour table is set
-         * @param m
-         */
-        void set_ct_method(ColorTableMethod m) {ct_method = m;};
+        void set_dm(QuantizerMethod _qm);
 
 
         /**
-         * Force the frame to use the global colour table rather than making
-         * its own. Set ct==NULL to disable the global table.
-         * @param gct The global ct
+         * clear the frames
          */
-        void use_global_ct(GIFColorTable* ct) {global_ct = ct;};
+        void clear_frames();
+        /**
+         * add a frame
+         */
+        void add_frame(pVideoFrame f);
+        /**
+         * get the list of frames
+         */
+        const std::list<pVideoFrame> get_frames() const;
+        /**
+         * get the number of frames
+         */
+        int count_frames() const;
+
 
         /**
-         * Get whether or not the global colour table will be used
+         * get the current output
+         * only valid after update_output
          */
-        bool has_global_ct() {return global_ct != NULL;};
+        const GIF *get_output() const;
 
         /**
-         * Do all processing and return the final GIFImage for writing
-         * @param w final width
-         * @param h final height
-         * @param im interpolation method to use for scaling
+         * (re)calculate the output
          */
-        std::vector<pGIFImage> process(int w, 
-                                       int h, 
-                                       InterpolationMethod im=INTERPOLATION_BICUBIC) const;
-
+        void update_output();
 
     protected:
-        /*
-         * Either generate of return the global table
-         */
-        bool get_color_table(GIFColorTable *& ct, pVideoFrame scaled_vf) const;
+        //general settings
+        DitherMethod dm;
+        QuantizerMethod qm;
+        
+        std::list<pVideoFrame> frames;
+        GIF *out;
 
-        /*
-         * Use colour table to produce a dithered image
-         */
-        Glib::RefPtr<GIFImage> dither_image(GIFColorTable& ct, pVideoFrame scaled_vf) const;
 
-        void dither_FS(GIFImage* out, GIFColorTable& ct, pVideoFrame scaled_vf) const;
-        void dither_none(GIFImage* out, GIFColorTable& ct, pVideoFrame scaled_vf) const;
-
-        pVideoFrame pVF;
-        int delay_t;
-        DitherMethod dither_method;
-        GIFColorTable *global_ct;
-        bool use_gct;
+        pGIFImage dither_image(const pVideoFrame vf,
+                               const pColorQuantizer cq) const;
+        void dither_FS(const pVideoFrame vf,
+                       GIFImage* out, 
+                       const pColorQuantizer cq) const;
+        void dither_none(const pVideoFrame vf,
+                         GIFImage* out, 
+                         const pColorQuantizer cq) const;
 };
+
+
 
 #endif // GTKMM_GIFAUTHOR_H
