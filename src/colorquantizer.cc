@@ -36,7 +36,7 @@ void ColorQuantizer::add_color(const uint8_t* color)
     {
         num_colors++;
         for(int i = 0; i < 3; i++)
-            colors[num_colors+i] = color[i];
+            colors[3*num_colors+i] = color[i];
     }
 };
 
@@ -51,10 +51,7 @@ class MMCQuantizer : public ColorQuantizer
         MMCQuantizer();
         virtual ~MMCQuantizer();
 
-        void set_max_colors(int max_colors);
-        void add_color(const uint8_t* color);
-        
-        virtual void build_ct();
+        virtual void build_ct(int quantized_colors=256);
         virtual int map_to_ct(const uint8_t* color) const;
         virtual GIFColorTable *get_ct();
 
@@ -69,9 +66,13 @@ class MMCQuantizer : public ColorQuantizer
                 bool is_leaf() const;
                 vbox *get_left() {return left;};
                 vbox *get_right() {return right;};
+                vbox *get_largest(float volume_coef, float count_coef); 
+                void add_to_ct(GIFColorTable *ct);
 
                 unsigned int get_volume() const;
                 int get_count() const;
+
+                int quantize(uint8_t *color);
 
                 void split();
 
@@ -81,20 +82,51 @@ class MMCQuantizer : public ColorQuantizer
                 int find_median(int channel);
 
                 vbox *left, *right;
+                int split_channel, ct_index;
+                uint8_t split_point;
                 uint8_t *px;
                 int num_pixels;
                 uint8_t min[3], max[3];
         };
 
 
-
-        uint32_t *hist;
+        GIFColorTable *ct;
+        vbox *root;
 };
 
         
-void MMCQuantizer::build_ct();
-int MMCQuantizer::map_to_ct(const uint8_t* color) const;
-GIFColorTable *MMCQuantizer::get_ct();
+MMCQuantizer::MMCQuantizer() :
+    root(NULL)
+{};
+
+MMCQuantizer::~MMCQuantizer()
+{
+    delete root;
+};
+
+void MMCQuantizer::build_ct(int quantized_colors)
+{
+    root = new vbox(colors, num_colors);
+    ct = new GIFColorTable();
+
+    //split up the color space
+    for(int i = 1; i < quantized_colors; i++)
+    {
+        root->get_largest(1.0,1.0)->split();
+    }
+
+    root->add_to_ct(ct);
+};
+
+int MMCQuantizer::map_to_ct(const uint8_t* color) const
+{
+    return root->quantize(color);
+};
+
+GIFColorTable *MMCQuantizer::get_ct()
+{
+    return ct;
+};
 
 /* *************************************************************
  *                                         MMCQuantizer::vbox
@@ -123,11 +155,30 @@ MMCQuantizer::vbox::vbox(uint8_t* _px, int np):
 
 };
 
-MMCQuantizer::vbox::~vbox() {};
+MMCQuantizer::vbox::~vbox() 
+{
+    if(left != NULL)
+        delete left;
+    if(right != NULL)
+        delete right;
+};
 
 bool MMCQuantizer::vbox::is_leaf() const
 {
     return (left == NULL && right ==NULL);
+};
+
+vbox *MMCQuantizer::get_largest(float volume_coef, float count_coef)
+{
+    if(is_leaf())
+        return this;
+    vbox *l = left->get_largest(volume_coef, count_coef), 
+         *r =right->get_largest(volume_coef, count_coef);
+
+    if((volume_coef * l->get_volume() + count_coef * l.get_count()) > 
+       (volume_coef * r->get_volume() + count_coef * r.get_count()))
+        return l;
+    return r;
 };
 
 unsigned int MMCQuantizer::vbox::get_volume() const
@@ -142,6 +193,45 @@ int MMCQuantizer::vbox::get_count() const
     return num_colors;
 };
 
+int MMCQuantizer::vbox::quantize(uint8_t *color)
+{
+    if(is_leaf())
+    {
+        return ct_index;
+    }
+
+    if(color[split_channel] <= split_value)
+        return left->quantize(color);
+    return right->quantize(color);
+};
+                
+void MMCQuantizer::vbox::add_to_ct(GIFColorTable *ct)
+{
+    if(is_leaf())
+    {
+        //find the average pixel value
+        uint32_t sum[3] = {0,0,0};
+        uint8_t value[3];
+        int i,j;
+        for(i=0; i < num_pixels; i++)
+        {
+            for(j=0; j < 3; j++)
+            {
+                sum[j] += px[3*i+j];
+            }
+        }
+        for(j=0; j<3; j++)
+        {
+            value[j] = sum[j] / num_pixels;
+        }
+        ct_index = ct->push_color(value);
+    }
+    else
+    {
+        left->add_to_ct(ct);
+        right->add_to_ct(ct);
+    }
+};
 
 void MMCQuantizer::vbox::swap_px(const int& a, const int& b)
 {
@@ -235,9 +325,10 @@ void MMCQuantizer::vbox::split()
 
     //find the index of the median pixel in that channel
     int median = find_median(ch);
-    //if the largest span is the left hand side
-    if(px[3*median+ch] - min[ch] > max[ch] - px[3*median+ch])
-    {
-    }
+    split_channel = ch;
+    split_point = px[median+ch];
+    
+    left = new vbox(px, median);
+    right = new vbox(px+median, num_pixels - median);
 };
 
