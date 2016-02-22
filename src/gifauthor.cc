@@ -3,6 +3,7 @@
 GIFAuthor::GIFAuthor() :
     out(NULL),
     dm(DITHER_NONE),
+    //dm(DITHER_FLOYD_STEINBERG),
     qm(QUANT_MMC)
 {};
 
@@ -144,12 +145,14 @@ Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
 };
 
 void GIFAuthor::dither_FS(const pVideoFrame vf,
-                       GIFImage* out, 
-                       pColorQuantizer cq) const
+                          GIFImage* out, 
+                          pColorQuantizer cq) const
 {
+    std::cout << "dither_fs" << std::endl;
     //store 2 rows of RGB errors, set to zero
     int16_t* errors = new int16_t[6*vf->get_width()];
     std::memset(errors, 0, 6*vf->get_width()*sizeof(int16_t));
+    //pointers to the errors that can be swapped around
     int16_t *this_row = errors, 
             *next_row = errors + 3*vf->get_width(), 
             *swap;
@@ -167,29 +170,38 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
             //add the errors, being wary of overflow
             for(i = 0; i < 3; i++)
                 pixel[i] = (uint8_t) std::min(UINT8_MAX,
-                        std::max(0,this_row[3*x+i]>>4 + uint16_t(pixel[i])));
+                        std::max(0,this_row[3*x+i]/16 + int16_t(pixel[i])));
 
             //get the closest ct
             index = cq->map_to_ct(pixel);
-            //calculate the errors. Shift 4 places so that we're accurate to 1/16 of a colour gradation
-            for(i = 0; i < 3; i++)
-                error[i] = (int16_t(cq->get_ct()->get_index(index)[i]) - int16_t(pixel[i])) << 4;
             //set the pixel
             out->set_value(x, y, index);
+            //calculate the errors. Shift 4 places so that we're accurate to 1/16 of a colour gradation
+            for(i = 0; i < 3; i++)
+                error[i] = (int16_t(cq->get_ct()->get_index(index)[i]) - int16_t(pixel[i]))*16;
+/*
+            std::cout << "error: ("<< error[0] << ", " << error[1] << ", "  << error[2] << ") = (" 
+                << (int)cq->get_ct()->get_index(index)[0] <<", " 
+                << (int)cq->get_ct()->get_index(index)[1] <<", " 
+                << (int)cq->get_ct()->get_index(index)[2] <<") - (" 
+                << int16_t(pixel[0]) << ", "
+                << int16_t(pixel[1]) << ", "
+                << int16_t(pixel[2]) << ")"
+                << std::endl;*/
 
             //propagate the errors
             if(x+1 < vf->get_width())
             {
                 for(i=0;i<3;i++)
-                    this_row[3*x+3+i] += 7 * error[i] / 16;
+                    this_row[3*x+3+i] += (7 * error[i]) / 16;
             }
             if(y+1 < vf->get_height())
             {
                 if(x > 0)
                     for(i=0;i<3;i++)
-                        next_row[3*x-3+i] += 3 * error[i] / 16;
+                        next_row[3*x-3+i] += (3 * error[i]) / 16;
                 for(i=0;i<3;i++)
-                    next_row[3*x+i] += 5 * error[i] / 16;
+                    next_row[3*x+i] += (5 * error[i]) / 16;
                 if(x+1 < vf->get_width())
                     for(i=0;i<3;i++)
                         next_row[3*x+3+i] += error[i] / 16;
@@ -210,6 +222,7 @@ void GIFAuthor::dither_none(const pVideoFrame vf,
                          GIFImage* out, 
                          const pColorQuantizer cq) const
 {
+    std::cout << "dither_none" << std::endl;
     int x,y,index;
     for(y = 0; y < vf->get_height(); y++)
     {
