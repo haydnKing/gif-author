@@ -219,4 +219,5 @@ void GIFAuthor::dither_none(const pVideoFrame vf,
             out->set_value(x, y, index);
         }
     }
+    
 };
