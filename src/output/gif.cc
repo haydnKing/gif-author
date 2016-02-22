@@ -152,7 +152,7 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     std::cout << "Minimum code width: " << (int)active_ct->log_colors() << " bits" << std::endl;
     //Image Data
     LZW writer(str, active_ct->log_colors());
-    writer.write_debug(data, width*height);
+    writer.write(data, width*height);
     writer.flush();
 
     //End image block

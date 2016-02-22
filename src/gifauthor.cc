@@ -2,8 +2,8 @@
 
 GIFAuthor::GIFAuthor() :
     out(NULL),
-    dm(DITHER_NONE),
-    //dm(DITHER_FLOYD_STEINBERG),
+    //dm(DITHER_NONE),
+    dm(DITHER_FLOYD_STEINBERG),
     qm(QUANT_MMC)
 {};
 
@@ -64,7 +64,7 @@ void debug_ct(pGIFImage &img, const GIFColorTable *ct)
     {
         for(int y = 0; y < img->get_height(); y++)
         {
-            if(x+img->get_width()*y > ct->num_colors())
+            if(x+img->get_width()*y >= ct->num_colors())
                 break;
             img->set_value(x,y,x+img->get_width()*y);
         }
@@ -179,7 +179,7 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
             //calculate the errors. Shift 4 places so that we're accurate to 1/16 of a colour gradation
             for(i = 0; i < 3; i++)
                 error[i] = (int16_t(cq->get_ct()->get_index(index)[i]) - int16_t(pixel[i]))*16;
-/*
+
             std::cout << "error: ("<< error[0] << ", " << error[1] << ", "  << error[2] << ") = (" 
                 << (int)cq->get_ct()->get_index(index)[0] <<", " 
                 << (int)cq->get_ct()->get_index(index)[1] <<", " 
@@ -187,7 +187,7 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
                 << int16_t(pixel[0]) << ", "
                 << int16_t(pixel[1]) << ", "
                 << int16_t(pixel[2]) << ")"
-                << std::endl;*/
+                << std::endl;
 
             //propagate the errors
             if(x+1 < vf->get_width())

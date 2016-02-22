@@ -36,9 +36,9 @@ void LZW::write(const uint8_t* data, uint32_t length){
     clear_dictionary();
     int32_t cur_code = -1;
 
+    for(uint32_t i=0; i < length; i++)
+    {
 
-    for(uint32_t i=0; i < length; i++){
-        
         //if first code in a run
         if(cur_code < 0){
             cur_code = data[i];
