@@ -24,6 +24,15 @@ LZW::~LZW(){
     delete [] chunk;
 }
 
+void LZW::write_debug(const uint8_t* data, uint32_t length)
+{
+    for(uint32_t i=0; i < length; i++)
+    {
+        write_code(data[i], code_size);
+        write_code(clear_code, code_size);
+    }
+};
+
 void LZW::write(const uint8_t* data, uint32_t length){
     int32_t cur_code = -1;
 

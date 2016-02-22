@@ -127,7 +127,6 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put(height & 0xff);
     str.put((height >> 8) & 0xff);
 
-    
     uint8_t ct_size= 0;
     if(ct){
         ct_size = ct->log_colors() - 1;
@@ -136,12 +135,15 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put((ct!=NULL)*0x80 + //ColorTable 
             flag_interlaced * 0x40 + //Interlace 
             (ct!=NULL && ct->is_sorted()) * 0x20 + //Sorted
-            ct_size&0x7); //ColorTable size (3 bytes)
+            (ct_size&0x7)); //ColorTable size (3 bytes)
 
     //local color table
     if(ct){
         ct->write(str);
     }
+
+    for(int i = 0; i < ct->num_colors(); i++)
+        std::cout << "CT[" << i << "] = " << (int)ct->get_index(i)[0] << ", " << (int)ct->get_index(i)[1] << ", " << (int)ct->get_index(i)[2] << std::endl;
 
     const GIFColorTable* active_ct = ct;
     if(active_ct == NULL){
@@ -152,7 +154,7 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put(active_ct->log_colors());
     //Image Data
     LZW writer(str, active_ct->log_colors());
-    writer.write(data, width*height);
+    writer.write_debug(data, width*height);
     writer.flush();
 
     //End image block

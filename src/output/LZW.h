@@ -26,6 +26,8 @@ public:
      */
     void write(const uint8_t* data, uint32_t length);
 
+    void write_debug(const uint8_t* data, uint32_t length);
+
     /*
      * Flush buffer and write the end bit
      */

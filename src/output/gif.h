@@ -10,6 +10,8 @@
 #include <ostream>
 #include <glibmm/object.h>
 
+#include <iostream>
+
 /**
  * Store a GIF Color Table
  *

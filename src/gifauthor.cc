@@ -2,7 +2,7 @@
 
 GIFAuthor::GIFAuthor() :
     out(NULL),
-    dm(DITHER_FLOYD_STEINBERG),
+    dm(DITHER_NONE),
     qm(QUANT_MMC)
 {};
 
@@ -87,7 +87,6 @@ void GIFAuthor::update_output()
         {
             for(x = 0; x < (*it)->get_width(); x++)
             {
-                //std::cout << "add_color(" << x << ", " << y << ")" << std::endl;
                 cq->add_color((*it)->get_pixel(x,y));
             }
         }
@@ -198,9 +197,9 @@ void GIFAuthor::dither_none(const pVideoFrame vf,
                          const pColorQuantizer cq) const
 {
     int x,y,index;
-    for(y = 0; y < vf->get_width(); y++)
+    for(y = 0; y < vf->get_height(); y++)
     {
-        for(x = 0; x < vf->get_height(); x++)
+        for(x = 0; x < vf->get_width(); x++)
         {
             index = cq->map_to_ct(vf->get_pixel(x,y));
             out->set_value(x, y, index);
