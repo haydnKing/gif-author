@@ -325,6 +325,7 @@ void MMCQuantizer::vbox::split()
     //get largest dimension
     for(int i = 0; i < 3; i++)
     {
+        std::cout << "channel " << i << ": range = [" << (unsigned int)min[i] << ", "<< (unsigned int)max[i] << "] ("<< (unsigned int)(max[i]-min[i])<<")" << std::endl;
         if(max[i] - min[i] > val)
         {
             val = max[i] - min[i];
@@ -339,6 +340,10 @@ void MMCQuantizer::vbox::split()
     
     left = new vbox(px, median);
     right = new vbox(px+median, num_pixels - median);
+
+    std::cout << "split vbox(vol = " << get_volume() << ", count = " << get_count() << ") ch = " << ch << " sv = " << (unsigned int)split_value   
+        << "\n\tvbox(vol = " << left->get_volume() << ", count = " << left->get_count() << ")"
+        << "\n\tvbox(vol = " <<right->get_volume() << ", count = " <<right->get_count() << ")" << std::endl;
 };
 
 

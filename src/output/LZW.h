@@ -5,6 +5,8 @@
 #include <cstring>
 #include <stdint.h>
 
+#include <iostream>
+
 class LZWNode {
     public:
         LZWNode() {};

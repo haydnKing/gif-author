@@ -57,6 +57,19 @@ const GIF *GIFAuthor::get_output() const
     return out;
 };
 
+void debug_ct(pGIFImage &img, const GIFColorTable *ct)
+{
+    for(int x = 0; x < img->get_width(); x++)
+    {
+        for(int y = 0; y < img->get_height(); y++)
+        {
+            if(x+img->get_width()*y > ct->num_colors())
+                break;
+            img->set_value(x,y,x+img->get_width()*y);
+        }
+    }
+};
+
 void GIFAuthor::update_output()
 {
     //delete the old;
@@ -96,6 +109,7 @@ void GIFAuthor::update_output()
         //Dither the image
         std::cout << "dither image" << std::endl;
         pGIFImage img = dither_image(*it, cq);
+        debug_ct(img, cq->get_ct());
         //TODO: set delay_time
         std::cout << "done with image" << std::endl;
         out->push_back(img);

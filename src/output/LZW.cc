@@ -17,7 +17,6 @@ LZW::LZW(std::ostream& _stream, int _minimum_code_size):
     std::memset(chunk, 0, 255);
 
     dict = new LZWNode[4096];
-    clear_dictionary();
 };
 
 LZW::~LZW(){
@@ -34,10 +33,12 @@ void LZW::write_debug(const uint8_t* data, uint32_t length)
 };
 
 void LZW::write(const uint8_t* data, uint32_t length){
+    clear_dictionary();
     int32_t cur_code = -1;
 
-    for(uint32_t i=0; i < length; i++){
 
+    for(uint32_t i=0; i < length; i++){
+        
         //if first code in a run
         if(cur_code < 0){
             cur_code = data[i];
@@ -83,7 +84,7 @@ void LZW::flush(){
 
 void LZW::clear_dictionary(){
     for(int i = 0; i < 4096; i++){
-        std::memset(dict[i].next_value, 0, 256);
+        std::memset(dict[i].next_value, 0, 256*sizeof(uint16_t));
     }
     write_code(clear_code, code_size);
     code_size = min_code_size + 1;
