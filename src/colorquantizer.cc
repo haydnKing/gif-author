@@ -87,6 +87,7 @@ class MMCQuantizer : public ColorQuantizer
             private:
                 void swap_px(const int& a, const int& b);
                 int partition(int start, int end, int pivot, int channel);
+                int partition_by_value(int start, int end, uint8_t value, int channel);
                 int find_median(int channel);
 
                 vbox *left, *right;
@@ -116,11 +117,15 @@ void MMCQuantizer::build_ct(int quantized_colors)
 {
     root = new vbox(colors, num_colors);
     ct = new GIFColorTable();
+    float f = 0.5;
 
     //split up the color space
     for(int i = 1; i < quantized_colors; i++)
     {
-        root->get_largest(1.0,1.0)->split();
+        if(i < quantized_colors * f)
+            root->get_largest(1.0,0.0)->split();
+        else
+            root->get_largest(1.0,1.0)->split();
     }
     root->add_to_ct(ct);
 };
@@ -273,6 +278,19 @@ int MMCQuantizer::vbox::partition(int start, int end, int pivot, int channel)
     return i+1;
 };
 
+int MMCQuantizer::vbox::partition_by_value(int start, int end, uint8_t value, int channel)
+{
+    int i = start, j;
+    for(j = start; j < end; j++)
+    {
+        if(px[3*j+channel] < value)
+        {
+            swap_px(i,j);
+            i++;
+        }
+    }
+    return i;
+};
 
 int MMCQuantizer::vbox::find_median(int ch)
 {
@@ -336,6 +354,22 @@ void MMCQuantizer::vbox::split()
     int median = find_median(ch);
     split_channel = ch;
     split_value = px[3*median+ch];
+
+    //if left is the largest distance
+    if(split_value - min[ch] > max[ch] - split_value)
+    {
+        //split half way along the left
+        split_value = uint8_t(((uint16_t)split_value+(uint16_t)min[ch])/2);
+        median = partition_by_value(0, median, split_value, ch);
+    }
+    //if right is the largest distance
+    else
+    {
+        //split half way along the right
+        split_value = uint8_t(((uint16_t)split_value+(uint16_t)max[ch])/2);
+        median = partition_by_value(median, num_pixels, split_value, ch);
+    }
+    
     
     left = new vbox(px, median);
     right = new vbox(px+3*median, num_pixels - median);

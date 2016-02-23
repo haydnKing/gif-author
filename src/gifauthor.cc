@@ -89,14 +89,9 @@ void GIFAuthor::update_output()
     int x, y;
     for(it = frames.begin(); it < frames.end(); it++)
     {
-        std::cout << "get_quantizer" << std::endl;
-        std::cout << "frame " << (*it)->get_width() << "x"
-                              << (*it)->get_height() << " rs "
-                              << (*it)->get_rowstride() << std::endl;
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
         cq->set_max_colors((*it)->get_height() * (*it)->get_width());
-        std::cout << "adding colours" << std::endl;
         for(y = 0; y < (*it)->get_height(); y++)
         {
             for(x = 0; x < (*it)->get_width(); x++)
@@ -104,15 +99,12 @@ void GIFAuthor::update_output()
                 cq->add_color((*it)->get_pixel(x,y));
             }
         }
-        std::cout << "build_ct" << std::endl;
         cq->build_ct();
 
         //Dither the image
-        std::cout << "dither image" << std::endl;
         pGIFImage img = dither_image(*it, cq);
         debug_ct(img, cq->get_ct());
         //TODO: set delay_time
-        std::cout << "done with image" << std::endl;
         out->push_back(img);
     }
 };
@@ -150,14 +142,14 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
 {
     std::cout << "dither_fs" << std::endl;
     //store 2 rows of RGB errors, set to zero
-    int16_t* errors = new int16_t[6*vf->get_width()];
-    std::memset(errors, 0, 6*vf->get_width()*sizeof(int16_t));
+    int32_t* errors = new int32_t[6*vf->get_width()];
+    std::memset(errors, 0, 6*vf->get_width()*sizeof(int32_t));
     //pointers to the errors that can be swapped around
-    int16_t *this_row = errors, 
+    int32_t *this_row = errors, 
             *next_row = errors + 3*vf->get_width(), 
             *swap;
     uint8_t pixel[3], * color;
-    int16_t error[3];
+    int32_t error[3];
 
     int x, y, index, i;
 
@@ -169,26 +161,20 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
             std::memcpy(pixel, vf->get_pixel(x,y), 3*sizeof(uint8_t));
             //add the errors, being wary of overflow
             for(i = 0; i < 3; i++)
-                pixel[i] = (uint8_t) std::min(UINT8_MAX,
-                        std::max(0,this_row[3*x+i]/16 + int16_t(pixel[i])));
+            {
+                error[i] = this_row[3*x+i] + int32_t(pixel[i])*256;
+                pixel[i] = (uint8_t)std::max(0, std::min(UINT8_MAX, (error[i]+128)/256));
+            }
 
             //get the closest ct
             index = cq->map_to_ct(pixel);
             //set the pixel
             out->set_value(x, y, index);
-            //calculate the errors. Shift 4 places so that we're accurate to 1/16 of a colour gradation
+            //calculate the errors. Shift 8 places for accuracy
             for(i = 0; i < 3; i++)
-                error[i] = (int16_t(cq->get_ct()->get_index(index)[i]) - int16_t(pixel[i]))*16;
+                error[i] -= int32_t(cq->get_ct()->get_index(index)[i])*256;
 
-            std::cout << "error: ("<< error[0] << ", " << error[1] << ", "  << error[2] << ") = (" 
-                << (int)cq->get_ct()->get_index(index)[0] <<", " 
-                << (int)cq->get_ct()->get_index(index)[1] <<", " 
-                << (int)cq->get_ct()->get_index(index)[2] <<") - (" 
-                << int16_t(pixel[0]) << ", "
-                << int16_t(pixel[1]) << ", "
-                << int16_t(pixel[2]) << ")"
-                << std::endl;
-
+            
             //propagate the errors
             if(x+1 < vf->get_width())
             {
@@ -211,7 +197,7 @@ void GIFAuthor::dither_FS(const pVideoFrame vf,
         swap = this_row;
         this_row = next_row;
         next_row = this_row;
-        memset(next_row, 0, 3*vf->get_width()*sizeof(int16_t));
+        memset(next_row, 0, 3*vf->get_width()*sizeof(int32_t));
     }
 
     //the best way to cover up mistakes ;)

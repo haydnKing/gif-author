@@ -25,7 +25,7 @@ class ColorQuantizer : public Glib::Object
         void add_color(const uint8_t* color);
         void add_colors(const uint8_t* color, int count);
 
-        virtual void build_ct(int quantized_colors=8) = 0;
+        virtual void build_ct(int quantized_colors=256) = 0;
         virtual int map_to_ct(const uint8_t* color) const = 0;
         virtual const GIFColorTable *get_ct() const = 0;
 
