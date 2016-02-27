@@ -87,12 +87,12 @@ class MMCQuantizer : public ColorQuantizer
             private:
                 void swap_px(const int& a, const int& b);
                 int partition(int start, int end, int pivot, int channel);
-                int partition_by_value(int start, int end, uint8_t value, int channel);
+                int partition_by_value(int start, int end, float value, int channel);
                 int find_median(int channel);
 
                 vbox *left, *right;
                 int split_channel, ct_index;
-                uint8_t split_value;
+                float split_value;
                 uint8_t *px;
                 int num_pixels;
                 uint8_t min[3], max[3];
@@ -152,6 +152,8 @@ MMCQuantizer::vbox::vbox(uint8_t* _px, int np):
     left(NULL),
     right(NULL)
 {
+    if(np == 0)
+        std::cout << "\tCreated a vbox with no pixels!" << std::endl;
     //find the minimum and maximum in each dimension
     min[0] = min[1] = min[2] = 255;
     max[0] = max[1] = max[2] = 0;
@@ -247,6 +249,9 @@ void MMCQuantizer::vbox::add_to_ct(GIFColorTable *ct)
 
 void MMCQuantizer::vbox::swap_px(const int& a, const int& b)
 {
+    if(a < 0 || b < 0 || a >= num_pixels || b >= num_pixels){
+        std::cout << "swap_px(" << a << ", " << b << ") out of range [0, " << num_pixels << ")" << std::endl;
+    }
     uint8_t t, i;
     for(i=0; i < 3; i++)
     {
@@ -278,7 +283,7 @@ int MMCQuantizer::vbox::partition(int start, int end, int pivot, int channel)
     return i+1;
 };
 
-int MMCQuantizer::vbox::partition_by_value(int start, int end, uint8_t value, int channel)
+int MMCQuantizer::vbox::partition_by_value(int start, int end, float value, int channel)
 {
     int i = start, j;
     for(j = start; j < end; j++)
@@ -294,45 +299,45 @@ int MMCQuantizer::vbox::partition_by_value(int start, int end, uint8_t value, in
 
 int MMCQuantizer::vbox::find_median(int ch)
 {
-    int start = 0, 
-        end = num_pixels, 
+    int first = 0, 
+        last = num_pixels-1, 
         median = num_pixels / 2, 
         mid, 
         pivot;
 
-    while(end - start > 1)
+    while(last != first)
     {
-        mid = (start + end) / 2;
-        // Choose a pivot - the median of the start, middle and end.
+        mid = (first + last) / 2;
+        // Choose a pivot - the median of the first, middle and last.
         // unlikely to be a rubbish pivot
         if(
-            (px[3*start+ch] >= px[3*mid+ch] && px[3*start+ch] <= px[3*end+ch]) ||
-            (px[3*start+ch] <= px[3*mid+ch] && px[3*start+ch] >= px[3*end+ch]))
-            pivot = start;
+            (px[3*first+ch] >= px[3*mid+ch] && px[3*first+ch] <= px[3*last+ch]) ||
+            (px[3*first+ch] <= px[3*mid+ch] && px[3*first+ch] >= px[3*last+ch]))
+            pivot = first;
         else if(
-            (px[3*mid+ch] > px[3*start+ch] && px[3*mid+ch] < px[3*end+ch]) ||
-            (px[3*mid+ch] < px[3*start+ch] && px[3*mid+ch] > px[3*end+ch]))
+            (px[3*mid+ch] > px[3*first+ch] && px[3*mid+ch] < px[3*last+ch]) ||
+            (px[3*mid+ch] < px[3*first+ch] && px[3*mid+ch] > px[3*last+ch]))
             pivot = mid;
         else
-            pivot = end;
+            pivot = last;
 
 
         //partition using that pivot
-        pivot = partition(start, end, pivot, ch);
+        pivot = partition(first, last+1, pivot, ch);
 
         //if the pivot is below the median, we only need to partition the upper part
         if(pivot < median)
-            start = pivot;
+            first = pivot;
         //if the pivot is above the median, we only need to partition the lower part
         else if(pivot > median)
-            end = pivot-1;
+            last = pivot-1;
         //special case where we happened to get the median
         else if(pivot == median)
             return pivot;
 
     }
 
-    return start;
+    return first;
 };
 
 
@@ -351,28 +356,50 @@ void MMCQuantizer::vbox::split()
     }
 
     //find the index of the median pixel in that channel
-    int median = find_median(ch);
+    int split_index = find_median(ch);
+    int median = split_index;
     split_channel = ch;
-    split_value = px[3*median+ch];
+    split_value = float(px[3*split_index+ch]);
 
     //if left is the largest distance
     if(split_value - min[ch] > max[ch] - split_value)
     {
         //split half way along the left
-        split_value = uint8_t(((uint16_t)split_value+(uint16_t)min[ch])/2);
-        median = partition_by_value(0, median, split_value, ch);
+        split_value = ((float)split_value+(float)min[ch])/2.;
+        split_index = partition_by_value(0, split_index, split_value, ch);
     }
     //if right is the largest distance
     else
     {
         //split half way along the right
-        split_value = uint8_t(((uint16_t)split_value+(uint16_t)max[ch])/2);
-        median = partition_by_value(median, num_pixels, split_value, ch);
+        split_value = ((float)split_value+(float)max[ch])/2.;
+        split_index = partition_by_value(split_index, num_pixels, split_value, ch);
     }
     
+    if(split_index == 0 || num_pixels == split_index)
+    {
+        std::cout << "Parent: l,r = " << split_index << ", " << num_pixels-split_index << "; ch = " << ch << 
+            "; min = {" 
+            << (unsigned int)min[0] << ", "
+            << (unsigned int)min[1] << ", " 
+            << (unsigned int)min[2] 
+            << "}; max = {" 
+            << (unsigned int)max[0] << ", "
+            << (unsigned int)max[1] << ", "
+            << (unsigned int)max[2]
+            << "}; split_value = " << split_value << "; median = " << median << ";"  << std::endl; 
+        for(i=0; i < num_pixels; i++)
+        {
+            if(px[3*i] > 4)
+            std::cout << "px[3*" << i << "] = {"
+                << (unsigned int)px[3*i+0] << ", "
+                << (unsigned int)px[3*i+1] << ", "
+                << (unsigned int)px[3*i+2] << "};" << std::endl;
+        }   
+    }
     
-    left = new vbox(px, median);
-    right = new vbox(px+3*median, num_pixels - median);
+    left = new vbox(px, split_index);
+    right = new vbox(px+3*split_index, num_pixels - split_index);
 };
 
 
