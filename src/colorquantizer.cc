@@ -152,8 +152,6 @@ MMCQuantizer::vbox::vbox(uint8_t* _px, int np):
     left(NULL),
     right(NULL)
 {
-    if(np == 0)
-        std::cout << "\tCreated a vbox with no pixels!" << std::endl;
     //find the minimum and maximum in each dimension
     min[0] = min[1] = min[2] = 255;
     max[0] = max[1] = max[2] = 0;
@@ -249,9 +247,6 @@ void MMCQuantizer::vbox::add_to_ct(GIFColorTable *ct)
 
 void MMCQuantizer::vbox::swap_px(const int& a, const int& b)
 {
-    if(a < 0 || b < 0 || a >= num_pixels || b >= num_pixels){
-        std::cout << "swap_px(" << a << ", " << b << ") out of range [0, " << num_pixels << ")" << std::endl;
-    }
     uint8_t t, i;
     for(i=0; i < 3; i++)
     {
@@ -374,28 +369,6 @@ void MMCQuantizer::vbox::split()
         //split half way along the right
         split_value = ((float)split_value+(float)max[ch])/2.;
         split_index = partition_by_value(split_index, num_pixels, split_value, ch);
-    }
-    
-    if(split_index == 0 || num_pixels == split_index)
-    {
-        std::cout << "Parent: l,r = " << split_index << ", " << num_pixels-split_index << "; ch = " << ch << 
-            "; min = {" 
-            << (unsigned int)min[0] << ", "
-            << (unsigned int)min[1] << ", " 
-            << (unsigned int)min[2] 
-            << "}; max = {" 
-            << (unsigned int)max[0] << ", "
-            << (unsigned int)max[1] << ", "
-            << (unsigned int)max[2]
-            << "}; split_value = " << split_value << "; median = " << median << ";"  << std::endl; 
-        for(i=0; i < num_pixels; i++)
-        {
-            if(px[3*i] > 4)
-            std::cout << "px[3*" << i << "] = {"
-                << (unsigned int)px[3*i+0] << ", "
-                << (unsigned int)px[3*i+1] << ", "
-                << (unsigned int)px[3*i+2] << "};" << std::endl;
-        }   
     }
     
     left = new vbox(px, split_index);
