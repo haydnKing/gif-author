@@ -89,20 +89,26 @@ void GIFAuthor::update_output()
     int x, y;
     for(it = frames.begin(); it < frames.end(); it++)
     {
+        //scale
+        pVideoFrame fr = *it;
+        float r = 500. / float(fr->get_width());
+        fr = fr->scale(500, int(0.5+r*float(fr->get_height())));
+
+
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
-        cq->set_max_colors((*it)->get_height() * (*it)->get_width());
-        for(y = 0; y < (*it)->get_height(); y++)
+        cq->set_max_colors(fr->get_height() * fr->get_width());
+        for(y = 0; y < fr->get_height(); y++)
         {
-            for(x = 0; x < (*it)->get_width(); x++)
+            for(x = 0; x < fr->get_width(); x++)
             {
-                cq->add_color((*it)->get_pixel(x,y));
+                cq->add_color(fr->get_pixel(x,y));
             }
         }
         cq->build_ct();
 
         //Dither the image
-        pGIFImage img = dither_image(*it, cq);
+        pGIFImage img = dither_image(fr, cq);
         debug_ct(img, cq->get_ct());
         //TODO: set delay_time
         out->push_back(img);
