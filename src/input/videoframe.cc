@@ -140,15 +140,17 @@ VideoFrame::VideoFrame():
     width(-1),
     height(-1),
     rowstride(-1),
-    timestamp(-1)
+    timestamp(-1),
+    frame_parent(NULL)
 {
     data = NULL;
 };
 
 VideoFrame::~VideoFrame(){
-    if(data != NULL){
+    if(frame_parent != NULL)
+        av_frame_free(&frame_parent);
+    else if(data != NULL)
         delete [] data;
-    }
 };
 
 /*
@@ -177,6 +179,19 @@ pVideoFrame VideoFrame::create_from_data(
     VideoFrame* f = new VideoFrame();
     f->init(cdata, width, height, rowstride, timestamp, position, data_parent);
     return pVideoFrame(f);
+};
+        
+pVideoFrame VideoFrame::create_from_avframe(AVFrame *fr, int64_t timestamp, int64_t position)
+{
+    pVideoFrame vf = create_from_data(fr->data[0],
+                                      fr->width,
+                                      fr->height,
+                                      fr->linesize[0],
+                                      false,
+                                      timestamp,
+                                      position);
+    vf->frame_parent = fr;
+    return vf;
 };
         
 Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf(){

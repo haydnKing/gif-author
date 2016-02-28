@@ -240,16 +240,10 @@ pVideoFrame VideoFile::get_frame(){
     if(!decode_convert_frame(&out)){
         return VideoFrame::create();
     }
-    pVideoFrame vf = VideoFrame::create_from_data(out->data[0],
-                                        out->width,
-                                        out->height,
-                                        out->linesize[0],
-                                        true,
+    return VideoFrame::create_from_avframe(out,
         (1000*formatCtx->streams[videoStream]->time_base.num*timestamp())/
         formatCtx->streams[videoStream]->time_base.den,
                                         position());
-    av_frame_free(&out);
-    return vf;
 };
         
 std::list<pVideoFrame> VideoFile::extract(int64_t start, int64_t end){

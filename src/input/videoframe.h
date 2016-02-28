@@ -9,6 +9,12 @@
 #include <sstream>
 
 #include <iostream>
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
+#include <libswscale/swscale.h>
+}
 
 /**
  * Affine 2D Transform
@@ -160,6 +166,8 @@ class VideoFrame : public Glib::Object
                 int64_t _position=-1,
                 pVideoFrame _data_parent=pVideoFrame());
 
+        static pVideoFrame create_from_avframe(AVFrame *fr, int64_t timestamp, int64_t position);
+
         /**
          * Get a Gdk::Pixbuf of the image with the same underlying data
          */
@@ -289,6 +297,7 @@ class VideoFrame : public Glib::Object
         uint8_t* data;
         //keep a pointer to the data parent (if any) so that the data isn't deleted
         pVideoFrame data_parent;
+        AVFrame *frame_parent;
 };
 
 
