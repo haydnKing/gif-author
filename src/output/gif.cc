@@ -62,12 +62,12 @@ GIFImage::GIFImage(int _left,
     ct(_ct),
     delay_time(_delay_time),
     flag_interlaced(false),
-    flag_transparency(transparency)
+    flag_transparency(transparency),
+    disposal_method(DISPOSAL_METHOD_NOT_SPECIFIED),
+    flag_user_input(false)
 {
-    std::cout << "\tdata = new uint8_t[" << width*height << "];" <<  std::endl; 
     data = new uint8_t[width*height];
     std::memset(data, 0, width*height);
-    std::cout << "data = " << data << std::endl;
 };
 
 GIFImage::~GIFImage(){

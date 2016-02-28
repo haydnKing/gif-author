@@ -21,6 +21,7 @@ LZW::LZW(std::ostream& _stream, int _minimum_code_size):
 
 LZW::~LZW(){
     delete [] chunk;
+    delete [] dict;
 }
 
 void LZW::write_debug(const uint8_t* data, uint32_t length)
