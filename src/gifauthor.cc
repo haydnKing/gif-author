@@ -82,18 +82,27 @@ void GIFAuthor::update_output()
     //preprocess frames here
     //
     //
+    int scale_x = 500;
+    float r = float(scale_x) / float(frames[0]->get_width());
+    int scale_y = int(0.5+r*float(frames[0]->get_height()));
 
-    out = new GIF(frames[0]->get_width(),
-                  frames[0]->get_height());
+    out = new GIF(scale_x, scale_y);
     std::vector<pVideoFrame>::iterator it;
+    pVideoFrame fr;
     int x, y;
     for(it = frames.begin(); it < frames.end(); it++)
     {
+        fr = *it;
         std::cout << "Scaling..." << std::endl;
         //scale
-        pVideoFrame fr = *it;
-        float r = 500. / float(fr->get_width());
-        fr = fr->scale_to(500, int(0.5+r*float(fr->get_height())));
+        fr = fr->scale_to(scale_x, scale_y);
+   /*     fr = VideoFrame::create_from_data(fr->get_data(),
+                                          fr->get_width(),
+                                          fr->get_height(),
+                                          fr->get_rowstride(),
+                                          true,
+                                          fr->get_timestamp(),
+                                          fr->get_position());*/
         std::cout << "done" << std::endl;
 
 

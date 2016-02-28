@@ -291,28 +291,30 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode) 
         if(limits[2] < cx[i]) limits[2] = cx[i];
         if(limits[3] < cy[i]) limits[3] = cy[i];
     }
-    int _width = int(limits[2] - limits[0]+0.5);
-    int _height = int(limits[3] - limits[1]+0.5); 
+    int t_width = int(limits[2] - limits[0]+0.5);
+    int t_height = int(limits[3] - limits[1]+0.5); 
 
-    std::cout << "Target width, height: (" << _width << ", " << _height << ")" << std::endl;
+    std::cout << "Target width, height: (" << t_width << ", " << t_height << ")" << std::endl;
+    std::cout << "origin: (" << limits[0] << ", " << limits[1] << ")" << std::endl;
 
     //allocate data
-    uint8_t *_data = new uint8_t[3*_width*_height];
+    uint8_t *t_data = new uint8_t[3*t_width*t_height];
+    std::memset(t_data, 0, 3*t_width*t_height);
     double x,y;
-    for(int v=0; v < _height; v++)
+    for(int v=0; v < t_height; v++)
     {
-        for(int u=0; u < _width; u++)
+        for(int u=0; u < t_width; u++)
         {
             //find location of (x,y) in the original image
             inv.get(limits[0]+u, limits[1]+v, x, y);
-            interpolate(x,y,_data+3*(u+_width*v), mode);
+            interpolate(x,y,t_data+3*(u+t_width*v), mode);
         }
     }
 
-    return VideoFrame::create_from_data(_data, 
-                                        _width, 
-                                        _height, 
-                                        _width,
+    return VideoFrame::create_from_data(t_data, 
+                                        t_width, 
+                                        t_height, 
+                                        3*t_width,
                                         false,
                                         timestamp,
                                         position);
@@ -378,33 +380,67 @@ void VideoFrame::interpolate_nearest(double x, double y, uint8_t* out) const
         iy = int(y+0.5);
     //this will round up eveything in range (width-0.5,width) to width
     //which could cause a seg-fault
-    if(ix == width) ix--;
-    if(iy == height) iy--;
+    if(ix >= width) ix = width-1;
+    if(iy >= height) iy = height -1;
     std::memcpy(out, get_pixel(ix,iy), 3*sizeof(uint8_t));
 };
 
 void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
 {
+    bool v = int(x)==433 && int(y)==61;
+
     int ix = int(x),
         iy = int(y);
     uint8_t a[3], b[3], c[3], d[3];
+    double da[3], db[3];
     extrapolate(ix  , iy  , a),
     extrapolate(ix+1, iy  , b),
     extrapolate(ix  , iy+1, c),
     extrapolate(ix+1, iy+1, d);
     double fx = x - ix,
            fy = y - iy;
+
+    if(v)
+    {
+        std::cout << "CORNERS:" << std::endl;
+        std::cout << "\tRGB(" 
+                  << (unsigned int)a[0] << ", "
+                  << (unsigned int)a[1] << ", "
+                  << (unsigned int)a[2] << ")" << std::endl;
+        std::cout << "\tRGB(" 
+                  << (unsigned int)b[0] << ", "
+                  << (unsigned int)b[1] << ", "
+                  << (unsigned int)b[2] << ")" << std::endl;
+        std::cout << "\tRGB(" 
+                  << (unsigned int)c[0] << ", "
+                  << (unsigned int)c[1] << ", "
+                  << (unsigned int)c[2] << ")" << std::endl;
+        std::cout << "\tRGB(" 
+                  << (unsigned int)d[0] << ", "
+                  << (unsigned int)d[1] << ", "
+                  << (unsigned int)d[2] << ")" << std::endl;
+        std::cout << "fx, fy = (" << fx << ", " << fy << ")" << std::endl;
+    }
     //x-axis
-    a[0] = fx*a[0] + (1.-fx)*b[0];
-    a[1] = fx*a[1] + (1.-fx)*b[1];
-    a[2] = fx*a[2] + (1.-fx)*b[2];
-    c[0] = fx*c[0] + (1.-fx)*d[0];
-    c[1] = fx*c[1] + (1.-fx)*d[1];
-    c[2] = fx*c[2] + (1.-fx)*d[2];
+    da[0] = (1.-fx)*double(a[0]) + fx*double(b[0]);
+    da[1] = (1.-fx)*double(a[1]) + fx*double(b[1]);
+    da[2] = (1.-fx)*double(a[2]) + fx*double(b[2]);
+    db[0] = (1.-fx)*double(c[0]) + fx*double(d[0]);
+    db[1] = (1.-fx)*double(c[1]) + fx*double(d[1]);
+    db[2] = (1.-fx)*double(c[2]) + fx*double(d[2]);
     //y-axis
-    out[0] = fy*a[0] + (1.-fy)*c[0];
-    out[1] = fy*a[1] + (1.-fy)*c[1];
-    out[2] = fy*a[2] + (1.-fy)*c[2];
+    out[0] = uint8_t(0.5+(1.-fy)*da[0] + fy*db[0]);
+    out[1] = uint8_t(0.5+(1.-fy)*da[1] + fy*db[1]);
+    out[2] = uint8_t(0.5+(1.-fy)*da[2] + fy*db[2]);
+
+    if(v)
+    {
+        std::cout << "OUT:" << std::endl;
+        std::cout << "\tRGB(" 
+                  << (unsigned int)out[0] << ", "
+                  << (unsigned int)out[1] << ", "
+                  << (unsigned int)out[2] << ")" << std::endl;
+    }
 };
 
 void bicubic_p(double t, 
