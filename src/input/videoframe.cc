@@ -147,7 +147,7 @@ VideoFrame::VideoFrame():
 
 VideoFrame::~VideoFrame(){
     if(data != NULL){
-        delete data;
+        delete [] data;
     }
 };
 

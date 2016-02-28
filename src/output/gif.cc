@@ -66,8 +66,8 @@ GIFImage::GIFImage(int _left,
 {
     std::cout << "\tdata = new uint8_t[" << width*height << "];" <<  std::endl; 
     data = new uint8_t[width*height];
+    std::memset(data, 0, width*height);
     std::cout << "data = " << data << std::endl;
-    clear_to(0);
 };
 
 GIFImage::~GIFImage(){
