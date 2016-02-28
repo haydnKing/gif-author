@@ -34,9 +34,9 @@ void ColorQuantizer::add_color(const uint8_t* color)
 {
     if(num_colors < max_colors)
     {
-        num_colors++;
         for(int i = 0; i < 3; i++)
             colors[3*num_colors+i] = color[i];
+        num_colors++;
     }
 };
 

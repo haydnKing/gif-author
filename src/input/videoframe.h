@@ -6,6 +6,9 @@
 #include <glibmm/object.h>
 #include <gdkmm/pixbuf.h>
 #include <glibmm/refptr.h>
+#include <sstream>
+
+#include <iostream>
 
 /**
  * Affine 2D Transform
@@ -93,6 +96,8 @@ class Affine2D
 
         const double* get_A() const {return A;};
         const double* get_b() const {return b;};
+
+        std::string as_string() const;
 
     protected:
         Affine2D();
@@ -225,7 +230,8 @@ class VideoFrame : public Glib::Object
          * @param height target height
          * @returns the new frame
          */
-        pVideoFrame scale(int width, int height) const;
+        pVideoFrame scale_to(int width, int height,
+                              InterpolationMethod mode=INTERPOLATION_BILINEAR) const;
 
         /**
          * Return a transformed version of the VideoFrame
@@ -233,7 +239,7 @@ class VideoFrame : public Glib::Object
          * @returns the new frame
          */
         pVideoFrame transform(const Affine2D& tr,
-                              InterpolationMethod mode=INTERPOLATION_BILINEAR);
+                              InterpolationMethod mode=INTERPOLATION_BILINEAR) const;
 
         /**
          * Retrieve the color at (x,y)

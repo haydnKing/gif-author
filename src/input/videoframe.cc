@@ -19,8 +19,12 @@ void ext_lin(const uint8_t* a,
 };
 
 Affine2D::Affine2D(){
-    std::memset(&A, 0, 4 * sizeof(double));
-    std::memset(&b, 0, 2 * sizeof(double));
+    A[0] = 0.;
+    A[1] = 0.;
+    A[2] = 0.;
+    A[3] = 0.;
+    b[0] = 0.;
+    b[1] = 0.;
 };
 
 Affine2D::Affine2D(const Affine2D& rhs){
@@ -88,10 +92,10 @@ Affine2D Affine2D::Invert(const Affine2D& rhs)
     double det = rhs.A[0] * rhs.A[3] - rhs.A[1] * rhs.A[2];
     ret.A[0] =   rhs.A[3] / det;
     ret.A[1] = - rhs.A[1] / det;
-    ret.A[2] =   rhs.A[2] / det;
-    ret.A[3] = - rhs.A[0] / det;
-    ret.b[0] = ret.A[0] * rhs.b[0] + ret.b[1] * ret.b[1];
-    ret.b[1] = ret.A[2] * rhs.b[0] + ret.b[3] * ret.b[1];
+    ret.A[2] = - rhs.A[2] / det;
+    ret.A[3] =   rhs.A[0] / det;
+    ret.b[0] = ret.A[0] * rhs.b[0] + ret.A[1] * rhs.b[1];
+    ret.b[1] = ret.A[2] * rhs.b[0] + ret.A[3] * rhs.b[1];
     return ret;
 }
 
@@ -113,7 +117,7 @@ double Affine2D::get_x(const double& x, const double& y) const
 
 double Affine2D::get_y(const double& x, const double& y) const
 {
-    return A[2] * x + A[3] * y + b[0];
+    return A[2] * x + A[3] * y + b[1];
 };
 
 void Affine2D::get(const double& u, const double& v, 
@@ -121,6 +125,14 @@ void Affine2D::get(const double& u, const double& v,
 {
     x = A[0] * u + A[1] * v + b[0];
     y = A[2] * u + A[3] * v + b[1];
+};
+        
+std::string Affine2D::as_string() const
+{
+    std::stringstream ss;
+    ss << "[" << A[0] << ", " << A[1] << "] [x]   [" << b[0] << "]\n" 
+       << "[" << A[2] << ", " << A[3] << "] [y] + [" << b[1] << "]";     
+    return ss.str();
 };
 
 
@@ -230,17 +242,29 @@ pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
             pVideoFrame(this));
 };
 
-pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode){
+pVideoFrame VideoFrame::scale_to(int w, int h, InterpolationMethod method) const
+{
+    std::cout << "scale_to(" << w << ", " << h << ", ...);" << std::endl;
+    std::cout << "\t(" << get_width() << ", " << get_height() << ")" << std::endl;
+    Affine2D tr = Affine2D::Scale(float(w)/float(get_width()),
+                                  float(h)/float(get_height()));
+    std::cout << tr.as_string() << std::endl;
+    return transform(tr, method);
+};
+
+pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode) const
+{
     int i;
     //get inverse transform
     Affine2D inv = tr.invert();
+    std::cout << "Inverse\n" << inv.as_string() << std::endl;
     //find out where the image corners transform to
     double cx[4];
     double cy[4];
-    tr.get(    0.,    0., cx[0], cy[0]);
-    tr.get(    0., width, cx[1], cy[1]);
-    tr.get(height,    0., cx[2], cy[2]);
-    tr.get(height, width, cx[3], cy[3]);
+    tr.get(   0.,    0., cx[0], cy[0]);
+    tr.get(width,    0., cx[1], cy[1]);
+    tr.get(   0., height, cx[2], cy[2]);
+    tr.get(width, height, cx[3], cy[3]);
     //find the limits of the image
     double limits[4] = {std::numeric_limits<double>::max(),
                         std::numeric_limits<double>::max(),
@@ -252,15 +276,17 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode){
         if(limits[2] < cx[i]) limits[2] = cx[i];
         if(limits[3] < cy[i]) limits[3] = cy[i];
     }
-    int _width = int(limits[2] - limits[0]);
-    int _height = int(limits[3] - limits[1]); 
+    int _width = int(limits[2] - limits[0]+0.5);
+    int _height = int(limits[3] - limits[1]+0.5); 
+
+    std::cout << "Target width, height: (" << _width << ", " << _height << ")" << std::endl;
 
     //allocate data
     uint8_t *_data = new uint8_t[3*_width*_height];
     double x,y;
-    for(int u=0; u < _width; u++)
+    for(int v=0; v < _height; v++)
     {
-        for(int v=0; v < _width; v++)
+        for(int u=0; u < _width; u++)
         {
             //find location of (x,y) in the original image
             inv.get(limits[0]+u, limits[1]+v, x, y);

@@ -64,7 +64,9 @@ GIFImage::GIFImage(int _left,
     flag_interlaced(false),
     flag_transparency(transparency)
 {
+    std::cout << "\tdata = new uint8_t[" << width*height << "];" <<  std::endl; 
     data = new uint8_t[width*height];
+    std::cout << "data = " << data << std::endl;
     clear_to(0);
 };
 

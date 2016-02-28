@@ -89,10 +89,12 @@ void GIFAuthor::update_output()
     int x, y;
     for(it = frames.begin(); it < frames.end(); it++)
     {
+        std::cout << "Scaling..." << std::endl;
         //scale
         pVideoFrame fr = *it;
         float r = 500. / float(fr->get_width());
-        fr = fr->scale(500, int(0.5+r*float(fr->get_height())));
+        fr = fr->scale_to(500, int(0.5+r*float(fr->get_height())));
+        std::cout << "done" << std::endl;
 
 
         //create a quantizer
@@ -120,6 +122,9 @@ void GIFAuthor::update_output()
 Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
                                                pColorQuantizer cq) const
 {
+    std::cout << "new GIFImage(0,0," << vf->get_width() << ", "
+                                     << vf->get_height() << ", "
+                                     << "0, false, ct);" << std::endl;
     //Create the output image
     GIFImage *ret = new GIFImage(0,
                                  0, 
@@ -128,6 +133,8 @@ Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
                                  0,
                                  false,
                                  cq->get_ct());
+
+    std::cout << "-> " << ret << std::endl;
 
     switch(dm)
     {
