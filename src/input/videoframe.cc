@@ -260,10 +260,8 @@ pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
 pVideoFrame VideoFrame::scale_to(int w, int h, InterpolationMethod method) const
 {
     std::cout << "scale_to(" << w << ", " << h << ", ...);" << std::endl;
-    std::cout << "\t(" << get_width() << ", " << get_height() << ")" << std::endl;
     Affine2D tr = Affine2D::Scale(float(w)/float(get_width()),
                                   float(h)/float(get_height()));
-    std::cout << tr.as_string() << std::endl;
     return transform(tr, method);
 };
 
@@ -272,7 +270,6 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode) 
     int i;
     //get inverse transform
     Affine2D inv = tr.invert();
-    std::cout << "Inverse\n" << inv.as_string() << std::endl;
     //find out where the image corners transform to
     double cx[4];
     double cy[4];
@@ -293,9 +290,6 @@ pVideoFrame VideoFrame::transform(const Affine2D& tr, InterpolationMethod mode) 
     }
     int t_width = int(limits[2] - limits[0]+0.5);
     int t_height = int(limits[3] - limits[1]+0.5); 
-
-    std::cout << "Target width, height: (" << t_width << ", " << t_height << ")" << std::endl;
-    std::cout << "origin: (" << limits[0] << ", " << limits[1] << ")" << std::endl;
 
     //allocate data
     uint8_t *t_data = new uint8_t[3*t_width*t_height];
@@ -387,8 +381,6 @@ void VideoFrame::interpolate_nearest(double x, double y, uint8_t* out) const
 
 void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
 {
-    bool v = int(x)==433 && int(y)==61;
-
     int ix = int(x),
         iy = int(y);
     uint8_t a[3], b[3], c[3], d[3];
@@ -400,27 +392,6 @@ void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
     double fx = x - ix,
            fy = y - iy;
 
-    if(v)
-    {
-        std::cout << "CORNERS:" << std::endl;
-        std::cout << "\tRGB(" 
-                  << (unsigned int)a[0] << ", "
-                  << (unsigned int)a[1] << ", "
-                  << (unsigned int)a[2] << ")" << std::endl;
-        std::cout << "\tRGB(" 
-                  << (unsigned int)b[0] << ", "
-                  << (unsigned int)b[1] << ", "
-                  << (unsigned int)b[2] << ")" << std::endl;
-        std::cout << "\tRGB(" 
-                  << (unsigned int)c[0] << ", "
-                  << (unsigned int)c[1] << ", "
-                  << (unsigned int)c[2] << ")" << std::endl;
-        std::cout << "\tRGB(" 
-                  << (unsigned int)d[0] << ", "
-                  << (unsigned int)d[1] << ", "
-                  << (unsigned int)d[2] << ")" << std::endl;
-        std::cout << "fx, fy = (" << fx << ", " << fy << ")" << std::endl;
-    }
     //x-axis
     da[0] = (1.-fx)*double(a[0]) + fx*double(b[0]);
     da[1] = (1.-fx)*double(a[1]) + fx*double(b[1]);
@@ -432,15 +403,6 @@ void VideoFrame::interpolate_bilinear(double x, double y, uint8_t* out) const
     out[0] = uint8_t(0.5+(1.-fy)*da[0] + fy*db[0]);
     out[1] = uint8_t(0.5+(1.-fy)*da[1] + fy*db[1]);
     out[2] = uint8_t(0.5+(1.-fy)*da[2] + fy*db[2]);
-
-    if(v)
-    {
-        std::cout << "OUT:" << std::endl;
-        std::cout << "\tRGB(" 
-                  << (unsigned int)out[0] << ", "
-                  << (unsigned int)out[1] << ", "
-                  << (unsigned int)out[2] << ")" << std::endl;
-    }
 };
 
 void bicubic_p(double t, 

@@ -131,9 +131,6 @@ void GIFAuthor::update_output()
 Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
                                                pColorQuantizer cq) const
 {
-    std::cout << "new GIFImage(0,0," << vf->get_width() << ", "
-                                     << vf->get_height() << ", "
-                                     << "0, false, ct);" << std::endl;
     //Create the output image
     GIFImage *ret = new GIFImage(0,
                                  0, 
@@ -142,8 +139,6 @@ Glib::RefPtr<GIFImage> GIFAuthor::dither_image(pVideoFrame vf,
                                  0,
                                  false,
                                  cq->get_ct());
-
-    std::cout << "-> " << ret << std::endl;
 
     switch(dm)
     {
