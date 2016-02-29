@@ -4,7 +4,9 @@ GIFAuthor::GIFAuthor() :
     out(NULL),
     //dm(DITHER_NONE),
     dm(DITHER_FLOYD_STEINBERG),
-    qm(QUANT_MMC)
+    qm(QUANT_MMC),
+    out_width(-1),
+    out_height(-1)
 {};
 
 GIFAuthor::~GIFAuthor() 
@@ -82,11 +84,25 @@ void GIFAuthor::update_output()
     //preprocess frames here
     //
     //
-    int scale_x = 500;
-    float r = float(scale_x) / float(frames[0]->get_width());
-    int scale_y = int(0.5+r*float(frames[0]->get_height()));
+    //
+    //work out size
+    if(out_width < 0 && out_height < 0)
+    {
+        out_width = frames[0]->get_width();
+        out_height = frames[0]->get_height();
+    }
+    else if(out_height < 0)
+    {
+        float r = float(out_width) / float(frames[0]->get_width());
+        out_height = int(0.5+r*float(frames[0]->get_height()));
+    }
+    else if(out_width < 0)
+    {
+        float r = float(out_height) / float(frames[0]->get_height());
+        out_width = int(0.5+r*float(frames[0]->get_width()));
+    }
 
-    out = new GIF(scale_x, scale_y);
+    out = new GIF(out_width, out_height);
     std::vector<pVideoFrame>::iterator it;
     pVideoFrame fr;
     int x, y;
@@ -95,14 +111,7 @@ void GIFAuthor::update_output()
         fr = *it;
         std::cout << "Scaling..." << std::endl;
         //scale
-        fr = fr->scale_to(scale_x, scale_y);
-   /*     fr = VideoFrame::create_from_data(fr->get_data(),
-                                          fr->get_width(),
-                                          fr->get_height(),
-                                          fr->get_rowstride(),
-                                          true,
-                                          fr->get_timestamp(),
-                                          fr->get_position());*/
+        fr = fr->scale_to(out_width, out_height);
         std::cout << "done" << std::endl;
 
 

@@ -7,7 +7,7 @@
 #include "input/videofile.h"
 #include "gifauthor.h"
 
-bool extract(std::string fname, int frame)
+bool extract(std::string fname, int frame, int length, int out_width)
 {
     std::cout << "Extract frame " << frame << " from \"" << fname << "\"" << std::endl;
     VideoFile vfile;
@@ -23,15 +23,12 @@ bool extract(std::string fname, int frame)
         return false;
     }
 
-    if(!vfile.seek_to(frame))
-    {
-        std::cerr << "Could not seek to frame" << std::endl;
-        return false;
-    }
-
     GIFAuthor ga;
-    ga.add_frame(vfile.get_frame());
-    std::cout << "Got frame" << std::endl;
+    std::list<pVideoFrame> frames = vfile.extract(frame, frame+length);
+    for(frames::iterator it = frames.begin(); it < frames.end(); it++)
+        ga.add_frame(*it);
+    std::cout << "Got frames" << std::endl;
+    ga.set_output_size(out_width);
     ga.update_output();
     std::cout << "Opening file" << std::endl;
 
@@ -62,6 +59,20 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     frame_entry.set_description("the frame to extract");
     group.add_entry(frame_entry, frame);
 
+    int length = 1;
+    Glib::OptionEntry length_entry;
+    frame_entry.set_long_name("length");
+    frame_entry.set_short_name('l');
+    frame_entry.set_description("the number of frames to extract");
+    group.add_entry(length_entry, length);
+
+    int width = -1;
+    Glib::OptionEntry length_entry;
+    frame_entry.set_long_name("width");
+    frame_entry.set_short_name('w');
+    frame_entry.set_description("the output width of the gif");
+    group.add_entry(length_entry, width);
+
     ctx.add_group(group);
 
     // add GTK options, --help-gtk, etc
@@ -76,7 +87,7 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
         app->activate();
     else
     {
-        extract(fname, frame);
+        extract(fname, frame, length, width);
     }
     return 0;
 }
