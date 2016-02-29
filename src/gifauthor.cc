@@ -106,6 +106,7 @@ void GIFAuthor::update_output()
     std::vector<pVideoFrame>::iterator it;
     pVideoFrame fr;
     int x, y;
+    int64_t delay, last_delay = 4;
     for(it = frames.begin(); it < frames.end(); it++)
     {
         fr = *it;
@@ -130,7 +131,17 @@ void GIFAuthor::update_output()
         //Dither the image
         pGIFImage img = dither_image(fr, cq);
         debug_ct(img, cq->get_ct());
-        //TODO: set delay_time
+        
+        //set delay_time
+        it++;
+        if(it == frames.end())
+            delay = last_delay;
+        else
+            delay = ((*it)->get_timestamp() - fr->get_timestamp())/10;
+        last_delay = delay;
+        it--;
+        img->set_delay_time(delay);
+        
         out->push_back(img);
     }
 };

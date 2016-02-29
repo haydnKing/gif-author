@@ -53,7 +53,7 @@ class GIFAuthor
 
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};
-        void set_output_size(int width=-1; int height=-1)
+        void set_output_size(int width=-1, int height=-1)
         {out_width=width; out_height=height;};
 
 

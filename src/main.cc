@@ -25,7 +25,7 @@ bool extract(std::string fname, int frame, int length, int out_width)
 
     GIFAuthor ga;
     std::list<pVideoFrame> frames = vfile.extract(frame, frame+length);
-    for(frames::iterator it = frames.begin(); it < frames.end(); it++)
+    for(std::list<pVideoFrame>::iterator it = frames.begin(); it != frames.end(); it++)
         ga.add_frame(*it);
     std::cout << "Got frames" << std::endl;
     ga.set_output_size(out_width);
@@ -61,17 +61,17 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
 
     int length = 1;
     Glib::OptionEntry length_entry;
-    frame_entry.set_long_name("length");
-    frame_entry.set_short_name('l');
-    frame_entry.set_description("the number of frames to extract");
+    length_entry.set_long_name("length");
+    length_entry.set_short_name('l');
+    length_entry.set_description("the number of frames to extract");
     group.add_entry(length_entry, length);
 
     int width = -1;
-    Glib::OptionEntry length_entry;
-    frame_entry.set_long_name("width");
-    frame_entry.set_short_name('w');
-    frame_entry.set_description("the output width of the gif");
-    group.add_entry(length_entry, width);
+    Glib::OptionEntry width_entry;
+    width_entry.set_long_name("width");
+    width_entry.set_short_name('w');
+    width_entry.set_description("the output width of the gif");
+    group.add_entry(width_entry, width);
 
     ctx.add_group(group);
 
