@@ -5,22 +5,7 @@
  * Underlying application code, does not require UI
  */
 
-#include "input/videoframe.h"
-#include "output/gif.h"
-#include "colorquantizer.h"
-
-#include <stdint.h>
-#include <vector>
-
-#include <iostream>
-
-/**
- * Which method to use when dithering an image
- */
-enum DitherMethod {
-    DITHER_NONE,
-    DITHER_FLOYD_STEINBERG
-};
+#include "gifencoder.h"
 
 
 /**
@@ -95,15 +80,6 @@ class GIFAuthor
         std::vector<pVideoFrame> frames;
         GIF *out;
 
-
-        pGIFImage dither_image(const pVideoFrame vf,
-                               const pColorQuantizer cq) const;
-        void dither_FS(const pVideoFrame vf,
-                       GIFImage* out, 
-                       const pColorQuantizer cq) const;
-        void dither_none(const pVideoFrame vf,
-                         GIFImage* out, 
-                         const pColorQuantizer cq) const;
 };
 
 
