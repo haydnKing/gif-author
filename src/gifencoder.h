@@ -27,25 +27,6 @@ enum DitherMethod {
 
 
 /**
- * A bit for every pixel in an image
- */
-class ImageBitset
-{
-    public:
-        ImageBitset(int width, int height, bool initial=false);
-        ~ImageBitset();
-
-        bool get(int x, int y) const;
-        void set(int x, int y, bool v);
-        void set(bool v);
-
-    private:
-        uint8_t *bitset;
-        int w, h;
-};
-
-
-/**
  * Central class. Contains all the information required to write out a GIF
  */
 class GIFEncoder
@@ -78,6 +59,8 @@ class GIFEncoder
         void dither_none(const pVideoFrame vf,
                          GIFImage* out, 
                          const pColorQuantizer cq) const;
+
+        std::vector<pVideoFrame> detect_bg() const;
 
 };
 

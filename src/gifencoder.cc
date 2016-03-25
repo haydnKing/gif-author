@@ -1,39 +1,5 @@
 #include "gifencoder.h"
 
-ImageBitset::ImageBitset(int width, int height, bool initial):
-    w(width),
-    h(height)
-{
-    bitset = new uint8_t[(width*height+7)/8];
-    set(initial);
-};
-
-ImageBitset::~ImageBitset()
-{
-    delete [] bitset;
-};
-
-bool ImageBitset::get(int x, int y) const
-{
-    x = x + w * y;
-    return bitset[x/8] & (1 << x%8);
-};
-
-void ImageBitset::set(int x, int y, bool v)
-{
-    x = x + w*y;
-    if(v)
-        bitset[x/8] = bitset[x/8] | (1 << x%8);
-    else
-        bitset[x/8] = bitset[x/8] & ~(1 << x%8);
-};
-        
-void ImageBitset::set(bool v)
-{
-    std::memset(bitset, 0xFF*v, (w*h+7)/8);
-};
-
-
 GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
     canvas_width(cw),
     canvas_height(ch),
@@ -51,65 +17,40 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 GIF *GIFEncoder::get_output()
 {
     GIF *out = new GIF(canvas_width, canvas_height);
-    ImageBitset update(canvas_width, canvas_height);
-    pVideoFrame fr, prev_fr;
+    pVideoFrame fr;
     std::vector<pVideoFrame>::iterator it;
     int x, y;
     const uint8_t *px, *prev_px;
     int64_t delay, last_delay = 4;
 
-    std::ofstream debug("debug.csv");
-    int64_t frame_num = 0, change;
-    int hist[256];
+    std::vector<pVideoFrame> bg = detect_bg();
+    std::cout << "Background detection done" << std::endl;
 
-    for(it = frames.begin(); it != frames.end(); it++)
+    for(it = bg.begin(); it != bg.end(); it++)
     {
-        debug << frame_num++;
-
         fr = *it;
-        update.set(true);
 
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
         cq->set_max_colors(fr->get_height() * fr->get_width());
-        std::memset(hist, 0, 256*sizeof(int));
-        int maximum = std::sqrt(3*255*255);
         
         for(y = 0; y < fr->get_height(); y++)
         {
             for(x = 0; x < fr->get_width(); x++)
             {
-                if(prev_fr)
-                {
-                    px = fr->get_pixel(x,y);
-                    prev_px = prev_fr->get_pixel(x,y);
-                    change = std::sqrt(
-                                std::pow(int(px[0])-int(prev_px[0]),2) +
-                                std::pow(int(px[1])-int(prev_px[1]),2) +
-                                std::pow(int(px[2])-int(prev_px[2]),2));
-                    hist[(255*(change))/maximum]++;
-
-                    if(change == 0)
-                        update.set(x,y,false);
-                    else
-                        cq->add_color(px);
-                }
-                else
-                    cq->add_color(fr->get_pixel(x,y));
+                cq->add_color(fr->get_pixel(x,y));
             }
         }
-        for(y = 0; y < 255; y++)
-            debug << ", " << hist[y];
-        debug << "\n";
         cq->build_ct();
 
         //Dither the image
         pGIFImage img = dither_image(fr, cq);
         //debug_ct(img, cq->get_ct());
+        std::cout << "E" << std::endl;
         
         //set delay_time
         it++;
-        if(it == frames.end())
+        if(it == bg.end())
             delay = last_delay;
         else
             delay = ((*it)->get_timestamp() - fr->get_timestamp())/10;
@@ -118,8 +59,6 @@ GIF *GIFEncoder::get_output()
         img->set_delay_time(delay);
         
         out->push_back(img);
-
-        prev_fr = fr;
     }
 
     return out;
@@ -236,5 +175,31 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
     }
     
 };
+        
+std::vector<pVideoFrame> GIFEncoder::detect_bg() const
+{
+    std::cout << "Detect background" << std::endl;
+    cv::Ptr<cv::BackgroundSubtractor> bsub = cv::createBackgroundSubtractorMOG2();
+    cv::Mat mask;
+    cv::Mat *frame;
+
+    std::vector<pVideoFrame> ret;
+    std::vector<pVideoFrame>::const_iterator it;
+
+    for(it = frames.begin(); it != frames.end(); it++)
+    {
+        frame = (*it)->get_mat();
+
+        std::cout << "\tapply..." << std::endl;
+        bsub->apply(*frame, mask);
+        std::cout << "\tdone" << std::endl;
+        ret.push_back(VideoFrame::create_from_mat(&mask, 
+                                                  (*it)->get_timestamp(), 
+                                                  (*it)->get_position()));
+        delete frame;
+    }
+    return ret;
+};
+
  
 

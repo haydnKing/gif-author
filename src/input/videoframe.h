@@ -170,6 +170,7 @@ class VideoFrame : public Glib::Object
 
         static pVideoFrame create_from_avframe(AVFrame *fr, int64_t timestamp, int64_t position);
         static pVideoFrame create_from_mat(cv::Mat *mat, int64_t timestamp=0, int64_t position=0);
+        static pVideoFrame create(int width, int height, int rowstride, uint8_t initial=0);
 
         /**
          * Get a Gdk::Pixbuf of the image with the same underlying data
@@ -179,7 +180,7 @@ class VideoFrame : public Glib::Object
         /**
          * Convert to an openCV Mat
          */
-        cv::Mat* get_mat(pVideoFrame img);
+        cv::Mat* get_mat();
 
         /*
          * frame height

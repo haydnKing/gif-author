@@ -218,13 +218,13 @@ Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf()
                                          get_rowstride());
 };   
 
-cv::Mat* VideoFrame::get_mat(pVideoFrame img)
+cv::Mat* VideoFrame::get_mat()
 {
-    return new cv::Mat(img->get_height(),
-                       img->get_width(),
+    return new cv::Mat(get_height(),
+                       get_width(),
                        CV_8UC3,
-                       img->get_data(),
-                       img->get_rowstride());
+                       get_data(),
+                       get_rowstride());
 };
 
 /*
