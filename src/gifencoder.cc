@@ -236,4 +236,5 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
     }
     
 };
-    
+ 
+

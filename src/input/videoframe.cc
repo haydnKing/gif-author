@@ -192,9 +192,23 @@ pVideoFrame VideoFrame::create_from_avframe(AVFrame *fr, int64_t timestamp, int6
                                       position);
     vf->frame_parent = fr;
     return vf;
-};
+}; 
         
-Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf(){
+pVideoFrame VideoFrame::create_from_mat(cv::Mat *mat, int64_t timestamp, int64_t position)
+{
+    return create_from_data(mat->data,
+                            mat->cols,
+                            mat->rows,
+                            mat->step,
+                            false,
+                            timestamp,
+                            position);
+};
+
+
+        
+Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf()
+{
     return Gdk::Pixbuf::create_from_data(get_data(),
                                          Gdk::COLORSPACE_RGB,
                                          false,
@@ -202,6 +216,15 @@ Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf(){
                                          get_width(),
                                          get_height(),
                                          get_rowstride());
+};   
+
+cv::Mat* VideoFrame::get_mat(pVideoFrame img)
+{
+    return new cv::Mat(img->get_height(),
+                       img->get_width(),
+                       CV_8UC3,
+                       img->get_data(),
+                       img->get_rowstride());
 };
 
 /*
@@ -242,7 +265,7 @@ uint8_t* VideoFrame::get_data(){
 
 bool VideoFrame::is_ok() const{
     return height>0 && width>0 && rowstride>0 && data!=NULL;
-}; 
+};
 
 pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
 {

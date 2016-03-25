@@ -8,6 +8,8 @@
 #include <glibmm/refptr.h>
 #include <sstream>
 
+#include <opencv2/core/mat.hpp>
+
 #include <iostream>
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -167,11 +169,17 @@ class VideoFrame : public Glib::Object
                 pVideoFrame _data_parent=pVideoFrame());
 
         static pVideoFrame create_from_avframe(AVFrame *fr, int64_t timestamp, int64_t position);
+        static pVideoFrame create_from_mat(cv::Mat *mat, int64_t timestamp=0, int64_t position=0);
 
         /**
          * Get a Gdk::Pixbuf of the image with the same underlying data
          */
         Glib::RefPtr<Gdk::Pixbuf> get_pixbuf();
+
+        /**
+         * Convert to an openCV Mat
+         */
+        cv::Mat* get_mat(pVideoFrame img);
 
         /*
          * frame height

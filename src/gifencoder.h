@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <opencv2/video.hpp>
+
 /**
  * Which method to use when dithering an image
  */
@@ -76,6 +78,7 @@ class GIFEncoder
         void dither_none(const pVideoFrame vf,
                          GIFImage* out, 
                          const pColorQuantizer cq) const;
+
 };
 
 
