@@ -122,18 +122,21 @@ void MMCQuantizer::build_ct(int quantized_colors)
     root = new vbox(colors, num_colors);
     ct = new GIFColorTable();
     float f = 0.5;
+    vbox* box;
 
     //split up the color space
     for(int i = 1; i < quantized_colors; i++)
     {
-        std::cout << "\ti = " << i << std::endl;
         if(i < quantized_colors * f)
-            root->get_largest(1.0,0.0)->split();
+            box = root->get_largest(1.0,0.0);
         else
-            root->get_largest(1.0,1.0)->split();
+            box = root->get_largest(1.0,1.0);
+        if(box == NULL)
+            break;
+        box->split();
     }
     root->add_to_ct(ct);
-    std::cout << "MMCQuantizer::~build_ct(...)" << std::endl;
+    std::cout << "MMCQuantizer::~build_ct(...) ct->num_colors() = " << ct->num_colors() << std::endl;
 };
 
 int MMCQuantizer::map_to_ct(const uint8_t* color) const
@@ -189,14 +192,25 @@ bool MMCQuantizer::vbox::is_leaf() const
 MMCQuantizer::vbox *MMCQuantizer::vbox::get_largest(float volume_coef, float count_coef)
 {
     if(is_leaf())
+    {
+        //check that I contain at least 2 colours
+        if((max[0] == min[0]) && (max[1] == min[1]) && (max[2] == min[2]))
+            return NULL;
         return this;
+    }
     vbox *l = left->get_largest(volume_coef, count_coef), 
          *r =right->get_largest(volume_coef, count_coef);
 
-    if((volume_coef * l->get_volume() + count_coef * l->get_count()) > 
-       (volume_coef * r->get_volume() + count_coef * r->get_count()))
-        return l;
-    return r;
+    if(l!=NULL && r!=NULL)
+    {
+        if((volume_coef * l->get_volume() + count_coef * l->get_count()) > 
+           (volume_coef * r->get_volume() + count_coef * r->get_count()))
+            return l;
+        return r;
+    }
+    if(l!=NULL) return l;
+    if(r!=NULL) return r;
+    return NULL;
 };
 
 unsigned int MMCQuantizer::vbox::get_volume() const
@@ -310,7 +324,7 @@ uint8_t MMCQuantizer::vbox::get_split_value(int ch)
     while(end-start > 1)
     {
         //average then ceil
-        last_partition = int(0.5*(float(low)+float(high))+1.);
+        last_partition = int(0.5*(float(low)+float(high))+0.5);
         //partition on the mid value
         idx = partition(start, end, float(last_partition), ch,
                         lhigh, rlow);
@@ -352,6 +366,7 @@ uint8_t MMCQuantizer::vbox::get_split_value(int ch)
             start = idx;
             end = idx+1;
         }
+        //usleep(50000);
     }
 
     return last_partition;
@@ -359,6 +374,11 @@ uint8_t MMCQuantizer::vbox::get_split_value(int ch)
 
 void MMCQuantizer::vbox::split()
 {
+    if(num_pixels <= 0)
+    {
+        usleep(10000000);
+    }
+
     int ch = 0, i;
     uint8_t val = 0;
     //get largest dimension
@@ -379,18 +399,16 @@ void MMCQuantizer::vbox::split()
     //if left is the largest distance
     if(split_value - min[ch] > max[ch] - split_value)
     {
-        std::cout << "\tLHS split" << std::endl;
         //split half way along the left
-        split_value = ((float)split_value+(float)min[ch])/2.;
-        split_index = partition(0, split_index, split_value, ch, lhigh, rlow);
+        split_value = uint8_t(0.5+((float)split_value+(float)min[ch])/2.);
+        split_index = partition(0, num_pixels, split_value, ch, lhigh, rlow);
     }
     //if right is the largest distance
     else
     {
-        std::cout << "\tRHS split" << std::endl;
         //split half way along the right
-        split_value = ((float)split_value+(float)max[ch])/2.;
-        split_index = partition(split_index, num_pixels, split_value, ch, lhigh, rlow);
+        split_value = uint8_t(0.5+((float)split_value+(float)max[ch])/2.);
+        split_index = partition(0, num_pixels, split_value, ch, lhigh, rlow);
     }
     
     left = new vbox(px, split_index);
