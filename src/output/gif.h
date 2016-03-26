@@ -119,6 +119,9 @@ class GIFImage : public Glib::Object
         bool set_transparency(bool t) {flag_transparency = t;};
         bool is_user_input() const {return flag_user_input;};
 
+        DisposalMethod get_disposal_method() const {return disposal_method;};
+        void set_disposal_method(DisposalMethod dm) {disposal_method = dm;};
+
         int transparent_index() const {return t_color_index;};
         void set_transparent_index(uint8_t i) {t_color_index = i;};
 

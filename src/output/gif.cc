@@ -97,9 +97,9 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put(0xF9);
     str.put(0x04);
 
-    str.put((disposal_method&0x07)<<2 + //disposal method
-            flag_user_input*0x02 + //user input
-            flag_transparency*0x01);
+    str.put(((disposal_method&0x07)<<2) + //disposal method
+            (flag_user_input*0x02) + //user input
+            (flag_transparency*0x01));
 
     //delay time
     str.put(delay_time & 0xff);

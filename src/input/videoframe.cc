@@ -576,6 +576,11 @@ const uint8_t* VideoFrame::get_pixel(int x, int y) const
     return data + (3*x + rowstride*y);
 };
 
+uint8_t* VideoFrame::get_pixel(int x, int y)
+{
+    return data + (3*x + rowstride*y);
+};
+
 void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp){
     if(data != NULL){
         delete data;

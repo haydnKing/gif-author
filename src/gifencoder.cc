@@ -77,6 +77,7 @@ void GIFEncoder::dither_image(pGIFImage out,
     {
         out->set_transparency(true);
         out->set_transparent_index(colors);
+        out->set_disposal_method(DISPOSAL_METHOD_NONE);
         cq->build_ct(colors-1);
     }
     else
@@ -212,6 +213,21 @@ std::vector<pVideoFrame> GIFEncoder::detect_bg() const
                                                   (*it)->get_position()));
         delete frame;
     }
+
+    for(int i = ret.size()-1; i > 1; i--)
+    {
+        for(int y = 0; y < ret[i]->get_height(); y++)
+        {
+            for(int x = 0; x < ret[i]->get_width(); x++)
+            {
+                if(ret[i-1]->get_pixel(x,y)[0] > 0)
+                {
+                    std::memset(ret[i]->get_pixel(x,y), 255, 3*sizeof(uint8_t));
+                }
+            }
+        }
+    }
+
     return ret;
 };
 

@@ -222,6 +222,11 @@ class VideoFrame : public Glib::Object
          * get a pixel value
          */
         const uint8_t* get_pixel(int x, int y) const;
+        
+        /**
+         * get a pixel value
+         */
+        uint8_t* get_pixel(int x, int y);
 
         /*
          * Check if the VideoFrame is initiated
