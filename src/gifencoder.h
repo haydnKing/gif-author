@@ -51,19 +51,23 @@ class GIFEncoder
         
         std::vector<pVideoFrame> frames;
 
-        pGIFImage dither_image(const pVideoFrame vf,
-                               const pVideoFrame bg,
-                               const pColorQuantizer cq) const;
+        void dither_image(pGIFImage out,
+                          const pVideoFrame vf,
+                          const pVideoFrame mask,
+                          const pColorQuantizer cq,
+                          uint8_t colors) const;
         void dither_FS(const pVideoFrame vf,
-                       const pVideoFrame bg,
-                       GIFImage* out, 
+                       const pVideoFrame mask,
+                       pGIFImage out, 
                        const pColorQuantizer cq) const;
         void dither_none(const pVideoFrame vf,
-                         const pVideoFrame bg,
-                         GIFImage* out, 
+                         const pVideoFrame mask,
+                         pGIFImage out, 
                          const pColorQuantizer cq) const;
 
         std::vector<pVideoFrame> detect_bg() const;
+
+        pGIFImage create_gif_image(int left, int top, int width, int height) const;
 
 };
 

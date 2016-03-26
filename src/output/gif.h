@@ -115,9 +115,11 @@ class GIFImage : public Glib::Object
         bool is_interlaced() const {return flag_interlaced;};
         bool has_local_colortable() const {return ct!=NULL;};
         bool has_transparency() const {return flag_transparency;};
+        bool set_transparency(bool t) {flag_transparency = t;};
         bool is_user_input() const {return flag_user_input;};
 
         int transparent_index() const {return t_color_index;};
+        void set_transparent_index(uint8_t i) {t_color_index = i;};
 
         // methods        
         void write(std::ostream& str, GIFColorTable* global_ct) const;

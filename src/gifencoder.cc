@@ -45,10 +45,10 @@ GIF *GIFEncoder::get_output()
                     cq->add_color(fr->get_pixel(x,y));
             }
         }
-        cq->build_ct();
 
         //Dither the image
-        pGIFImage img = dither_image(fr, bg, cq);
+        pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
+        dither_image(img, fr, bg, cq, 255);
         //debug_ct(img, cq->get_ct());
         
         //set delay_time
@@ -67,37 +67,34 @@ GIF *GIFEncoder::get_output()
     return out;
 };
 
-
-
-Glib::RefPtr<GIFImage> GIFEncoder::dither_image(const pVideoFrame vf,
-                                                const pVideoFrame bg,
-                                                const pColorQuantizer cq) const
+void GIFEncoder::dither_image(pGIFImage out,
+                              const pVideoFrame vf,
+                              const pVideoFrame mask,
+                              const pColorQuantizer cq,
+                              uint8_t colors) const
 {
-    //Create the output image
-    GIFImage *ret = new GIFImage(0,
-                                 0, 
-                                 vf->get_width(), 
-                                 vf->get_height(),
-                                 0,
-                                 false,
-                                 cq->get_ct());
-
+    if(mask)
+    {
+        out->set_transparency(true);
+        out->set_transparent_index(colors);
+        cq->build_ct(colors-1);
+    }
+    else
+        cq->build_ct(colors);
     switch(dm)
     {
         case DITHER_FLOYD_STEINBERG:
-            dither_FS(vf, bg, ret, cq);
+            dither_FS(vf, mask, out, cq);
             break;
         case DITHER_NONE:
-            dither_none(vf, bg, ret, cq);
+            dither_none(vf, mask, out, cq);
             break;
     }
-
-    return Glib::RefPtr<GIFImage>(ret);
 };
 
 void GIFEncoder::dither_FS(const pVideoFrame vf,
-                           const pVideoFrame bg,
-                           GIFImage* out, 
+                           const pVideoFrame mask,
+                           pGIFImage out, 
                            const pColorQuantizer cq) const
 {
     std::cout << "dither_fs" << std::endl;
@@ -117,6 +114,11 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
     {
         for(x = 0; x < vf->get_width(); x++)
         {
+            //transparency
+            if(mask && mask->get_pixel(x,y)[0] == 0)
+            {
+                out->set_value(x,y,out->transparent_index());
+            }
             //get the pixel
             std::memcpy(pixel, vf->get_pixel(x,y), 3*sizeof(uint8_t));
             //add the errors, being wary of overflow
@@ -165,8 +167,8 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
 };
 
 void GIFEncoder::dither_none(const pVideoFrame vf,
-                             const pVideoFrame bg,
-                             GIFImage* out, 
+                             const pVideoFrame mask,
+                             pGIFImage out, 
                              const pColorQuantizer cq) const
 {
     std::cout << "dither_none" << std::endl;
@@ -175,6 +177,11 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
     {
         for(x = 0; x < vf->get_width(); x++)
         {
+            //transparency
+            if(mask && mask->get_pixel(x,y)[0] == 0)
+            {
+                out->set_value(x,y,out->transparent_index());
+            }
             index = cq->map_to_ct(vf->get_pixel(x,y));
             out->set_value(x, y, index);
         }
@@ -205,5 +212,15 @@ std::vector<pVideoFrame> GIFEncoder::detect_bg() const
     return ret;
 };
 
+pGIFImage GIFEncoder::create_gif_image(int left, int top, int width, int height) const
+{
+    //Create the output image
+    GIFImage *ret = new GIFImage(left,
+                                 top, 
+                                 width, 
+                                 height);
+
+    return Glib::RefPtr<GIFImage>(ret);
+};
  
 
