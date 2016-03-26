@@ -15,7 +15,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <opencv2/video.hpp>
+#include <opencv2/opencv.hpp>
 
 /**
  * Which method to use when dithering an image
@@ -52,11 +52,14 @@ class GIFEncoder
         std::vector<pVideoFrame> frames;
 
         pGIFImage dither_image(const pVideoFrame vf,
+                               const pVideoFrame bg,
                                const pColorQuantizer cq) const;
         void dither_FS(const pVideoFrame vf,
+                       const pVideoFrame bg,
                        GIFImage* out, 
                        const pColorQuantizer cq) const;
         void dither_none(const pVideoFrame vf,
+                         const pVideoFrame bg,
                          GIFImage* out, 
                          const pColorQuantizer cq) const;
 

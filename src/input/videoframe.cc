@@ -196,11 +196,19 @@ pVideoFrame VideoFrame::create_from_avframe(AVFrame *fr, int64_t timestamp, int6
         
 pVideoFrame VideoFrame::create_from_mat(cv::Mat *mat, int64_t timestamp, int64_t position)
 {
+    cv::Mat copy;
+    if(mat->type()==CV_8UC1) 
+    {
+        //grayscale
+        cv::cvtColor(*mat, copy, CV_GRAY2RGB);
+        mat = &copy;
+    }
+
     return create_from_data(mat->data,
                             mat->cols,
                             mat->rows,
                             mat->step,
-                            false,
+                            true,
                             timestamp,
                             position);
 };

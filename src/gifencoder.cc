@@ -17,18 +17,21 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 GIF *GIFEncoder::get_output()
 {
     GIF *out = new GIF(canvas_width, canvas_height);
-    pVideoFrame fr;
+    pVideoFrame fr, bg;
     std::vector<pVideoFrame>::iterator it;
     int x, y;
     const uint8_t *px, *prev_px;
     int64_t delay, last_delay = 4;
+    int64_t frame_no = 0;
 
-    std::vector<pVideoFrame> bg = detect_bg();
+    std::vector<pVideoFrame> background = detect_bg();
     std::cout << "Background detection done" << std::endl;
 
-    for(it = bg.begin(); it != bg.end(); it++)
+    for(int i = 0; i < frames.size(); i++)
     {
-        fr = *it;
+        std::cout << "Frame " << i << " of " << frames.size() << std::endl;
+        fr = frames[i];
+        bg = background[i];
 
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
@@ -38,24 +41,24 @@ GIF *GIFEncoder::get_output()
         {
             for(x = 0; x < fr->get_width(); x++)
             {
-                cq->add_color(fr->get_pixel(x,y));
+                if(bg->get_pixel(x,y)[0] > 0)
+                    cq->add_color(fr->get_pixel(x,y));
             }
         }
         cq->build_ct();
 
         //Dither the image
-        pGIFImage img = dither_image(fr, cq);
+        pGIFImage img = dither_image(fr, bg, cq);
         //debug_ct(img, cq->get_ct());
-        std::cout << "E" << std::endl;
         
         //set delay_time
-        it++;
-        if(it == bg.end())
+        i++;
+        if(i == frames.size())
             delay = last_delay;
         else
-            delay = ((*it)->get_timestamp() - fr->get_timestamp())/10;
+            delay = (frames[i]->get_timestamp() - fr->get_timestamp())/10;
         last_delay = delay;
-        it--;
+        i--;
         img->set_delay_time(delay);
         
         out->push_back(img);
@@ -66,8 +69,9 @@ GIF *GIFEncoder::get_output()
 
 
 
-Glib::RefPtr<GIFImage> GIFEncoder::dither_image(pVideoFrame vf,
-                                               pColorQuantizer cq) const
+Glib::RefPtr<GIFImage> GIFEncoder::dither_image(const pVideoFrame vf,
+                                                const pVideoFrame bg,
+                                                const pColorQuantizer cq) const
 {
     //Create the output image
     GIFImage *ret = new GIFImage(0,
@@ -81,10 +85,10 @@ Glib::RefPtr<GIFImage> GIFEncoder::dither_image(pVideoFrame vf,
     switch(dm)
     {
         case DITHER_FLOYD_STEINBERG:
-            dither_FS(vf, ret, cq);
+            dither_FS(vf, bg, ret, cq);
             break;
         case DITHER_NONE:
-            dither_none(vf, ret, cq);
+            dither_none(vf, bg, ret, cq);
             break;
     }
 
@@ -92,8 +96,9 @@ Glib::RefPtr<GIFImage> GIFEncoder::dither_image(pVideoFrame vf,
 };
 
 void GIFEncoder::dither_FS(const pVideoFrame vf,
-                          GIFImage* out, 
-                          pColorQuantizer cq) const
+                           const pVideoFrame bg,
+                           GIFImage* out, 
+                           const pColorQuantizer cq) const
 {
     std::cout << "dither_fs" << std::endl;
     //store 2 rows of RGB errors, set to zero
@@ -160,8 +165,9 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
 };
 
 void GIFEncoder::dither_none(const pVideoFrame vf,
-                         GIFImage* out, 
-                         const pColorQuantizer cq) const
+                             const pVideoFrame bg,
+                             GIFImage* out, 
+                             const pColorQuantizer cq) const
 {
     std::cout << "dither_none" << std::endl;
     int x,y,index;
@@ -190,9 +196,7 @@ std::vector<pVideoFrame> GIFEncoder::detect_bg() const
     {
         frame = (*it)->get_mat();
 
-        std::cout << "\tapply..." << std::endl;
         bsub->apply(*frame, mask);
-        std::cout << "\tdone" << std::endl;
         ret.push_back(VideoFrame::create_from_mat(&mask, 
                                                   (*it)->get_timestamp(), 
                                                   (*it)->get_position()));

@@ -1,8 +1,5 @@
 #include "colorquantizer.h"
 
-#include <fstream>
-#include <unistd.h>
-
 /* *************************************************************
  *                                         ColorQuantizer
  * *************************************************************/
@@ -95,7 +92,7 @@ class MMCQuantizer : public ColorQuantizer
 
                 vbox *left, *right;
                 int split_channel, ct_index;
-                float split_value;
+                uint8_t split_value;
                 uint8_t *px;
                 int num_pixels;
                 uint8_t min[3], max[3];
@@ -118,7 +115,6 @@ MMCQuantizer::~MMCQuantizer()
 
 void MMCQuantizer::build_ct(int quantized_colors)
 {
-    std::cout << "MMCQuantizer::build_ct(quantized_colors = "<< quantized_colors<<")" << std::endl;
     root = new vbox(colors, num_colors);
     ct = new GIFColorTable();
     float f = 0.5;
@@ -136,7 +132,6 @@ void MMCQuantizer::build_ct(int quantized_colors)
         box->split();
     }
     root->add_to_ct(ct);
-    std::cout << "MMCQuantizer::~build_ct(...) ct->num_colors() = " << ct->num_colors() << std::endl;
 };
 
 int MMCQuantizer::map_to_ct(const uint8_t* color) const
@@ -366,7 +361,6 @@ uint8_t MMCQuantizer::vbox::get_split_value(int ch)
             start = idx;
             end = idx+1;
         }
-        //usleep(50000);
     }
 
     return last_partition;
@@ -374,11 +368,6 @@ uint8_t MMCQuantizer::vbox::get_split_value(int ch)
 
 void MMCQuantizer::vbox::split()
 {
-    if(num_pixels <= 0)
-    {
-        usleep(10000000);
-    }
-
     int ch = 0, i;
     uint8_t val = 0;
     //get largest dimension
@@ -390,10 +379,11 @@ void MMCQuantizer::vbox::split()
             ch = i;
         }
     }
+    split_channel = ch;
 
     //get split value
-    uint8_t split_value = get_split_value(ch),
-            lhigh, rlow;
+    split_value = get_split_value(ch);
+    uint8_t lhigh, rlow;
     int split_index;
 
     //if left is the largest distance

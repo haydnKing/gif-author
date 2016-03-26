@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include <opencv2/core/mat.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <iostream>
 extern "C" {
