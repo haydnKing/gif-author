@@ -119,6 +119,7 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
             if(mask && mask->get_pixel(x,y)[0] == 0)
             {
                 out->set_value(x,y,out->transparent_index());
+                continue;
             }
             //get the pixel
             std::memcpy(pixel, vf->get_pixel(x,y), 3*sizeof(uint8_t));
@@ -182,6 +183,7 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
             if(mask && mask->get_pixel(x,y)[0] == 0)
             {
                 out->set_value(x,y,out->transparent_index());
+                continue;
             }
             index = cq->map_to_ct(vf->get_pixel(x,y));
             out->set_value(x, y, index);
