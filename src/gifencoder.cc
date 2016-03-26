@@ -81,6 +81,7 @@ void GIFEncoder::dither_image(pGIFImage out,
     }
     else
         cq->build_ct(colors);
+    out->set_local_colortable(cq->get_ct());
     switch(dm)
     {
         case DITHER_FLOYD_STEINBERG:

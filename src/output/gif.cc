@@ -13,7 +13,8 @@ GIFColorTable::~GIFColorTable()
     delete [] data;
 };
 
-uint8_t GIFColorTable::log_colors() const {
+uint8_t GIFColorTable::log_colors() const 
+{
     if(colors < 4)
         return 2;
     else

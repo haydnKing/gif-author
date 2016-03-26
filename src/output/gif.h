@@ -114,6 +114,7 @@ class GIFImage : public Glib::Object
 
         bool is_interlaced() const {return flag_interlaced;};
         bool has_local_colortable() const {return ct!=NULL;};
+        void set_local_colortable(const GIFColorTable* _ct) {ct = _ct;};
         bool has_transparency() const {return flag_transparency;};
         bool set_transparency(bool t) {flag_transparency = t;};
         bool is_user_input() const {return flag_user_input;};
