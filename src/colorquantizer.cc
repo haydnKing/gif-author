@@ -263,7 +263,7 @@ void MMCQuantizer::vbox::swap_px(const int& a, const int& b)
 };
 
 int MMCQuantizer::vbox::partition(int start, int end, float value, int channel, 
-                                  uint8_t& left_high, uint8_t right_low)
+                                  uint8_t& left_high, uint8_t& right_low)
 {
     int i = start, j;
     left_high = min[channel];
@@ -296,7 +296,7 @@ int MMCQuantizer::vbox::partition(int start, int end, float value, int channel,
     return i;
 };
 
-uint8_t MMCQuantizer::vbox::split_channel(int ch, uint8_t& value)
+uint8_t MMCQuantizer::vbox::get_split_value(int ch)
 {
     int start = 0,
         end   = num_pixels,
@@ -312,7 +312,7 @@ uint8_t MMCQuantizer::vbox::split_channel(int ch, uint8_t& value)
         //average then ceil
         last_partition = int(0.5*(float(low)+float(high))+1.);
         //partition on the mid value
-        idx = partition(start, end, float(last_partition),
+        idx = partition(start, end, float(last_partition), ch,
                         lhigh, rlow);
 
         //if all values between start & end are equal
