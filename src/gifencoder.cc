@@ -101,6 +101,7 @@ void GIFEncoder::dither_image(pGIFImage out,
         out->set_transparency(true);
         out->set_transparent_index(colors);
         out->set_disposal_method(DISPOSAL_METHOD_NONE);
+        //out->set_disposal_method(DISPOSAL_METHOD_RESTORE_BACKGROUND);
         cq->build_ct(colors-1);
     }
     else
@@ -342,105 +343,76 @@ std::vector<pVideoFrame> GIFEncoder::get_optical_flow() const
     return ret;
 };
 
-std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
+std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig) const
 {
     int i, j,k, y, x;
 
     uint8_t *pixels = new uint8_t[3*frames.size()], *last;
     float  *fpixels = new float[3*frames.size()], *flast;
 
+    int kernel_length =int(6*sig) + 1;
+    int kernel_center = kernel_length/2;
+    float kernel[kernel_length], norm;
+    for(j=0; j < kernel_length; j++)
+    {
+        kernel[j] = std::exp(-(j-kernel_center)*(j-kernel_center)/(2*sig*sig));
+    }
+
     //prepare output images
     std::vector<pVideoFrame> ret;
     for(i=0; i < frames.size(); i++)
         ret.push_back(VideoFrame::create(frames[i]->get_width(), frames[i]->get_height(), 0));
 
+    unsigned long c = 0;
     //pixel by pixel
     for(y = 0; y < frames[0]->get_height(); y++)
     {
         for(x = 0; x < frames[0]->get_width(); x++)
         {
-            float min[3] = {255.,255.,255.};
-            float max[3] = {0.,0.,0.};
             //get the pixels
             for(i = 0; i < frames.size(); i++)
             {
                 std::memcpy(pixels+3*i, frames[i]->get_pixel(x,y), 3*sizeof(uint8_t));
             }
 
-            //smooth and find limits
+            //smooth
             for(i=0; i<frames.size(); i++)
             {
                 for(j=0; j<3; j++)
                 {
-                    fpixels[3*i+j] = pixels[3*i+j];
-                    if(i > 0) fpixels[3*i+j] += pixels[3*i+j-3];
-                    if(i < frames.size()-1) fpixels[3*i+j] += pixels[3*i+j+3];
-
-                    if(i > 0 && i < frames.size()-1) fpixels[3*i+j] /= 3.;
-                    else fpixels[3*i+j]/=2.;
-                    
-                    if(fpixels[3*i+j] > max[j]) max[j] = fpixels[3*i+j];
-                    if(fpixels[3*i+j] < min[j]) min[j] = fpixels[3*i+j];
+                    fpixels[3*i+j] = 0;
+                    norm = 0;
+                    for(k=0; k < kernel_length; k++)
+                    {
+                        if((i+k-kernel_center > 0) &&
+                           (i+k-kernel_center < frames.size()))
+                        {
+                            fpixels[3*i+j] += kernel[k] * float(pixels[3*(i+k-kernel_center)+j]);
+                            norm += kernel[k];
+                        }
+                    }
+                    fpixels[3*i+j] /= norm;
                 }
-            }
-/*
-            if(x==170 && y == 88)
-            {
-                std::cout << "Smoothed (" << x << ", " << y << ") = [" << std::endl;
-                for(i=0; i < frames.size(); i++)
-                    std::cout << "\t(" << fpixels[3*i+0] << ", " << fpixels[3*i+1] << ", " << fpixels[3*i+2] << ")," << std::endl;
-                std::cout << "]" << std::endl;
-                std::cout << "lim(" << x << ", " << y << ").r = (" << min[0] << ", " << max[0] << ") d = " << (max[0]-min[0]) << std::endl;
-                std::cout << "lim(" << x << ", " << y << ").g = (" << min[1] << ", " << max[1] << ") d = " << (max[1]-min[1]) << std::endl;
-                std::cout << "lim(" << x << ", " << y << ").b = (" << min[2] << ", " << max[2] << ") d = " << (max[2]-min[2]) << std::endl;
-            }*/
-
-            //if no channel changed by more than beta
-            if((max[0]-min[0] < beta) && (max[1]-min[1] < beta) && (max[2]-min[2] < beta))
-            {
-                //set outgoing pixel to the average
-                float sum[3] = {0,0,0};
-                for(i=0; i < frames.size(); i++)
-                    for(j=0; j < 3; j++)
-                        sum[j] += pixels[3*i+j];
-                for(j=0; j < 3; j++)
-                    sum[j] = sum[j]/frames.size()+0.5;
-                
-                for(i=0; i < frames.size(); i++)
-                    ret[i]->set_pixel(x,y,uint8_t(sum[0]),uint8_t(sum[1]),uint8_t(sum[2]));
-                continue;
             }
 
             //deltas
 
-            //threshold (alpha)
-            //First find jumps greater than beta, then mark updates for all
-            //jumps greater than alpha either side
-            ret[0]->set_pixel(x,y,pixels[0], pixels[1], pixels[2]);
+            int run_start = 0;
             bool update[ret.size()];
             std::memset(update, 0, ret.size()*sizeof(bool));
             update[0] = true;
-            flast = fpixels;
             for(i=1; i < ret.size(); i++)
             {
-                if((std::abs(fpixels[3*i]-flast[0]) > beta) || 
-                   (std::abs(fpixels[3*i+1]-flast[1]) > beta) ||
-                   (std::abs(fpixels[3*i]-flast[2]) > beta))
+                for(j=0; j < 3; j++)
                 {
-                    //move forward again until we're below alpha
-                    while(i < ret.size())
+                    if(std::abs(fpixels[3*i+j] - fpixels[3*run_start+j]) > alpha)
                     {
+                        run_start = i;
                         update[i] = true;
-                        flast = fpixels+3*i;
-                        i++;
-                        if((std::abs(fpixels[3*i]-flast[0]) < alpha) || 
-                           (std::abs(fpixels[3*i+1]-flast[1]) < alpha) ||
-                           (std::abs(fpixels[3*i]-flast[2]) < alpha))
-                            break;
                     }
-
                 }
             }
+            
 
             //Fill in pixel values
             for(i=0; i < ret.size(); i++)
