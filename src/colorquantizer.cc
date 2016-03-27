@@ -158,7 +158,6 @@ MMCQuantizer::vbox::vbox(uint8_t* _px, int np):
     left(NULL),
     right(NULL)
 {
-    std::cout << "vbox::vbox(px, np=" << num_pixels << ")" << std::endl;
     //find the minimum and maximum in each dimension
     min[0] = min[1] = min[2] = 255;
     max[0] = max[1] = max[2] = 0;

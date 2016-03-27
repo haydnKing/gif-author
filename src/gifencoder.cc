@@ -22,12 +22,14 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 
 GIF *GIFEncoder::get_output()
 {
+    detect_bg();
+
     GIF *out = new GIF(canvas_width, canvas_height);
     pVideoFrame fr, prev_fr;
     std::vector<pVideoFrame>::iterator it;
     int x, y;
     const uint8_t *px, *prev_px;
-    int64_t delay, last_delay = 4;
+    int64_t last_timestamp, delay = 4;
     int64_t frame_no = 0;
 
     std::vector<pVideoFrame> sframes = simplify();
@@ -60,23 +62,26 @@ GIF *GIFEncoder::get_output()
             }
         }
 
-        //Dither the image
-        pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
-        dither_image(img, fr, prev_fr, cq, 255);
-        //debug_ct(img, cq->get_ct());
-        
-        //set delay_time
-        i++;
-        if(i == frames.size())
-            delay = last_delay;
-        else
-            delay = (frames[i]->get_timestamp() - fr->get_timestamp())/10;
-        last_delay = delay;
-        i--;
-        img->set_delay_time(delay);
-        
-        out->push_back(img);
+        if(cq->get_num_colors() > 0)
+        {
+            //Dither the image
+            pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
+            dither_image(img, fr, prev_fr, cq, 255);
+            //debug_ct(img, cq->get_ct());
+            
+            //set delay_time
+            if(i > 0)
+            {
+                delay = (frames[i]->get_timestamp() - last_timestamp)/10;
+                out->back()->set_delay_time(delay);
+            }
+            last_timestamp = frames[i]->get_timestamp();
+            
+            out->push_back(img);
+        }
     }
+    //set delay for last frame
+    out->back()->set_delay_time(delay);
 
     return out;
 };
@@ -224,7 +229,7 @@ std::vector<pVideoFrame> GIFEncoder::detect_bg() const
 
     for(it = frames.begin(); it != frames.end(); it++)
     {
-        px = (*it)->get_pixel(6,102);
+        px = (*it)->get_pixel(304,102);
         f << int(px[0]) << ", " << int(px[1]) << ", " << int(px[2]) << std::endl;
         frame = (*it)->get_mat();
 
@@ -321,10 +326,8 @@ std::vector<pVideoFrame> GIFEncoder::get_optical_flow() const
 std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
 {
     int i, j, y, x;
-    uint8_t min[3] = {255,255,255};
-    uint8_t max[3] = {0,0,0};
 
-    uint8_t *pixels = new uint8_t[3*frames.size()];
+    uint8_t *pixels = new uint8_t[3*frames.size()], *last;
     float  *fpixels = new float[3*frames.size()];
 
     //prepare output images
@@ -337,16 +340,41 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
     {
         for(x = 0; x < frames[0]->get_width(); x++)
         {
-            //get the pixels and find limits
+            float min[3] = {255.,255.,255.};
+            float max[3] = {0.,0.,0.};
+            //get the pixels
             for(i = 0; i < frames.size(); i++)
             {
                 std::memcpy(pixels+3*i, frames[i]->get_pixel(x,y), 3*sizeof(uint8_t));
-                for(j=0; j < 3; j++)
+            }
+
+            //smooth and find limits
+            for(i=0; i<frames.size(); i++)
+            {
+                for(j=0; j<3; j++)
                 {
-                    if(pixels[3*i+j] > max[j]) max[j] == pixels[3*i+j];
-                    if(pixels[3*i+j] < min[j]) min[j] == pixels[3*i+j];
+                    fpixels[3*i+j] = pixels[3*i+j];
+                    if(i > 0) fpixels[3*i+j] += pixels[3*i+j-3];
+                    if(i < frames.size()-1) fpixels[3*i+j] += pixels[3*i+j+3];
+
+                    if(i > 0 && i < frames.size()-1) fpixels[3*i+j] /= 3.;
+                    else fpixels[3*i+j]/=2.;
+                    
+                    if(fpixels[3*i+j] > max[j]) max[j] = fpixels[3*i+j];
+                    if(fpixels[3*i+j] < min[j]) min[j] = fpixels[3*i+j];
                 }
             }
+/*
+            if(x==170 && y == 88)
+            {
+                std::cout << "Smoothed (" << x << ", " << y << ") = [" << std::endl;
+                for(i=0; i < frames.size(); i++)
+                    std::cout << "\t(" << fpixels[3*i+0] << ", " << fpixels[3*i+1] << ", " << fpixels[3*i+2] << ")," << std::endl;
+                std::cout << "]" << std::endl;
+                std::cout << "lim(" << x << ", " << y << ").r = (" << min[0] << ", " << max[0] << ") d = " << (max[0]-min[0]) << std::endl;
+                std::cout << "lim(" << x << ", " << y << ").g = (" << min[1] << ", " << max[1] << ") d = " << (max[1]-min[1]) << std::endl;
+                std::cout << "lim(" << x << ", " << y << ").b = (" << min[2] << ", " << max[2] << ") d = " << (max[2]-min[2]) << std::endl;
+            }*/
 
             //if no channel changed by more than beta
             if((max[0]-min[0] < beta) && (max[1]-min[1] < beta) && (max[2]-min[2] < beta))
@@ -364,9 +392,25 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
                 continue;
             }
 
-            //smooth
-
             //threshold (alpha)
+            ret[0]->set_pixel(x,y,pixels[0], pixels[1], pixels[2]);
+            last = pixels;
+            for(i=1; i < ret.size(); i++)
+            {
+                if((std::abs(fpixels[3*i]-fpixels[3*i-3]) > alpha) || 
+                   (std::abs(fpixels[3*i+1]-fpixels[3*i-3+1]) > alpha) ||
+                   (std::abs(fpixels[3*i]-fpixels[3*i-3+1]) > alpha))
+                {
+                    if(x==304 && y == 102) std::cout << "Update frame = " << i <<"; -> (" << int(pixels[3*i]) << ", " << int(pixels[3*i+1]) << ", "<< int(pixels[3*i+2]) << ")" << std::endl;
+                    ret[i]->set_pixel(x,y,pixels[3*i], pixels[3*i+1], pixels[3*i+2]);
+                    last = pixels+3*i;
+                }
+                else
+                {
+                    ret[i]->set_pixel(x,y,last[0], last[1], last[2]);
+                }
+
+            }
             
 
         }

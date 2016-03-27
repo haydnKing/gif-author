@@ -67,7 +67,7 @@ class GIFEncoder
 
         std::vector<pVideoFrame> detect_bg() const;
         std::vector<pVideoFrame> get_optical_flow() const;
-        std::vector<pVideoFrame> simplify(float alpha = 10, float beta=20) const;
+        std::vector<pVideoFrame> simplify(float alpha = 5, float beta=20) const;
 
         pGIFImage create_gif_image(int left, int top, int width, int height) const;
 
