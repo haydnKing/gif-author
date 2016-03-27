@@ -1,5 +1,11 @@
 #include "gifencoder.h"
 
+//utility to compare pixels
+bool px_equal(uint8_t *lhs, uint8_t *rhs)
+{
+    return (lhs[0]==rhs[0] && lhs[1]==rhs[1] && lhs[2] == rhs[2]);
+};
+
 GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
     canvas_width(cw),
     canvas_height(ch),
@@ -17,21 +23,24 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 GIF *GIFEncoder::get_output()
 {
     GIF *out = new GIF(canvas_width, canvas_height);
-    pVideoFrame fr, bg;
+    pVideoFrame fr, prev_fr;
     std::vector<pVideoFrame>::iterator it;
     int x, y;
     const uint8_t *px, *prev_px;
     int64_t delay, last_delay = 4;
     int64_t frame_no = 0;
 
-    std::vector<pVideoFrame> background = detect_bg();
+    std::vector<pVideoFrame> sframes = simplify();
     std::cout << "Background detection done" << std::endl;
 
-    for(int i = 0; i < frames.size(); i++)
+    for(int i = 0; i < sframes.size(); i++)
     {
         std::cout << "Frame " << i << " of " << frames.size() << std::endl;
-        fr = frames[i];
-        bg = background[i];
+        fr = sframes[i];
+        if(i==0)
+            prev_fr = pVideoFrame();
+        else
+            prev_fr = sframes[i-1];
 
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
@@ -41,14 +50,19 @@ GIF *GIFEncoder::get_output()
         {
             for(x = 0; x < fr->get_width(); x++)
             {
-                if(bg->get_pixel(x,y)[0] > 0)
+                if(prev_fr)
+                {
+                    if(!px_equal(prev_fr->get_pixel(x,y), fr->get_pixel(x,y)))
+                        cq->add_color(fr->get_pixel(x,y));
+                }
+                else
                     cq->add_color(fr->get_pixel(x,y));
             }
         }
 
         //Dither the image
         pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
-        dither_image(img, fr, bg, cq, 255);
+        dither_image(img, fr, prev_fr, cq, 255);
         //debug_ct(img, cq->get_ct());
         
         //set delay_time
@@ -69,11 +83,11 @@ GIF *GIFEncoder::get_output()
 
 void GIFEncoder::dither_image(pGIFImage out,
                               const pVideoFrame vf,
-                              const pVideoFrame mask,
+                              const pVideoFrame pvf,
                               const pColorQuantizer cq,
                               uint8_t colors) const
 {
-    if(mask)
+    if(pvf)
     {
         out->set_transparency(true);
         out->set_transparent_index(colors);
@@ -86,16 +100,16 @@ void GIFEncoder::dither_image(pGIFImage out,
     switch(dm)
     {
         case DITHER_FLOYD_STEINBERG:
-            dither_FS(vf, mask, out, cq);
+            dither_FS(vf, pvf, out, cq);
             break;
         case DITHER_NONE:
-            dither_none(vf, mask, out, cq);
+            dither_none(vf, pvf, out, cq);
             break;
     }
 };
 
 void GIFEncoder::dither_FS(const pVideoFrame vf,
-                           const pVideoFrame mask,
+                           const pVideoFrame pvf,
                            pGIFImage out, 
                            const pColorQuantizer cq) const
 {
@@ -117,7 +131,7 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
         for(x = 0; x < vf->get_width(); x++)
         {
             //transparency
-            if(mask && mask->get_pixel(x,y)[0] == 0)
+            if(pvf && px_equal(vf->get_pixel(x,y), pvf->get_pixel(x,y)))
             {
                 out->set_value(x,y,out->transparent_index());
                 continue;
@@ -170,7 +184,7 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
 };
 
 void GIFEncoder::dither_none(const pVideoFrame vf,
-                             const pVideoFrame mask,
+                             const pVideoFrame pvf,
                              pGIFImage out, 
                              const pColorQuantizer cq) const
 {
@@ -181,7 +195,7 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
         for(x = 0; x < vf->get_width(); x++)
         {
             //transparency
-            if(mask && mask->get_pixel(x,y)[0] == 0)
+            if(pvf && px_equal(vf->get_pixel(x,y), pvf->get_pixel(x,y)))
             {
                 out->set_value(x,y,out->transparent_index());
                 continue;
@@ -196,15 +210,22 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
 std::vector<pVideoFrame> GIFEncoder::detect_bg() const
 {
     std::cout << "Detect background" << std::endl;
-    cv::Ptr<cv::BackgroundSubtractor> bsub = cv::createBackgroundSubtractorMOG2();
+    cv::Ptr<cv::BackgroundSubtractor> bsub = cv::createBackgroundSubtractorMOG2(frames.size());
     cv::Mat mask;
     cv::Mat *frame;
 
-    std::vector<pVideoFrame> ret;
+    std::vector<pVideoFrame> ret, ret2;
     std::vector<pVideoFrame>::const_iterator it;
+    pVideoFrame fr;
+
+    std::ofstream f("POI.csv");
+    f << "r, g, b" << std::endl;
+    const uint8_t* px;
 
     for(it = frames.begin(); it != frames.end(); it++)
     {
+        px = (*it)->get_pixel(6,102);
+        f << int(px[0]) << ", " << int(px[1]) << ", " << int(px[2]) << std::endl;
         frame = (*it)->get_mat();
 
         bsub->apply(*frame, mask);
@@ -214,17 +235,140 @@ std::vector<pVideoFrame> GIFEncoder::detect_bg() const
         delete frame;
     }
 
-    for(int i = ret.size()-1; i > 1; i--)
+    bool high;
+    for(int i = 0; i < ret.size(); i++)
     {
+        fr = VideoFrame::create(ret[i]->get_width(), ret[i]->get_height(), 0); 
         for(int y = 0; y < ret[i]->get_height(); y++)
         {
             for(int x = 0; x < ret[i]->get_width(); x++)
             {
-                if(ret[i-1]->get_pixel(x,y)[0] > 0)
+                high = false;
+                if(x>0 && y>0                                      && ret[i]->get_pixel(x-1,y-1)[0] > 0) high=true;
+                if(x>0                                             && ret[i]->get_pixel(x-1,y  )[0] > 0) high=true;
+                if(x>0 && y<ret[i]->get_height()                   && ret[i]->get_pixel(x-1,y+1)[0] > 0) high=true;
+                if(x<ret[i]->get_width() && x>0                    && ret[i]->get_pixel(x+1,y-1)[0] > 0) high=true;
+                if(x<ret[i]->get_width()                           && ret[i]->get_pixel(x+1,y  )[0] > 0) high=true;
+                if(x<ret[i]->get_width() && x<ret[i]->get_width()  && ret[i]->get_pixel(x+1,y+1)[0] > 0) high=true;
+                if(y>0                                             && ret[i]->get_pixel(x,y-1)[0] > 0) high=true;
+                if(y<ret[i]->get_height()                          && ret[i]->get_pixel(x,y+1)[0] > 0) high=true;
+
+                if(high) fr->set_pixel(x,y,255,255,255);
+            }
+        }
+        ret2.push_back(fr);
+    }
+
+    for(int i = 0;  i < ret2.size(); i++)
+    {
+        frame = ret2[i]->get_mat();
+        std::stringstream ss;
+        ss << "./mask/frame_" << i << ".jpg";
+        cv::imwrite(ss.str().c_str(), *frame);
+        delete frame;
+    }
+
+    return ret2;
+};
+
+
+std::vector<pVideoFrame> GIFEncoder::get_optical_flow() const
+{
+    cv::Mat *prev, *next, flow, *save;
+    std::vector<pVideoFrame> ret;
+    pVideoFrame frame;
+    ret.push_back(VideoFrame::create(frames[0]->get_width(), frames[0]->get_height(), 0));
+
+    prev = frames[0]->get_mat();
+    cv::cvtColor(*prev, *prev, CV_RGB2GRAY);
+
+    for(int i = 1; i < frames.size(); i++)
+    {
+        next = frames[i]->get_mat();
+        cv::cvtColor(*next, *next, CV_RGB2GRAY);
+
+        cv::calcOpticalFlowFarneback(*prev, *next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+        frame = VideoFrame::create(frames[0]->get_width(), frames[0]->get_height(), 0);
+
+        float fv;
+        uint8_t v;
+        for(int y = 0; y < flow.rows; y ++)
+            for(int x = 0; x < flow.cols; x ++)
+            {
+                const cv::Point2f& fxy = flow.at<cv::Point2f>(y, x);
+                fv = std::sqrt(fxy.x*fxy.x + fxy.y+fxy.y)*10;
+                if(fv > 255.5) fv = 255.5;
+                v = uint8_t(fv);
+                frame->set_pixel(x,y, v, v, v); 
+            }
+
+        save = frame->get_mat();
+        std::stringstream ss;
+        ss << "./flow/frame_" << i << ".jpg";
+        cv::imwrite(ss.str().c_str(), *save);
+        delete save;
+
+        ret.push_back(frame);
+
+        delete prev;
+        prev = next;
+    };
+    delete next;
+
+    return ret;
+};
+
+std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
+{
+    int i, j, y, x;
+    uint8_t min[3] = {255,255,255};
+    uint8_t max[3] = {0,0,0};
+
+    uint8_t *pixels = new uint8_t[3*frames.size()];
+    float  *fpixels = new float[3*frames.size()];
+
+    //prepare output images
+    std::vector<pVideoFrame> ret;
+    for(i=0; i < frames.size(); i++)
+        ret.push_back(VideoFrame::create(frames[i]->get_width(), frames[i]->get_height(), 0));
+
+    //pixel by pixel
+    for(y = 0; y < frames[0]->get_height(); y++)
+    {
+        for(x = 0; x < frames[0]->get_width(); x++)
+        {
+            //get the pixels and find limits
+            for(i = 0; i < frames.size(); i++)
+            {
+                std::memcpy(pixels+3*i, frames[i]->get_pixel(x,y), 3*sizeof(uint8_t));
+                for(j=0; j < 3; j++)
                 {
-                    std::memset(ret[i]->get_pixel(x,y), 255, 3*sizeof(uint8_t));
+                    if(pixels[3*i+j] > max[j]) max[j] == pixels[3*i+j];
+                    if(pixels[3*i+j] < min[j]) min[j] == pixels[3*i+j];
                 }
             }
+
+            //if no channel changed by more than beta
+            if((max[0]-min[0] < beta) && (max[1]-min[1] < beta) && (max[2]-min[2] < beta))
+            {
+                //set outgoing pixel to the average
+                float sum[3] = {0,0,0};
+                for(i=0; i < frames.size(); i++)
+                    for(j=0; j < 3; j++)
+                        sum[j] += pixels[3*i+j];
+                for(j=0; j < 3; j++)
+                    sum[j] = sum[j]/frames.size()+0.5;
+                
+                for(i=0; i < frames.size(); i++)
+                    ret[i]->set_pixel(x,y,uint8_t(sum[0]),uint8_t(sum[1]),uint8_t(sum[2]));
+                continue;
+            }
+
+            //smooth
+
+            //threshold (alpha)
+            
+
         }
     }
 

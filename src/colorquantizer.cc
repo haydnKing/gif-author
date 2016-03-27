@@ -115,6 +115,8 @@ MMCQuantizer::~MMCQuantizer()
 
 void MMCQuantizer::build_ct(int quantized_colors)
 {
+    if(num_colors == 0)
+        return;
     root = new vbox(colors, num_colors);
     ct = new GIFColorTable();
     float f = 0.5;
@@ -156,6 +158,7 @@ MMCQuantizer::vbox::vbox(uint8_t* _px, int np):
     left(NULL),
     right(NULL)
 {
+    std::cout << "vbox::vbox(px, np=" << num_pixels << ")" << std::endl;
     //find the minimum and maximum in each dimension
     min[0] = min[1] = min[2] = 255;
     max[0] = max[1] = max[2] = 0;

@@ -213,6 +213,19 @@ pVideoFrame VideoFrame::create_from_mat(cv::Mat *mat, int64_t timestamp, int64_t
                             position);
 };
 
+pVideoFrame VideoFrame::create(int width, int height, uint8_t initial)
+{
+    uint8_t *data = new uint8_t[3*width*height];
+    std::memset(data, initial, 3*width*height*sizeof(uint8_t));
+
+    return create_from_data(data,
+                            width,
+                            height,
+                            3*width,
+                            false,
+                            0,
+                            0);
+};
 
         
 Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf()
@@ -579,6 +592,14 @@ const uint8_t* VideoFrame::get_pixel(int x, int y) const
 uint8_t* VideoFrame::get_pixel(int x, int y)
 {
     return data + (3*x + rowstride*y);
+};
+
+void VideoFrame::set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+    uint8_t *p = get_pixel(x,y);
+    p[0] = r;
+    p[1] = g;
+    p[2] = b;
 };
 
 void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp){
