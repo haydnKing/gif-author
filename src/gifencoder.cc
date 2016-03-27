@@ -219,7 +219,7 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
 void GIFEncoder::dbg_save_POI(int x, int y, const char* name) const
 {
     std::stringstream ss;
-    ss << "./POI/POI_" << x << "_" << y << "_" << name << ".csv" << std::endl;
+    ss << "./POI/POI_" << x << "_" << y << "_" << name << ".csv";
     std::ofstream f(ss.str().c_str());
     f << "r, g, b" << std::endl;
     const uint8_t* px;
@@ -347,7 +347,7 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
     int i, j,k, y, x;
 
     uint8_t *pixels = new uint8_t[3*frames.size()], *last;
-    float  *fpixels = new float[3*frames.size()];
+    float  *fpixels = new float[3*frames.size()], *flast;
 
     //prepare output images
     std::vector<pVideoFrame> ret;
@@ -412,12 +412,6 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
             }
 
             //deltas
-            for(i=ret.size()-1; i > 0; i--)
-            {
-                fpixels[3*i+0] = std::abs(fpixels[3*i+0] - fpixels[3*i+0-3]);
-                fpixels[3*i+1] = std::abs(fpixels[3*i+1] - fpixels[3*i+1-3]);
-                fpixels[3*i+2] = std::abs(fpixels[3*i+2] - fpixels[3*i+2-3]);
-            }
 
             //threshold (alpha)
             //First find jumps greater than beta, then mark updates for all
@@ -426,26 +420,23 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
             bool update[ret.size()];
             std::memset(update, 0, ret.size()*sizeof(bool));
             update[0] = true;
+            flast = fpixels;
             for(i=1; i < ret.size(); i++)
             {
-                if((fpixels[3*i] > beta) || 
-                   (fpixels[3*i+1] > beta) ||
-                   (fpixels[3*i] > beta))
+                if((std::abs(fpixels[3*i]-flast[0]) > beta) || 
+                   (std::abs(fpixels[3*i+1]-flast[1]) > beta) ||
+                   (std::abs(fpixels[3*i]-flast[2]) > beta))
                 {
-                    //backtrack until we're below alpha
-                    while(i > 0)
-                    {
-                        i--;
-                        if((fpixels[3*i] < alpha) && (fpixels[3*i+1] < alpha) && (fpixels[3*i+2] < alpha))
-                            break;
-                    }
                     //move forward again until we're below alpha
                     while(i < ret.size())
                     {
-                        i++;
-                        if((fpixels[3*i] < alpha) && (fpixels[3*i+1] < alpha) && (fpixels[3*i+2] < alpha))
-                            break;
                         update[i] = true;
+                        flast = fpixels+3*i;
+                        i++;
+                        if((std::abs(fpixels[3*i]-flast[0]) < alpha) || 
+                           (std::abs(fpixels[3*i+1]-flast[1]) < alpha) ||
+                           (std::abs(fpixels[3*i]-flast[2]) < alpha))
+                            break;
                     }
 
                 }

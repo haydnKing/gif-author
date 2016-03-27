@@ -68,7 +68,7 @@ class GIFEncoder
 
         std::vector<pVideoFrame> detect_bg() const;
         std::vector<pVideoFrame> get_optical_flow() const;
-        std::vector<pVideoFrame> simplify(float alpha = 0, float beta=20) const;
+        std::vector<pVideoFrame> simplify(float alpha = 2, float beta=20) const;
 
         void dbg_save_POI(int x, int y, const char* name) const;
 
