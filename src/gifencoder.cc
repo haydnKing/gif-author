@@ -36,7 +36,7 @@ GIF *GIFEncoder::get_output()
     int64_t last_timestamp, delay = 4;
     int64_t frame_no = 0;
 
-    std::vector<pVideoFrame> sframes = simplify();
+    std::vector<pVideoFrame> sframes = simplify(frames);
     std::cout << "Background detection done" << std::endl;
 
     for(int i = 0; i < sframes.size(); i++)
@@ -297,53 +297,7 @@ std::vector<pVideoFrame> GIFEncoder::detect_bg() const
 };
 
 
-std::vector<pVideoFrame> GIFEncoder::get_optical_flow() const
-{
-    cv::Mat *prev, *next, flow, *save;
-    std::vector<pVideoFrame> ret;
-    pVideoFrame frame;
-    ret.push_back(VideoFrame::create(frames[0]->get_width(), frames[0]->get_height(), 0));
-
-    prev = frames[0]->get_mat();
-    cv::cvtColor(*prev, *prev, CV_RGB2GRAY);
-
-    for(int i = 1; i < frames.size(); i++)
-    {
-        next = frames[i]->get_mat();
-        cv::cvtColor(*next, *next, CV_RGB2GRAY);
-
-        cv::calcOpticalFlowFarneback(*prev, *next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
-        frame = VideoFrame::create(frames[0]->get_width(), frames[0]->get_height(), 0);
-
-        float fv;
-        uint8_t v;
-        for(int y = 0; y < flow.rows; y ++)
-            for(int x = 0; x < flow.cols; x ++)
-            {
-                const cv::Point2f& fxy = flow.at<cv::Point2f>(y, x);
-                fv = std::sqrt(fxy.x*fxy.x + fxy.y+fxy.y)*10;
-                if(fv > 255.5) fv = 255.5;
-                v = uint8_t(fv);
-                frame->set_pixel(x,y, v, v, v); 
-            }
-
-        save = frame->get_mat();
-        std::stringstream ss;
-        ss << "./flow/frame_" << i << ".jpg";
-        cv::imwrite(ss.str().c_str(), *save);
-        delete save;
-
-        ret.push_back(frame);
-
-        delete prev;
-        prev = next;
-    };
-    delete next;
-
-    return ret;
-};
-
-std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig_t, float sig_s) const
+std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, float alpha, float sig_t, float sig_s) const
 {
     int i, j,k, y, x;
 

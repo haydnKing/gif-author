@@ -67,8 +67,7 @@ class GIFEncoder
                          const pColorQuantizer cq) const;
 
         std::vector<pVideoFrame> detect_bg() const;
-        std::vector<pVideoFrame> get_optical_flow() const;
-        std::vector<pVideoFrame> simplify(float alpha = 5, float sig_t=1.5, float sig_s=1.5) const;
+        std::vector<pVideoFrame> simplify(std::vector<pVideoFrame> frames, float alpha = 5, float sig_t=1.5, float sig_s=1.5) const;
 
         void dbg_save_POI(int x, int y, const char* name) const;
 
