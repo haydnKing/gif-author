@@ -22,7 +22,11 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 
 GIF *GIFEncoder::get_output()
 {
-    detect_bg();
+    dbg_save_POI(220, 105, "elbow");
+    dbg_save_POI(170, 88, "light");
+    dbg_save_POI(104, 97, "wall1");
+    dbg_save_POI(205, 95, "wall2");
+    dbg_save_POI(272,166, "hip");
 
     GIF *out = new GIF(canvas_width, canvas_height);
     pVideoFrame fr, prev_fr;
@@ -212,6 +216,21 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
     
 };
         
+void GIFEncoder::dbg_save_POI(int x, int y, const char* name) const
+{
+    std::stringstream ss;
+    ss << "./POI/POI_" << x << "_" << y << "_" << name << ".csv" << std::endl;
+    std::ofstream f(ss.str().c_str());
+    f << "r, g, b" << std::endl;
+    const uint8_t* px;
+
+    for(int i = 0; i < frames.size(); i++)
+    {
+        px = frames[i]->get_pixel(x,y);
+        f << int(px[0]) << ", " << int(px[1]) << ", " << int(px[2]) << std::endl;
+    }
+};
+
 std::vector<pVideoFrame> GIFEncoder::detect_bg() const
 {
     std::cout << "Detect background" << std::endl;
@@ -325,7 +344,7 @@ std::vector<pVideoFrame> GIFEncoder::get_optical_flow() const
 
 std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
 {
-    int i, j, y, x;
+    int i, j,k, y, x;
 
     uint8_t *pixels = new uint8_t[3*frames.size()], *last;
     float  *fpixels = new float[3*frames.size()];
@@ -392,24 +411,56 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float beta) const
                 continue;
             }
 
+            //deltas
+            for(i=ret.size()-1; i > 0; i--)
+            {
+                fpixels[3*i+0] = std::abs(fpixels[3*i+0] - fpixels[3*i+0-3]);
+                fpixels[3*i+1] = std::abs(fpixels[3*i+1] - fpixels[3*i+1-3]);
+                fpixels[3*i+2] = std::abs(fpixels[3*i+2] - fpixels[3*i+2-3]);
+            }
+
             //threshold (alpha)
+            //First find jumps greater than beta, then mark updates for all
+            //jumps greater than alpha either side
             ret[0]->set_pixel(x,y,pixels[0], pixels[1], pixels[2]);
-            last = pixels;
+            bool update[ret.size()];
+            std::memset(update, 0, ret.size()*sizeof(bool));
+            update[0] = true;
             for(i=1; i < ret.size(); i++)
             {
-                if((std::abs(fpixels[3*i]-fpixels[3*i-3]) > alpha) || 
-                   (std::abs(fpixels[3*i+1]-fpixels[3*i-3+1]) > alpha) ||
-                   (std::abs(fpixels[3*i]-fpixels[3*i-3+1]) > alpha))
+                if((fpixels[3*i] > beta) || 
+                   (fpixels[3*i+1] > beta) ||
+                   (fpixels[3*i] > beta))
                 {
-                    if(x==304 && y == 102) std::cout << "Update frame = " << i <<"; -> (" << int(pixels[3*i]) << ", " << int(pixels[3*i+1]) << ", "<< int(pixels[3*i+2]) << ")" << std::endl;
-                    ret[i]->set_pixel(x,y,pixels[3*i], pixels[3*i+1], pixels[3*i+2]);
-                    last = pixels+3*i;
+                    //backtrack until we're below alpha
+                    while(i > 0)
+                    {
+                        i--;
+                        if((fpixels[3*i] < alpha) && (fpixels[3*i+1] < alpha) && (fpixels[3*i+2] < alpha))
+                            break;
+                    }
+                    //move forward again until we're below alpha
+                    while(i < ret.size())
+                    {
+                        i++;
+                        if((fpixels[3*i] < alpha) && (fpixels[3*i+1] < alpha) && (fpixels[3*i+2] < alpha))
+                            break;
+                        update[i] = true;
+                    }
+
                 }
-                else
+            }
+
+            //Fill in pixel values
+            for(i=0; i < ret.size(); i++)
+            {
+                if(update[i])
                 {
+                    last = pixels+3*i;
                     ret[i]->set_pixel(x,y,last[0], last[1], last[2]);
                 }
-
+                else
+                    ret[i]->set_pixel(x,y,last[0], last[1], last[2]);
             }
             
 
