@@ -101,7 +101,7 @@ void GIFEncoder::dither_image(pGIFImage out,
         out->set_transparency(true);
         out->set_transparent_index(colors);
         out->set_disposal_method(DISPOSAL_METHOD_NONE);
-        //out->set_disposal_method(DISPOSAL_METHOD_RESTORE_BACKGROUND);
+        out->set_disposal_method(DISPOSAL_METHOD_RESTORE_BACKGROUND);
         cq->build_ct(colors-1);
     }
     else
@@ -343,25 +343,31 @@ std::vector<pVideoFrame> GIFEncoder::get_optical_flow() const
     return ret;
 };
 
-std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig) const
+std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig_t, float sig_s) const
 {
     int i, j,k, y, x;
 
     uint8_t *pixels = new uint8_t[3*frames.size()], *last;
     float  *fpixels = new float[3*frames.size()], *flast;
 
-    int kernel_length =int(6*sig) + 1;
+    int kernel_length =int(6*sig_t) + 1;
     int kernel_center = kernel_length/2;
     float kernel[kernel_length], norm;
     for(j=0; j < kernel_length; j++)
     {
-        kernel[j] = std::exp(-(j-kernel_center)*(j-kernel_center)/(2*sig*sig));
+        kernel[j] = std::exp(-(j-kernel_center)*(j-kernel_center)/(2*sig_t*sig_t));
     }
 
     //prepare output images
     std::vector<pVideoFrame> ret;
     for(i=0; i < frames.size(); i++)
         ret.push_back(VideoFrame::create(frames[i]->get_width(), frames[i]->get_height(), 0));
+
+    //blur input images
+    std::vector<pVideoFrame> blurred;
+    for(i=0; i < frames.size(); i++)
+        //blurred.push_back(frames[i]);
+        blurred.push_back(frames[i]->blur(sig_s));
 
     unsigned long c = 0;
     //pixel by pixel
@@ -372,7 +378,7 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig) const
             //get the pixels
             for(i = 0; i < frames.size(); i++)
             {
-                std::memcpy(pixels+3*i, frames[i]->get_pixel(x,y), 3*sizeof(uint8_t));
+                std::memcpy(pixels+3*i, blurred[i]->get_pixel(x,y), 3*sizeof(uint8_t));
             }
 
             //smooth
@@ -395,8 +401,21 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig) const
                 }
             }
 
-            //deltas
+            if(x==168 && y==150)
+            {
+                for(i = 0; i < frames.size(); i++)
+                {
+                    std::cout << "("<< x << ", " << y << ", " << i << "): ("
+                        << int(pixels[3*i+0]) << ", "
+                        << int(pixels[3*i+1]) << ", "
+                        << int(pixels[3*i+2]) << ") -> "
+                        << fpixels[3*i+0] << ", "
+                        << fpixels[3*i+1] << ", "
+                        << fpixels[3*i+2] << ")" << std::endl;
+                }
+            }
 
+            //decide whether to update
             int run_start = 0;
             bool update[ret.size()];
             std::memset(update, 0, ret.size()*sizeof(bool));
@@ -419,7 +438,7 @@ std::vector<pVideoFrame> GIFEncoder::simplify(float alpha, float sig) const
             {
                 if(update[i])
                 {
-                    last = pixels+3*i;
+                    last = frames[i]->get_pixel(x,y);
                     ret[i]->set_pixel(x,y,last[0], last[1], last[2]);
                 }
                 else

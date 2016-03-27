@@ -614,3 +614,69 @@ void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p,
     position = p;
     data_parent = dp;
 };
+
+pVideoFrame VideoFrame::blur(float sigma) const
+{
+    int kernel_length = int(3*sigma+1.0);
+    if(kernel_length%2==0) kernel_length++;
+    int kernel_center = kernel_length / 2;
+    float kernel[kernel_length], norm, val[3];
+    int x,y,i,j,k;
+    for(k=0; k < kernel_length; k++)
+        kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
+
+    pVideoFrame h = create(get_width(), get_height(), 0),
+                v = create(get_width(), get_height(), 0);
+
+    //blur horizontally
+    for(y = 0; y < get_height(); y++)
+    {
+        for(x = 0; x < get_width(); x++)
+        {
+            norm = 0.;
+            val[0] = 0.;
+            val[1] = 0.;
+            val[2] = 0.;
+            for(k=0; k < kernel_length; k++)
+            {
+                i = x+k-kernel_center;
+                if(i >= 0 && i < get_width())
+                {
+                    norm+=kernel[k];
+                    for(j=0; j <3; j++)
+                    {
+                        val[j] += float(get_pixel(i, y)[j]) * kernel[k];
+                    }
+                }
+            }
+            h->set_pixel(x,y,uint8_t(val[0]/norm),uint8_t(val[1]/norm),uint8_t(val[2]/norm));
+        }
+    }
+    //blur vertically
+    for(y = 0; y < get_height(); y++)
+    {
+        for(x = 0; x < get_width(); x++)
+        {
+            norm = 0.;
+            val[0] = 0.;
+            val[1] = 0.;
+            val[2] = 0.;
+            for(k=0; k < kernel_length; k++)
+            {
+                i = y+k-kernel_center;
+                if(i >= 0 && i < get_height())
+                {
+                    norm+=kernel[k];
+                    for(j=0; j <3; j++)
+                    {
+                        val[j] += float(h->get_pixel(x, i)[j]) * kernel[k];
+                    }
+                }
+            }
+            v->set_pixel(x,y,uint8_t(val[0]/norm),uint8_t(val[1]/norm),uint8_t(val[2]/norm));
+        }
+    }
+
+    return v;
+};
+

@@ -295,6 +295,8 @@ class VideoFrame : public Glib::Object
                          uint8_t* out,
                          InterpolationMethod mode=INTERPOLATION_BILINEAR) const;
 
+        pVideoFrame blur(float sigma) const;
+
     protected:
         VideoFrame();
 
