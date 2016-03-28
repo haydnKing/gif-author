@@ -452,7 +452,7 @@ std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, flo
     //blur input images
     std::vector<pVideoFrame> blurred;
     for(i=0; i < segment.size(); i++)
-        blurred.push_back(segment[i]/*->blur(sig_s)*/);
+        blurred.push_back(segment[i]->blur(sig_s));
 
     unsigned long c = 0;
     //pixel by pixel
