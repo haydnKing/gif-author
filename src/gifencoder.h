@@ -18,6 +18,28 @@
 
 #include <opencv2/opencv.hpp>
 
+class Bitset;
+typedef Glib::RefPtr<Bitset> pBitset;
+
+class Bitset : public Glib::Object
+{
+    public:
+        ~Bitset();
+        static pBitset create(int _width, int _height, bool initial=false);
+
+        bool get(int x, int y) const;
+        void set(int x, int y, bool s=true);
+
+        void clear(bool v=false);
+
+    private:
+        uint8_t *data;
+        int width, height;
+        Bitset(int _width, int _height, bool initial);
+};
+
+
+
 /**
  * Which method to use when dithering an image
  */
@@ -54,20 +76,26 @@ class GIFEncoder
 
         void dither_image(pGIFImage out,
                           const pVideoFrame vf,
-                          const pVideoFrame mask,
+                          const pBitset mask,
                           const pColorQuantizer cq,
                           uint8_t colors) const;
         void dither_FS(const pVideoFrame vf,
-                       const pVideoFrame mask,
+                       const pBitset mask,
                        pGIFImage out, 
                        const pColorQuantizer cq) const;
         void dither_none(const pVideoFrame vf,
-                         const pVideoFrame mask,
+                         const pBitset mask,
                          pGIFImage out, 
                          const pColorQuantizer cq) const;
 
-        std::vector<pVideoFrame> detect_bg() const;
-        std::vector<pVideoFrame> simplify(std::vector<pVideoFrame> frames, float alpha = 5, float sig_t=1.5, float sig_s=1.5) const;
+        std::vector<pBitset> detect_bg(float alpha = 5, 
+                                       float beta = 0.75,
+                                       float sig_t=1.5, 
+                                       float sig_s=1.5) const;
+        std::vector<pBitset> threshold(std::vector<pVideoFrame> segment, 
+                                       float alpha, 
+                                       float sig_t, 
+                                       float sig_s) const;
 
         void dbg_save_POI(int x, int y, const char* name) const;
 

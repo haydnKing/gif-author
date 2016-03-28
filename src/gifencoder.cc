@@ -6,6 +6,50 @@ bool px_equal(uint8_t *lhs, uint8_t *rhs)
     return (lhs[0]==rhs[0] && lhs[1]==rhs[1] && lhs[2] == rhs[2]);
 };
 
+
+Bitset::Bitset(int _width, int _height, bool initial):
+    width(_width),
+    height(_height)
+{
+    data = new uint8_t[(width*height+7)/8];
+    clear(initial);
+};
+
+Bitset::~Bitset()
+{
+    delete [] data;
+};
+
+pBitset Bitset::create(int _width, int _height, bool initial)
+{
+    return pBitset(new Bitset(_width, _height, initial));
+};
+
+bool Bitset::get(int x, int y) const
+{
+    x = x+y*width;
+    return (data[x/8] && (1<<(x%8)));
+};
+
+void Bitset::set(int x, int y, bool s)
+{
+    x = x+y*width;
+    if(s)
+        data[x/8] = data[x/8] | (1 << (x%8));
+    else
+        data[x/8] = data[x/8] & ~(1 << (x%8));
+};
+
+void Bitset::clear(bool v)
+{
+    if(v)
+        std::memset(data, 255, (width*height+7)/8);
+    else
+        std::memset(data, 0, (width*height+7)/8);
+};
+
+
+
 GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
     canvas_width(cw),
     canvas_height(ch),
@@ -29,48 +73,48 @@ GIF *GIFEncoder::get_output()
     dbg_save_POI(272,166, "hip");
 
     GIF *out = new GIF(canvas_width, canvas_height);
-    pVideoFrame fr, prev_fr;
+    pVideoFrame fr;
+    pBitset fr_mask;
     std::vector<pVideoFrame>::iterator it;
     int x, y;
-    const uint8_t *px, *prev_px;
+    const uint8_t *px;
     int64_t last_timestamp, delay = 4;
     int64_t frame_no = 0;
 
-    std::vector<pVideoFrame> sframes = simplify(frames);
+    std::vector<pBitset> masks = detect_bg();
+    //in case I want to re-introduce smoothing
+    std::vector<pVideoFrame> sframes = frames;
     std::cout << "Background detection done" << std::endl;
 
     for(int i = 0; i < sframes.size(); i++)
     {
         std::cout << "Frame " << i << " of " << frames.size() << std::endl;
         fr = sframes[i];
-        if(i==0)
-            prev_fr = pVideoFrame();
-        else
-            prev_fr = sframes[i-1];
+        fr_mask = masks[i];
 
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
         cq->set_max_colors(fr->get_height() * fr->get_width());
         
-        for(y = 0; y < fr->get_height(); y++)
+        if(fr_mask)
         {
-            for(x = 0; x < fr->get_width(); x++)
-            {
-                if(prev_fr)
-                {
-                    if(!px_equal(prev_fr->get_pixel(x,y), fr->get_pixel(x,y)))
+            for(y = 0; y < fr->get_height(); y++)
+                for(x = 0; x < fr->get_width(); x++)
+                    if(fr_mask->get(x,y))
                         cq->add_color(fr->get_pixel(x,y));
-                }
-                else
+        }
+        else
+        {
+            for(y = 0; y < fr->get_height(); y++)
+                for(x = 0; x < fr->get_width(); x++)
                     cq->add_color(fr->get_pixel(x,y));
-            }
         }
 
         if(cq->get_num_colors() > 0)
         {
             //Dither the image
             pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
-            dither_image(img, fr, prev_fr, cq, 255);
+            dither_image(img, fr, fr_mask, cq, 255);
             //debug_ct(img, cq->get_ct());
             
             //set delay_time
@@ -92,11 +136,11 @@ GIF *GIFEncoder::get_output()
 
 void GIFEncoder::dither_image(pGIFImage out,
                               const pVideoFrame vf,
-                              const pVideoFrame pvf,
+                              const pBitset mask,
                               const pColorQuantizer cq,
                               uint8_t colors) const
 {
-    if(pvf)
+    if(mask)
     {
         out->set_transparency(true);
         out->set_transparent_index(colors);
@@ -110,16 +154,16 @@ void GIFEncoder::dither_image(pGIFImage out,
     switch(dm)
     {
         case DITHER_FLOYD_STEINBERG:
-            dither_FS(vf, pvf, out, cq);
+            dither_FS(vf, mask, out, cq);
             break;
         case DITHER_NONE:
-            dither_none(vf, pvf, out, cq);
+            dither_none(vf, mask, out, cq);
             break;
     }
 };
 
 void GIFEncoder::dither_FS(const pVideoFrame vf,
-                           const pVideoFrame pvf,
+                           const pBitset mask,
                            pGIFImage out, 
                            const pColorQuantizer cq) const
 {
@@ -141,7 +185,7 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
         for(x = 0; x < vf->get_width(); x++)
         {
             //transparency
-            if(pvf && px_equal(vf->get_pixel(x,y), pvf->get_pixel(x,y)))
+            if(mask && !mask->get(x,y))
             {
                 out->set_value(x,y,out->transparent_index());
                 continue;
@@ -194,7 +238,7 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
 };
 
 void GIFEncoder::dither_none(const pVideoFrame vf,
-                             const pVideoFrame pvf,
+                             const pBitset mask,
                              pGIFImage out, 
                              const pColorQuantizer cq) const
 {
@@ -205,7 +249,7 @@ void GIFEncoder::dither_none(const pVideoFrame vf,
         for(x = 0; x < vf->get_width(); x++)
         {
             //transparency
-            if(pvf && px_equal(vf->get_pixel(x,y), pvf->get_pixel(x,y)))
+            if(mask && !mask->get(x,y))
             {
                 out->set_value(x,y,out->transparent_index());
                 continue;
@@ -232,77 +276,18 @@ void GIFEncoder::dbg_save_POI(int x, int y, const char* name) const
     }
 };
 
-std::vector<pVideoFrame> GIFEncoder::detect_bg() const
+std::vector<pBitset> GIFEncoder::detect_bg(float alpha, float beta, float sig_t, float sig_s) const
 {
-    std::cout << "Detect background" << std::endl;
-    cv::Ptr<cv::BackgroundSubtractor> bsub = cv::createBackgroundSubtractorMOG2(frames.size());
-    cv::Mat mask;
-    cv::Mat *frame;
-
-    std::vector<pVideoFrame> ret, ret2;
-    std::vector<pVideoFrame>::const_iterator it;
-    pVideoFrame fr;
-
-    std::ofstream f("POI.csv");
-    f << "r, g, b" << std::endl;
-    const uint8_t* px;
-
-    for(it = frames.begin(); it != frames.end(); it++)
-    {
-        px = (*it)->get_pixel(304,102);
-        f << int(px[0]) << ", " << int(px[1]) << ", " << int(px[2]) << std::endl;
-        frame = (*it)->get_mat();
-
-        bsub->apply(*frame, mask);
-        ret.push_back(VideoFrame::create_from_mat(&mask, 
-                                                  (*it)->get_timestamp(), 
-                                                  (*it)->get_position()));
-        delete frame;
-    }
-
-    bool high;
-    for(int i = 0; i < ret.size(); i++)
-    {
-        fr = VideoFrame::create(ret[i]->get_width(), ret[i]->get_height(), 0); 
-        for(int y = 0; y < ret[i]->get_height(); y++)
-        {
-            for(int x = 0; x < ret[i]->get_width(); x++)
-            {
-                high = false;
-                if(x>0 && y>0                                      && ret[i]->get_pixel(x-1,y-1)[0] > 0) high=true;
-                if(x>0                                             && ret[i]->get_pixel(x-1,y  )[0] > 0) high=true;
-                if(x>0 && y<ret[i]->get_height()                   && ret[i]->get_pixel(x-1,y+1)[0] > 0) high=true;
-                if(x<ret[i]->get_width() && x>0                    && ret[i]->get_pixel(x+1,y-1)[0] > 0) high=true;
-                if(x<ret[i]->get_width()                           && ret[i]->get_pixel(x+1,y  )[0] > 0) high=true;
-                if(x<ret[i]->get_width() && x<ret[i]->get_width()  && ret[i]->get_pixel(x+1,y+1)[0] > 0) high=true;
-                if(y>0                                             && ret[i]->get_pixel(x,y-1)[0] > 0) high=true;
-                if(y<ret[i]->get_height()                          && ret[i]->get_pixel(x,y+1)[0] > 0) high=true;
-
-                if(high) fr->set_pixel(x,y,255,255,255);
-            }
-        }
-        ret2.push_back(fr);
-    }
-
-    for(int i = 0;  i < ret2.size(); i++)
-    {
-        frame = ret2[i]->get_mat();
-        std::stringstream ss;
-        ss << "./mask/frame_" << i << ".jpg";
-        cv::imwrite(ss.str().c_str(), *frame);
-        delete frame;
-    }
-
-    return ret2;
+    return threshold(frames, alpha, sig_t, sig_s);
 };
 
 
-std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, float alpha, float sig_t, float sig_s) const
+std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, float alpha, float sig_t, float sig_s) const
 {
     int i, j,k, y, x;
 
-    uint8_t *pixels = new uint8_t[3*frames.size()], *last;
-    float  *fpixels = new float[3*frames.size()], *flast;
+    uint8_t *pixels = new uint8_t[3*segment.size()], *last;
+    float  *fpixels = new float[3*segment.size()], *flast;
 
     int kernel_length =int(6*sig_t) + 1;
     int kernel_center = kernel_length/2;
@@ -313,30 +298,29 @@ std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, f
     }
 
     //prepare output images
-    std::vector<pVideoFrame> ret;
-    for(i=0; i < frames.size(); i++)
-        ret.push_back(VideoFrame::create(frames[i]->get_width(), frames[i]->get_height(), 0));
+    std::vector<pBitset> ret;
+    for(i=0; i < segment.size(); i++)
+        ret.push_back(Bitset::create(segment[i]->get_width(), segment[i]->get_height(), false));
 
     //blur input images
     std::vector<pVideoFrame> blurred;
-    for(i=0; i < frames.size(); i++)
-        //blurred.push_back(frames[i]);
-        blurred.push_back(frames[i]->blur(sig_s));
+    for(i=0; i < segment.size(); i++)
+        blurred.push_back(segment[i]->blur(sig_s));
 
     unsigned long c = 0;
     //pixel by pixel
-    for(y = 0; y < frames[0]->get_height(); y++)
+    for(y = 0; y < segment[0]->get_height(); y++)
     {
-        for(x = 0; x < frames[0]->get_width(); x++)
+        for(x = 0; x < segment[0]->get_width(); x++)
         {
             //get the pixels
-            for(i = 0; i < frames.size(); i++)
+            for(i = 0; i < segment.size(); i++)
             {
                 std::memcpy(pixels+3*i, blurred[i]->get_pixel(x,y), 3*sizeof(uint8_t));
             }
 
             //smooth
-            for(i=0; i<frames.size(); i++)
+            for(i=0; i<segment.size(); i++)
             {
                 for(j=0; j<3; j++)
                 {
@@ -345,7 +329,7 @@ std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, f
                     for(k=0; k < kernel_length; k++)
                     {
                         if((i+k-kernel_center > 0) &&
-                           (i+k-kernel_center < frames.size()))
+                           (i+k-kernel_center < segment.size()))
                         {
                             fpixels[3*i+j] += kernel[k] * float(pixels[3*(i+k-kernel_center)+j]);
                             norm += kernel[k];
@@ -357,7 +341,7 @@ std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, f
 
             if(x==168 && y==150)
             {
-                for(i = 0; i < frames.size(); i++)
+                for(i = 0; i < segment.size(); i++)
                 {
                     std::cout << "("<< x << ", " << y << ", " << i << "): ("
                         << int(pixels[3*i+0]) << ", "
@@ -371,9 +355,7 @@ std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, f
 
             //decide whether to update
             int run_start = 0;
-            bool update[ret.size()];
-            std::memset(update, 0, ret.size()*sizeof(bool));
-            update[0] = true;
+            ret[0]->set(x,y,true);
             for(i=1; i < ret.size(); i++)
             {
                 for(j=0; j < 3; j++)
@@ -381,25 +363,10 @@ std::vector<pVideoFrame> GIFEncoder::simplify(std::vector<pVideoFrame> frames, f
                     if(std::abs(fpixels[3*i+j] - fpixels[3*run_start+j]) > alpha)
                     {
                         run_start = i;
-                        update[i] = true;
+                        ret[i]->set(x,y,true);
                     }
                 }
             }
-            
-
-            //Fill in pixel values
-            for(i=0; i < ret.size(); i++)
-            {
-                if(update[i])
-                {
-                    last = frames[i]->get_pixel(x,y);
-                    ret[i]->set_pixel(x,y,last[0], last[1], last[2]);
-                }
-                else
-                    ret[i]->set_pixel(x,y,last[0], last[1], last[2]);
-            }
-            
-
         }
     }
 
