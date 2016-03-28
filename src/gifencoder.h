@@ -32,6 +32,9 @@ class Bitset : public Glib::Object
 
         void clear(bool v=false);
 
+        //remove isolated pixels
+        void remove_islands();
+
     private:
         uint8_t *data;
         int width, height;
@@ -89,15 +92,19 @@ class GIFEncoder
                          const pColorQuantizer cq) const;
 
         std::vector<pBitset> detect_bg(float alpha = 5, 
+                                       float alpha_max = 40.,
                                        float beta = 0.75,
                                        float sig_t=1.5, 
                                        float sig_s=1.5) const;
         std::vector<pBitset> threshold(std::vector<pVideoFrame> segment, 
                                        float alpha, 
+                                       float alpha_max, 
                                        float sig_t, 
                                        float sig_s) const;
+        float get_fraction_above(const pVideoFrame lhs, const pVideoFrame rhs, float beta) const;
 
         void dbg_save_POI(int x, int y, const char* name) const;
+        void dbg_thresholding(int len, uint8_t *px, float *fpx, const char *name) const;
 
         pGIFImage create_gif_image(int left, int top, int width, int height) const;
 

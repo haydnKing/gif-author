@@ -48,6 +48,107 @@ void Bitset::clear(bool v)
         std::memset(data, 0, (width*height+7)/8);
 };
 
+void Bitset::remove_islands()
+{
+    bool t;
+    int x,y;
+    for(y=1; y < height-1; y++)
+    {
+        //left column, x=0
+        if(get(0,y) &&
+           !get(0,y-1) &&
+           !get(0,y+1) &&
+           !get(1,y  ) &&
+           !get(1,y-1) &&
+           !get(1,y-1))
+        {
+            set(0,y,false);
+        }
+        //right column, x=width-1
+        if(get(width-1,y) &&
+           !get(width-1,y-1) &&
+           !get(width-1,y+1) &&
+           !get(width-2,y  ) &&
+           !get(width-2,y-1) &&
+           !get(width-2,y-1))
+        {
+            set(0,y,false);
+        }
+        for(x=1; x < width-1; x++)
+        {
+            //general case
+            //if pixel is high and surroundings are low
+            if(get(x  ,y  ) &&
+               !get(x  ,y+1) &&
+               !get(x  ,y-1) &&
+               !get(x-1,y  ) &&
+               !get(x-1,y+1) &&
+               !get(x-1,y-1) &&
+               !get(x+1,y  ) &&
+               !get(x+1,y+1) &&
+               !get(x+1,y-1))
+            {
+                //set low
+                set(x,y,false);
+            }
+        }
+    }
+    for(x=1; x < width-1; x++)
+    {
+        //top row, y=0
+        if(get(x,0) &&
+           !get(x-1,0) &&
+           !get(x+1,0) &&
+           !get(x-1,1) &&
+           !get(x  ,1) &&
+           !get(x+1,1))
+        {
+            set(x,0,false);
+        }
+        //bottom row, y=height-1
+        if(get(x,height-1) &&
+           !get(x-1,height-1) &&
+           !get(x+1,height-1) &&
+           !get(x-1,height-2) &&
+           !get(x  ,height-2) &&
+           !get(x+1,height-2))
+        {
+            set(x,height-1,false);
+        }
+    }
+    //x==0, y==0
+    if(get(0,0) &&
+       !get(1,0) &&
+       !get(1,1) &&
+       !get(0,1))
+    {
+        set(0,0,false);
+    }
+    //x==width-1, y==0
+    if(get(width-1,0) &&
+       !get(width-1,1) &&
+       !get(width-2,0) &&
+       !get(width-2,1))
+    {
+        set(width-1,0,false);
+    }
+    //x==0, y==height-1
+    if(get(0,height-1) &&
+       !get(1,height-1) &&
+       !get(1,height-2) &&
+       !get(0,height-2))
+    {
+        set(0,height-1,false);
+    }
+    //x==width-1, y==height-1
+    if(get(width-1,height-1) &&
+       !get(width-2,height-1) &&
+       !get(width-2,height-2) &&
+       !get(width-1,height-2))
+    {
+        set(width-1,height-1,false);
+    }
+};
 
 
 GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
@@ -66,11 +167,14 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 
 GIF *GIFEncoder::get_output()
 {
+    /*
     dbg_save_POI(220, 105, "elbow");
     dbg_save_POI(170, 88, "light");
     dbg_save_POI(104, 97, "wall1");
     dbg_save_POI(205, 95, "wall2");
     dbg_save_POI(272,166, "hip");
+    */
+    dbg_save_POI(217,96, "hood");
 
     GIF *out = new GIF(canvas_width, canvas_height);
     pVideoFrame fr;
@@ -145,7 +249,7 @@ void GIFEncoder::dither_image(pGIFImage out,
         out->set_transparency(true);
         out->set_transparent_index(colors);
         out->set_disposal_method(DISPOSAL_METHOD_NONE);
-        out->set_disposal_method(DISPOSAL_METHOD_RESTORE_BACKGROUND);
+        //out->set_disposal_method(DISPOSAL_METHOD_RESTORE_BACKGROUND);
         cq->build_ct(colors-1);
     }
     else
@@ -275,18 +379,61 @@ void GIFEncoder::dbg_save_POI(int x, int y, const char* name) const
         f << int(px[0]) << ", " << int(px[1]) << ", " << int(px[2]) << std::endl;
     }
 };
-
-std::vector<pBitset> GIFEncoder::detect_bg(float alpha, float beta, float sig_t, float sig_s) const
+        
+void GIFEncoder::dbg_thresholding(int len, uint8_t *px, float *fpx, const char *name) const
 {
-    return threshold(frames, alpha, sig_t, sig_s);
+    std::stringstream ss;
+    ss << "./POI/thresh_" << name << ".csv";
+    std::ofstream f(ss.str().c_str());
+    f << "r, g, b, r, g, b" << std::endl;
+
+    for(int i = 0; i < len; i++)
+    {
+        f << int(px[3*i+0]) << ", "
+          << int(px[3*i+1]) << ", "
+          << int(px[3*i+2]) << ", "
+          << fpx[3*i+0] << ", "
+          << fpx[3*i+1] << ", "
+          << fpx[3*i+2] << std::endl;
+    }
+};
+
+std::vector<pBitset> GIFEncoder::detect_bg(float alpha, float alpha_max, float beta, float sig_t, float sig_s) const
+{
+    std::cout << "GIFEncoder::detect_bg(...)" << std::endl;
+
+    std::vector<pBitset> ret;
+    ret.reserve(frames.size());
+    int scene_start = 0;
+    float d;
+    for(int i = 1; i < frames.size();i++)
+    {
+        d = get_fraction_above(frames[i], frames[i-1], beta);
+        if(d > beta)
+        {
+            std::cout << "frame[" << i << "] = " << d << std::endl;
+            std::vector<pVideoFrame> scene(frames.begin()+scene_start, frames.begin()+i);
+            std::vector<pBitset> temp = threshold(scene, alpha, alpha_max, sig_t, sig_s);
+            ret.insert(ret.end(), temp.begin(), temp.end());
+            scene_start = i;
+        }
+    }
+    //last scene
+    std::vector<pVideoFrame> scene(frames.begin()+scene_start, frames.end());
+    std::vector<pBitset> temp = threshold(scene, alpha, alpha_max, sig_t, sig_s);
+    ret.insert(ret.end(), temp.begin(), temp.end());
+
+    for(int i = 0; i < ret.size(); i++)
+        ret[i]->remove_islands();
+    return ret;
 };
 
 
-std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, float alpha, float sig_t, float sig_s) const
+std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, float alpha, float alpha_max, float sig_t, float sig_s) const
 {
     int i, j,k, y, x;
 
-    uint8_t *pixels = new uint8_t[3*segment.size()], *last;
+    uint8_t *pixels = new uint8_t[3*segment.size()], *last, max_d;
     float  *fpixels = new float[3*segment.size()], *flast;
 
     int kernel_length =int(6*sig_t) + 1;
@@ -305,7 +452,7 @@ std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, flo
     //blur input images
     std::vector<pVideoFrame> blurred;
     for(i=0; i < segment.size(); i++)
-        blurred.push_back(segment[i]->blur(sig_s));
+        blurred.push_back(segment[i]/*->blur(sig_s)*/);
 
     unsigned long c = 0;
     //pixel by pixel
@@ -322,36 +469,48 @@ std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, flo
             //smooth
             for(i=0; i<segment.size(); i++)
             {
-                for(j=0; j<3; j++)
+                //find the max delta
+                max_d = 0;
+                if(i > 0)
+                    for(j=0; j<3; j++)
+                        if(std::abs(pixels[3*i+j]-pixels[3*i+j-3]) > max_d)
+                            max_d = std::abs(pixels[3*i+j]-pixels[3*i+j-3]);
+                if(i < segment.size()-1)
+                    for(j=0; j<3; j++)
+                        if(std::abs(pixels[3*i+j]-pixels[3*i+j+3]) > max_d)
+                            max_d = std::abs(pixels[3*i+j]-pixels[3*i+j+3]);
+
+                //only smooth if max delta is below alpha_max. This prevents
+                //sudden large jumps from being lost
+                if(max_d < alpha_max)
                 {
-                    fpixels[3*i+j] = 0;
-                    norm = 0;
-                    for(k=0; k < kernel_length; k++)
+
+                    for(j=0; j<3; j++)
                     {
-                        if((i+k-kernel_center > 0) &&
-                           (i+k-kernel_center < segment.size()))
+                        fpixels[3*i+j] = 0;
+                        norm = 0;
+                        for(k=0; k < kernel_length; k++)
                         {
-                            fpixels[3*i+j] += kernel[k] * float(pixels[3*(i+k-kernel_center)+j]);
-                            norm += kernel[k];
+                            if((i+k-kernel_center > 0) &&
+                               (i+k-kernel_center < segment.size()))
+                            {
+                                fpixels[3*i+j] += kernel[k] * float(pixels[3*(i+k-kernel_center)+j]);
+                                norm += kernel[k];
+                            }
                         }
+                        fpixels[3*i+j] /= norm;
                     }
-                    fpixels[3*i+j] /= norm;
+                }
+                else
+                {
+                    for(j=0; j < 3; j++)
+                    {
+                        fpixels[3*i+j] = float(pixels[3*i+j]);
+                    }
                 }
             }
 
-            if(x==168 && y==150)
-            {
-                for(i = 0; i < segment.size(); i++)
-                {
-                    std::cout << "("<< x << ", " << y << ", " << i << "): ("
-                        << int(pixels[3*i+0]) << ", "
-                        << int(pixels[3*i+1]) << ", "
-                        << int(pixels[3*i+2]) << ") -> "
-                        << fpixels[3*i+0] << ", "
-                        << fpixels[3*i+1] << ", "
-                        << fpixels[3*i+2] << ")" << std::endl;
-                }
-            }
+            if(x==308 && y==157) dbg_thresholding(segment.size(), pixels, fpixels, "hood");
 
             //decide whether to update
             int run_start = 0;
@@ -371,6 +530,28 @@ std::vector<pBitset> GIFEncoder::threshold(std::vector<pVideoFrame> segment, flo
     }
 
     return ret;
+};
+        
+float GIFEncoder::get_fraction_above(const pVideoFrame lhs, const pVideoFrame rhs, float beta) const
+{
+    unsigned int c = 0;
+    const uint8_t *l_px, *r_px;
+    for(int y = 0; y < lhs->get_height(); y++)
+    {
+        for(int x = 0; x < lhs->get_width(); x++)
+        {
+            l_px = lhs->get_pixel(x,y);
+            r_px = rhs->get_pixel(x,y);
+            if(std::abs(l_px[0] - r_px[0]) > beta ||
+               std::abs(l_px[1] - r_px[1]) > beta ||
+               std::abs(l_px[2] - r_px[2]) > beta)
+            {
+                c++;
+            }
+            
+        }
+    }
+    return float(c) / float(lhs->get_width()*lhs->get_height());
 };
 
 pGIFImage GIFEncoder::create_gif_image(int left, int top, int width, int height) const
