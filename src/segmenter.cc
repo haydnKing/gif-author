@@ -1,4 +1,4 @@
-#include "imagesegmenter.h"
+#include "segmenter.h"
 
 class DeltaSegmenter;
 class SmoothDeltaSegmenter;
