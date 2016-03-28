@@ -28,7 +28,7 @@ pBitset Bitset::create(int _width, int _height, bool initial)
 bool Bitset::get(int x, int y) const
 {
     x = x+y*width;
-    return (data[x/8] && (1<<(x%8)));
+    return (data[x/8] & (1<<(x%8)));
 };
 
 void Bitset::set(int x, int y, bool s)
