@@ -63,19 +63,72 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 };
     
 /*******************************************************************
- ******************************************** SMOOTH DELTA SEGMENTER
+ ******************************************** PER-PIXEL SEGMENTER
  *******************************************************************/
 
-class SmoothDeltaSegmenter : public Segmenter
+/*
+ * Extract the timeline for individual pixels
+ */
+class PerPixelSegmenter : public Segmenter
 {
     public:
-        SmoothDeltaSegmenter() {};
-        ~SmoothDeltaSegmenter() {};
+        PerPixelSegmenter() {};
+        ~PerPixelSegmenter() {};
 
         void segment(const std::vector<pVideoFrame> frames, 
                      std::vector<pVideoFrame>& out_frames,
                      std::vector<pBitset>& out_bits);
 
     protected:
-        float get_num_changed(pVideoFrame lhs, pVideoFrame rhs, delta);
+        virtual void process_pixel(int length, uint8_t *in, uint8_t *out, bool *changed) = 0;
+
+};
+
+void PerPixelSegmenter::segment(const std::vector<pVideoFrame> frames, 
+                                std::vector<pVideoFrame>& out_frames,
+                                std::vector<pBitset>& out_bits)
+{
+    int x, y, z, w = frames[0]->get_width(), h = frames[0]->get_height();
+    uint8_t *i_px = new uint8_t[3*frames.size()],
+            *o_px = new uint8_t[3*frames.size()];
+    bool *changed = new bool[frames.size()];
+    const uint8_t *px;
+
+    for(z = 0; z < frames.size(); z++)
+    {
+        out_frames.push_back(VideoFrame::create(w,h));
+        out_bits.push_back(BitSet::create(w,h));
+    }
+
+    for(y = 0; y < h; y++)
+    {
+        for(x = 0; x < w; x++)
+        {
+            //get the original pixels
+            for(z=0; z < frames.size(); z++)
+            {
+                px = frames[z]->get_pixel(x,y);
+                i_px[3*z  ] = px[0];
+                i_px[3*z+1] = px[1];
+                i_px[3*z+2] = px[2];
+            }
+
+            process_pixel(frames.size(), i_px, o_px, changed);
+
+            //set the processed pixels and bits
+            for(z = 0; z < frames.size(); z++)
+            {
+                px = out_frames[z]->get_pixel(x,y);
+                px[0] = o_px[3*z  ];
+                px[1] = o_px[3*z+1];
+                px[2] = o_px[3*z+2];
+                out_bits[z]->set_bit(x,y,changed[z]);
+            }
+
+        }
+    }
+
+    delete [] i_px;
+    delete [] o_px;
+    delete [] changed;
 };
