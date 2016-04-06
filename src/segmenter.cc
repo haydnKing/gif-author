@@ -197,8 +197,13 @@ void SmoothDeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                                    std::vector<pVideoFrame>& out_frames,
                                    std::vector<pBitset>& out_bits)
 {
+    std::vector<pVideoFrame> blurred_frames;
+    for(frames::const_iterator it = frames.begin(); it != frames.end(); it++)
+    {
+        blurred_frames.push_back((*it)->blur(sig_space));
+    }
     //v1 assume no scenes
-    PixelSegmenter::segment(frames, out_frames, out_bits);
+    PixelSegmenter::segment(blurred_frames, out_frames, out_bits);
 };
         
 void SmoothDeltaSegmenter::get_max_d(uint8_t* lhs, uint8_t* rhs, uint8_t &curr)
