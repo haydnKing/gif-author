@@ -303,3 +303,34 @@ void SmoothDeltaSegmenter::process_pixel(int length,
         
 
 };
+    
+/*******************************************************************
+ **************************************** Recursive Normal Segmenter
+ *******************************************************************/
+
+/*
+ * A per pixel segmenter which models the signal as gaussian transitioning to normal
+ * then uses an EM esq algorithm to find a switchpoint
+ */
+class RecursiveNormalSegmenter : public PixelSegmenter
+{
+    public:
+        RecursiveNormalSegmenter();
+        ~RecursiveNormalSegmenter();
+
+    protected:
+        virtual void process_pixel(int length, uint8_t *in, uint8_t *out, bool *changed);
+
+        float gaussian(uint8_t *px, float *mean, float *var);
+        void get_mean(uint8_t *px, int len, float *out);
+        void get_var(uint8_t *px, int len, float *out);
+
+        float min_var = 0.5; //minimum possible variance
+};
+        
+void RecursiveNormalSegmenter::process_pixel(int length, 
+                                             uint8_t *in, 
+                                             uint8_t *out, 
+                                             bool *changed)
+{
+};
