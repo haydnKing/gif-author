@@ -3,58 +3,109 @@
 #define GIFAUTHOR_SETTINGS_H
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <typeinfo>
-#include <iostream>
-#include <cstdlib>
-#include <new>
 
 using namespace std;
 
-class Settings 
+/**
+ * An individual setting object
+ */
+template <class T> class Setting
 {
     public:
-        typedef pair<const type_info&,void*> value_type;
-        typedef unordered_map<string,value_type> map;
-        typedef map::const_iterator const_iterator;
+        Setting(const T& default_value, string description) :
+            value(default_value),
+            description(description),
+            bounds(false)
+        {};
+        Setting(const T& default_value, const T& min_value, const T& max_value, string description) :
+            value(default_value),
+            min_value(min_value),
+            max_value(max_value),
+            description(description)
+        {};
+        ~Setting() {};
 
-        template <class T>
-          bool add_setting(const string& name, const T& value) 
-          {
-            auto it = data.insert(make_pair(
-              name, value_type(typeid(T), nullptr)));
-            if (!it.second) return false;
-            it.first->second.second = new(malloc(sizeof(T))) T(value);
-            return true; 
-          }
+        const T& get_value() const {return value;}
+        const T& get_minimum() const {return min_value;}
+        const T& get_maximum() const {return max_value;}
 
-        template <class T>
-          const T& get_setting(const string& name) const 
-          {
-            auto it = data.at(name);
-            if (it.first != typeid(T)) throw bad_cast();
-            return *(T*)it.second; 
-          }
+        const string& get_description() const {return description;}
 
-        const_iterator begin() const {return data.begin(); }
-        const_iterator end() const {return data.end(); }
-
-        void erase_setting(const_iterator it) 
+        bool set_value(const T& new_value)
         {
-            free(it->second.second);
-            data.erase(it); 
-        }
+            if(bounds)
+            {
+                if(new_value > max_value || new_value < min_value)
+                    return false;
+            }
+            value = new_value;
+            return true;
+        };
 
-        bool remove_setting(const string& name) 
-        {
-            auto it = data.find(name);
-            if (it == data.end()) return false;
-            free(it->second.second);
-            data.erase(it);
-            return true; 
-        }
+
+
     private:
-        map data;
+        T value, min_value, max_value;
+        string description;
+        bool bounds;
+};
+
+
+/**
+ * An object which stores settings
+ */
+class Configurable
+{
+    public:
+        typedef pair<const type_info&, void*> setting_value;
+
+        /**
+         * Add a new setting, without bounds
+         */
+        template <class T>
+            bool add_setting(const string& name, const T& default_value, const string& description)
+            {
+                s = Setting(name, default_value, description);
+                return add_setting(s);
+            };
+
+        /**
+         * Add a new setting, with bounds
+         */
+        template <class T>
+            bool add_setting(const string& name, const T& default_value, const T& min_value, const T& max_value, const string& description)
+            {
+                s = Setting(name, default_value, min_value, max_value, description);
+                return add_setting(s);
+            };
+
+        /**
+         * Directly add a new setting
+         */
+        template <class T>
+            bool add_setting(const string& name, const Setting<T> setting)
+            {
+                auto it = my_map.insert(make_pair(typeid(T), nullptr));
+                //if we failed
+                if(!it.second) return false;
+                //otherwise set the object
+                if.first->second = new Setting<T>(setting);
+                return true;
+            };
+
+        template <class T>
+            const Setting<T>& get_setting(const string& name) const
+            {
+                auto it = my_map.at(name);
+                if(it.first != typeid(T)) throw bad_cast();
+                return *(T*)it.second;
+            };
+
+
+    private:
+        map<string, setting_value> my_map;
 };
 
 #endif //GIFAUTHOR_SETTINGS_H

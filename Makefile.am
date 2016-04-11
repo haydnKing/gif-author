@@ -7,6 +7,7 @@ gif_author_SOURCES =  src/main.cc  \
 					  src/colorquantizer.cc  src/colorquantizer.h \
 					  src/gifauthor.cc  src/gifauthor.h \
 					  src/gifencoder.cc  src/gifencoder.h \
+					  src/segmenter.cc src/segmenter.h \
 					  src/widgets/imagearea.cc src/widgets/imagearea.h \
 					  src/input/videoframe.cc src/input/videoframe.h \
 					  src/input/videofile.cc src/input/videofile.h \

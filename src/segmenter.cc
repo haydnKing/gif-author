@@ -1,7 +1,151 @@
 #include "segmenter.h"
 
+Bitset::Bitset(int _width, int _height, bool initial):
+    width(_width),
+    height(_height)
+{
+    data = new uint8_t[(width*height+7)/8];
+    clear(initial);
+};
+
+Bitset::~Bitset()
+{
+    delete [] data;
+};
+
+pBitset Bitset::create(int _width, int _height, bool initial)
+{
+    return pBitset(new Bitset(_width, _height, initial));
+};
+
+bool Bitset::get(int x, int y) const
+{
+    x = x+y*width;
+    return (data[x/8] & (1<<(x%8)));
+};
+
+void Bitset::set(int x, int y, bool s)
+{
+    x = x+y*width;
+    if(s)
+        data[x/8] = data[x/8] | (1 << (x%8));
+    else
+        data[x/8] = data[x/8] & ~(1 << (x%8));
+};
+
+void Bitset::clear(bool v)
+{
+    if(v)
+        std::memset(data, 255, (width*height+7)/8);
+    else
+        std::memset(data, 0, (width*height+7)/8);
+};
+
+void Bitset::remove_islands()
+{
+    bool t;
+    int x,y;
+    for(y=1; y < height-1; y++)
+    {
+        //left column, x=0
+        if(get(0,y) &&
+           !get(0,y-1) &&
+           !get(0,y+1) &&
+           !get(1,y  ) &&
+           !get(1,y-1) &&
+           !get(1,y-1))
+        {
+            set(0,y,false);
+        }
+        //right column, x=width-1
+        if(get(width-1,y) &&
+           !get(width-1,y-1) &&
+           !get(width-1,y+1) &&
+           !get(width-2,y  ) &&
+           !get(width-2,y-1) &&
+           !get(width-2,y-1))
+        {
+            set(0,y,false);
+        }
+        for(x=1; x < width-1; x++)
+        {
+            //general case
+            //if pixel is high and surroundings are low
+            if(get(x  ,y  ) &&
+               !get(x  ,y+1) &&
+               !get(x  ,y-1) &&
+               !get(x-1,y  ) &&
+               !get(x-1,y+1) &&
+               !get(x-1,y-1) &&
+               !get(x+1,y  ) &&
+               !get(x+1,y+1) &&
+               !get(x+1,y-1))
+            {
+                //set low
+                set(x,y,false);
+            }
+        }
+    }
+    for(x=1; x < width-1; x++)
+    {
+        //top row, y=0
+        if(get(x,0) &&
+           !get(x-1,0) &&
+           !get(x+1,0) &&
+           !get(x-1,1) &&
+           !get(x  ,1) &&
+           !get(x+1,1))
+        {
+            set(x,0,false);
+        }
+        //bottom row, y=height-1
+        if(get(x,height-1) &&
+           !get(x-1,height-1) &&
+           !get(x+1,height-1) &&
+           !get(x-1,height-2) &&
+           !get(x  ,height-2) &&
+           !get(x+1,height-2))
+        {
+            set(x,height-1,false);
+        }
+    }
+    //x==0, y==0
+    if(get(0,0) &&
+       !get(1,0) &&
+       !get(1,1) &&
+       !get(0,1))
+    {
+        set(0,0,false);
+    }
+    //x==width-1, y==0
+    if(get(width-1,0) &&
+       !get(width-1,1) &&
+       !get(width-2,0) &&
+       !get(width-2,1))
+    {
+        set(width-1,0,false);
+    }
+    //x==0, y==height-1
+    if(get(0,height-1) &&
+       !get(1,height-1) &&
+       !get(1,height-2) &&
+       !get(0,height-2))
+    {
+        set(0,height-1,false);
+    }
+    //x==width-1, y==height-1
+    if(get(width-1,height-1) &&
+       !get(width-2,height-1) &&
+       !get(width-2,height-2) &&
+       !get(width-1,height-2))
+    {
+        set(width-1,height-1,false);
+    }
+};
+
+
 class DeltaSegmenter;
-class SmoothDeltaSegmenter;
+//class SmoothDeltaSegmenter;
 
 Segmenter *Segmenter::get_segmentor(SegmentationMethod method)
 {
@@ -21,7 +165,9 @@ Segmenter *Segmenter::get_segmentor(SegmentationMethod method)
 class DeltaSegmenter : public Segmenter
 {
     public:
-        DeltaSegmenter() {};
+        DeltaSegmenter() {
+            add_setting("delta", 2.0, 0., std::numeric_limits.infinity(), "Pixel changes of less than this value will be ignored");
+        };
         ~DeltaSegmenter() {};
 
         void segment(const std::vector<pVideoFrame> frames, 
@@ -33,8 +179,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                              std::vector<pVideoFrame>& out_frames,
                              std::vector<pBitset>& out_bits)
 {
-    //worry about where to get settings later
-    float delta = 2.0;
+    float delta = get_setting("delta");
 
     //No transparency in the first frame
     out_bits.push_back(pBitset());
@@ -68,7 +213,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 
 /*
  * Extract the timeline for individual pixels
- */
+ *//*
 class PixelSegmenter : public Segmenter
 {
     public:
@@ -136,7 +281,7 @@ void PixelSegmenter::segment(const std::vector<pVideoFrame> frames,
     delete [] i_px;
     delete [] o_px;
     delete [] changed;
-};
+};*/
     
 /*******************************************************************
  ****************************************** Smooth Delta Segmenter
@@ -144,7 +289,7 @@ void PixelSegmenter::segment(const std::vector<pVideoFrame> frames,
 
 /*
  * A per pixel segmenter which first identifies scene transitions
- */
+ *//*
 class SmoothDeltaSegmenter : public PixelSegmenter
 {
     public:
@@ -302,7 +447,7 @@ void SmoothDeltaSegmenter::process_pixel(int length,
     out[3*j+2] = b / (i-j);
         
 
-};
+};*/
     
 /*******************************************************************
  **************************************** Recursive Normal Segmenter
@@ -312,6 +457,7 @@ void SmoothDeltaSegmenter::process_pixel(int length,
  * A per pixel segmenter which models the signal as gaussian transitioning to normal
  * then uses an EM esq algorithm to find a switchpoint
  */
+/*
 class RecursiveNormalSegmenter : public PixelSegmenter
 {
     public:
@@ -321,7 +467,7 @@ class RecursiveNormalSegmenter : public PixelSegmenter
     protected:
         virtual void process_pixel(int length, uint8_t *in, uint8_t *out, bool *changed);
 
-        float gaussian(uint8_t *px, float *mean, float *var);
+        float normal_cdf(uint8_t *px, float *mean, float *var);
         void get_mean(uint8_t *px, int len, float *out);
         void get_var(uint8_t *px, int len, float *out);
 
@@ -333,4 +479,4 @@ void RecursiveNormalSegmenter::process_pixel(int length,
                                              uint8_t *out, 
                                              bool *changed)
 {
-};
+};*/
