@@ -8,8 +8,7 @@
 #include <glibmm/refptr.h>
 #include <sstream>
 
-#include <opencv2/core/mat.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <iostream>
 extern "C" {

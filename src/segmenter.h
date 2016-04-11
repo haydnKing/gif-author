@@ -53,9 +53,9 @@ class Segmenter : public Configurable
          * @param out_bits bitfield indicating which pixels in each frame are 
          * to be updated.
          */
-        void segment(const std::vector<pVideoFrame> frames, 
-                     std::vector<pVideoFrame>& out_frames,
-                     std::vector<pBitset>& out_bits) = 0;
+        virtual void segment(const std::vector<pVideoFrame> frames, 
+                             std::vector<pVideoFrame>& out_frames,
+                             std::vector<pBitset>& out_bits) = 0;
 
     protected:
         Segmenter() {};

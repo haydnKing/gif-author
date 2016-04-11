@@ -23,7 +23,15 @@ template <class T> class Setting
             value(default_value),
             min_value(min_value),
             max_value(max_value),
-            description(description)
+            description(description),
+            bounds(true)
+        {};
+        Setting(const Setting<T>& rhs) :
+            value(rhs.get_value()),
+            min_value(rhs.get_minimum()),
+            max_value(rhs.get_maximum()),
+            description(rhs.get_description()),
+            bounds(rhs.is_bounded())
         {};
         ~Setting() {};
 
@@ -32,6 +40,7 @@ template <class T> class Setting
         const T& get_maximum() const {return max_value;}
 
         const string& get_description() const {return description;}
+        bool is_bounded() const {return bounds;}
 
         bool set_value(const T& new_value)
         {
@@ -59,7 +68,7 @@ template <class T> class Setting
 class Configurable
 {
     public:
-        typedef pair<const type_info&, void*> setting_value;
+        typedef pair<const type_info&, void*> setting_type;
 
         /**
          * Add a new setting, without bounds
@@ -67,7 +76,7 @@ class Configurable
         template <class T>
             bool add_setting(const string& name, const T& default_value, const string& description)
             {
-                s = Setting(name, default_value, description);
+                Setting<T> s = Setting<T>(name, default_value, description);
                 return add_setting(s);
             };
 
@@ -77,7 +86,7 @@ class Configurable
         template <class T>
             bool add_setting(const string& name, const T& default_value, const T& min_value, const T& max_value, const string& description)
             {
-                s = Setting(name, default_value, min_value, max_value, description);
+                Setting<T> s = Setting<T>(name, default_value, min_value, max_value, description);
                 return add_setting(s);
             };
 
@@ -87,11 +96,11 @@ class Configurable
         template <class T>
             bool add_setting(const string& name, const Setting<T> setting)
             {
-                auto it = my_map.insert(make_pair(typeid(T), nullptr));
+                auto it = my_map.insert(make_pair(name, setting_type(typeid(T), nullptr)));
                 //if we failed
                 if(!it.second) return false;
                 //otherwise set the object
-                if.first->second = new Setting<T>(setting);
+                it.first->second.second = new Setting<T>(setting);
                 return true;
             };
 
@@ -105,7 +114,7 @@ class Configurable
 
 
     private:
-        map<string, setting_value> my_map;
+        map<string, setting_type> my_map;
 };
 
 #endif //GIFAUTHOR_SETTINGS_H

@@ -1,6 +1,6 @@
 bin_PROGRAMS = gif-author
 
-AM_CXXFLAGS = $(GTKMM_CFLAGS) $(CV2_CFLAGS) $(FFMPEG_CFLAGS) -D__STDC_CONSTANT_MACROS
+AM_CXXFLAGS = $(GTKMM_CFLAGS) $(CV2_CFLAGS) $(FFMPEG_CFLAGS) -D__STDC_CONSTANT_MACROS -std=c++11
 
 gif_author_SOURCES =  src/main.cc  \
 					  src/mainwindow.cc  src/mainwindow.h \
