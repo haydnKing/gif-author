@@ -76,8 +76,8 @@ class Configurable
         template <class T>
             bool add_setting(const string& name, const T& default_value, const string& description)
             {
-                Setting<T> s = Setting<T>(name, default_value, description);
-                return add_setting(s);
+                Setting<T> s = Setting<T>(default_value, description);
+                return add_setting(name, s);
             };
 
         /**
@@ -86,8 +86,8 @@ class Configurable
         template <class T>
             bool add_setting(const string& name, const T& default_value, const T& min_value, const T& max_value, const string& description)
             {
-                Setting<T> s = Setting<T>(name, default_value, min_value, max_value, description);
-                return add_setting(s);
+                Setting<T> s = Setting<T>(default_value, min_value, max_value, description);
+                return add_setting(name, s);
             };
 
         /**
@@ -109,7 +109,7 @@ class Configurable
             {
                 auto it = my_map.at(name);
                 if(it.first != typeid(T)) throw bad_cast();
-                return *(T*)it.second;
+                return *(Setting<T>*)it.second;
             };
 
 

@@ -43,7 +43,7 @@ class Segmenter : public Configurable
 {
     public:
         ~Segmenter() {};
-        static Segmenter *get_segmentor(SegmentationMethod method);
+        static Segmenter *get_segmenter(SegmentationMethod method);
 
         /**
          * Segment the frames

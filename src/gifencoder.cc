@@ -32,7 +32,7 @@ GIF *GIFEncoder::get_output()
     int64_t frame_no = 0;
 
     std::vector<pBitset> masks;
-    std::vector<pVideoFrames> sframes;
+    std::vector<pVideoFrame> sframes;
     Segmenter *sm = Segmenter::get_segmenter(SM_SIMPLE_DELTA);
     sm->segment(frames, sframes, masks);
 

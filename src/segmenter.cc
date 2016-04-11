@@ -1,4 +1,5 @@
 #include "segmenter.h"
+#include <cstring>
 
 Bitset::Bitset(int _width, int _height, bool initial):
     width(_width),
@@ -143,21 +144,6 @@ void Bitset::remove_islands()
     }
 };
 
-
-class DeltaSegmenter;
-//class SmoothDeltaSegmenter;
-
-Segmenter *Segmenter::get_segmentor(SegmentationMethod method)
-{
-    Segmenter *ret;
-    switch(method)
-    {
-        case SM_SIMPLE_DELTA:
-            ret = new DeltaSegmenter();
-    }
-    return ret;
-};
-
 /*******************************************************************
  *************************************************** DELTA SEGMENTER
  *******************************************************************/
@@ -166,7 +152,7 @@ class DeltaSegmenter : public Segmenter
 {
     public:
         DeltaSegmenter() {
-            add_setting("delta", 2.0, 0., std::numeric_limits.infinity(), "Pixel changes of less than this value will be ignored");
+            add_setting("delta", 2.0, 0., std::numeric_limits<double>::infinity(), "Pixel changes of less than this value will be ignored");
         };
         ~DeltaSegmenter() {};
 
@@ -179,7 +165,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                              std::vector<pVideoFrame>& out_frames,
                              std::vector<pBitset>& out_bits)
 {
-    float delta = get_setting("delta");
+    double delta = get_setting<double>("delta").get_value();
 
     //No transparency in the first frame
     out_bits.push_back(pBitset());
@@ -190,7 +176,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     uint8_t *px_this, *px_prev;
     for(i=1; i < frames.size(); i++)
     {
-        out = pBitset::create(frames[i]->get_width(), frames[i]->get_height(), false);
+        out = Bitset::create(frames[i]->get_width(), frames[i]->get_height(), false);
         for(y=0; y<frames[i]->get_height(); y++)
         {
             for(x=0; x < frames[i]->get_width(); x++)
@@ -480,3 +466,23 @@ void RecursiveNormalSegmenter::process_pixel(int length,
                                              bool *changed)
 {
 };*/
+
+
+
+
+
+    
+/*******************************************************************
+ ****************************************** Segmenter::get_segmenter
+ *******************************************************************/
+
+Segmenter *Segmenter::get_segmenter(SegmentationMethod method)
+{
+    Segmenter *ret;
+    switch(method)
+    {
+        case SM_SIMPLE_DELTA:
+            ret = new DeltaSegmenter();
+    }
+    return ret;
+};
