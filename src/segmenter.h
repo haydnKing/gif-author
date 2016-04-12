@@ -10,40 +10,20 @@
 #include <stdint.h>
 #include <vector>
 
-class Bitset;
-typedef Glib::RefPtr<Bitset> pBitset;
-
-class Bitset : public Glib::Object
-{
-    public:
-        ~Bitset();
-        static pBitset create(int _width, int _height, bool initial=false);
-
-        bool get(int x, int y) const;
-        void set(int x, int y, bool s=true);
-
-        void clear(bool v=false);
-
-        //remove isolated pixels
-        void remove_islands();
-
-    private:
-        uint8_t *data;
-        int width, height;
-        Bitset(int _width, int _height, bool initial);
-};
-
-
+#include "bitset.h"
 
 enum SegmentationMethod {
     SM_SIMPLE_DELTA,
 };
 
+/**
+ * A class to decide which pixels in each frame should be updated,
+ * and what value they should be set to. Initialise via SegmenterFactory
+ */
 class Segmenter : public Configurable
 {
     public:
         ~Segmenter() {};
-        static Segmenter *get_segmenter(SegmentationMethod method);
 
         /**
          * Segment the frames
@@ -60,6 +40,8 @@ class Segmenter : public Configurable
     protected:
         Segmenter() {};
 };
+
+class SegmenterFactory : public Factory<SegmentationMethod, Segmenter> {};
 
 
 #endif //GTKMM_IMAGESEGMENTER_H
