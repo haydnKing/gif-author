@@ -11,7 +11,9 @@ GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
     canvas_height(ch),
     qm(_qm),
     dm(_dm)
-{};
+{
+    register_segmenters();
+};
 
 GIFEncoder::~GIFEncoder() {};
 
@@ -33,7 +35,7 @@ GIF *GIFEncoder::get_output()
 
     std::vector<pBitset> masks;
     std::vector<pVideoFrame> sframes;
-    Segmenter *sm = SegmenterFactor::get(SM_SIMPLE_DELTA);
+    Segmenter *sm = SegmenterFactory::get(SM_SIMPLE_DELTA);
     sm->segment(frames, sframes, masks);
 
     std::cout << "Background detection done" << std::endl;

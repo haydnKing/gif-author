@@ -15,11 +15,10 @@ template<class E, class T> class Factory
     public:
         static T *get(const E& type)
         {
-            auto it = my_map.at(type);
-            return *it;
+            return my_map.at(type);
         };
 
-        static bool register(const E& type, T* cfg)
+        static bool register_type(const E& type, T* cfg)
         {
             auto r = my_map.insert(make_pair(type, cfg));
             return r.second;
@@ -29,7 +28,7 @@ template<class E, class T> class Factory
         static std::map<E, T*> my_map;
 };
 
-
-
+template<class E, class T>
+std::map<E,T*> Factory<E,T>::my_map = std::map<E,T*>();
 
 #endif // GIFAUTHOR_FACTORY_H

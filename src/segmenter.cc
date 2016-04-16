@@ -50,7 +50,6 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     }
 };
 
-SegmenterFactory::register(SM_SIMPLE_DELTA, new DeltaSegmenter());
     
 /*******************************************************************
  ******************************************** PER-PIXEL SEGMENTER
@@ -328,20 +327,7 @@ void RecursiveNormalSegmenter::process_pixel(int length,
 
 
 
-
-
-    
-/*******************************************************************
- ****************************************** Segmenter::get_segmenter
- *******************************************************************/
-
-Segmenter *Segmenter::get_segmenter(SegmentationMethod method)
+void register_segmenters()
 {
-    Segmenter *ret;
-    switch(method)
-    {
-        case SM_SIMPLE_DELTA:
-            ret = new DeltaSegmenter();
-    }
-    return ret;
+    SegmenterFactory::register_type(SM_SIMPLE_DELTA, new DeltaSegmenter());
 };

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "bitset.h"
+#include "factory.h"
 
 enum SegmentationMethod {
     SM_SIMPLE_DELTA,
@@ -42,6 +43,8 @@ class Segmenter : public Configurable
 };
 
 class SegmenterFactory : public Factory<SegmentationMethod, Segmenter> {};
+
+void register_segmenters();
 
 
 #endif //GTKMM_IMAGESEGMENTER_H

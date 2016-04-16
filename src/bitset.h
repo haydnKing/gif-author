@@ -2,6 +2,8 @@
 #define GIFAUTHOR_BITSET_H
 
 #include <glibmm/refptr.h>
+#include <glibmm/object.h>
+#include <cstring>
 
 class Bitset;
 typedef Glib::RefPtr<Bitset> pBitset;
