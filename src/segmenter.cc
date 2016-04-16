@@ -1,6 +1,51 @@
 #include "segmenter.h"
 #include <cstring>
 
+void Segmenter::output_average(const std::vector<pVideoFrame> frames,
+                               std::vector<pVideoFrame>& out_frames,
+                               std::vector<pBitset>& out_bits)
+{
+    double r,g,b;
+    int x,y,z,last_update;
+    uint8_t *px;
+    //create output data
+    for(z = 0; z < frames.size(); z++)
+    {
+        out_frames.push_back(VideoFrame::create(frames[z]->get_width(), frames[z]->get_height()));
+    }
+
+    for(y = 0; y < frames[0]->get_height(); y++)
+    {
+        for(x = 0; x < frames[0]->get_width(); x++)
+        {
+            r = g = b = 0.;
+            last_update = 0;
+            for(z = 1; z < frames.size(); z++)
+            {
+                px = frames[z]->get_pixel(x,y);
+                r += px[0];
+                g += px[1];
+                b += px[2];
+                if(out_bits[z]->get(x,y))
+                {
+                    px = out_frames[last_update]->get_pixel(x,y);
+                    px[0] = uint8_t(0.5 + r / (z-last_update));
+                    px[1] = uint8_t(0.5 + g / (z-last_update));
+                    px[2] = uint8_t(0.5 + b / (z-last_update));
+                    r = g = b = 0;
+                    last_update = z;
+                }   
+            }
+            px = out_frames[last_update]->get_pixel(x,y);
+            px[0] = uint8_t(0.5 + r / (z-last_update));
+            px[1] = uint8_t(0.5 + g / (z-last_update));
+            px[2] = uint8_t(0.5 + b / (z-last_update));
+        }
+    }
+
+
+};
+
 /*******************************************************************
  *************************************************** DELTA SEGMENTER
  *******************************************************************/
@@ -48,6 +93,8 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
         }
         out_bits.push_back(out);
     }
+
+    output_average(frames, out_frames, out_bits);
 };
 
     

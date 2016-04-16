@@ -40,6 +40,9 @@ class Segmenter : public Configurable
 
     protected:
         Segmenter() {};
+        void output_average(const std::vector<pVideoFrame> frames,
+                            std::vector<pVideoFrame>& out_frames,
+                            std::vector<pBitset>& out_bits);
 };
 
 class SegmenterFactory : public Factory<SegmentationMethod, Segmenter> {};

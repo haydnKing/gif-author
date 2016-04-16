@@ -39,6 +39,9 @@ GIF *GIFEncoder::get_output()
     sm->segment(frames, sframes, masks);
 
     std::cout << "Background detection done" << std::endl;
+    std::cout << "frames: " << frames.size() << std::endl;
+    std::cout << "sframes: " << sframes.size() << std::endl;
+    std::cout << "masks: " << masks.size() << std::endl;
 
     for(int i = 0; i < sframes.size(); i++)
     {
