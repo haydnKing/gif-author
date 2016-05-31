@@ -3,10 +3,26 @@
 #define GIFAUTHOR_SETTINGS_H
 
 #include <string>
+#include <sstream>
 #include <map>
 #include <typeinfo>
 
 using namespace std;
+
+#include <memory>
+#include <iostream>
+#include <string>
+#include <cstdio>
+
+
+template<typename ... Args>
+string string_format( const std::string& format, Args ... args )
+{
+    size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+    unique_ptr<char[]> buf( new char[ size ] ); 
+    snprintf( buf.get(), size, format.c_str(), args ... );
+    return string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+}
 
 /**
  * An individual setting object
@@ -111,6 +127,85 @@ class Configurable
                 if(it.first != typeid(T)) throw bad_cast();
                 return *(Setting<T>*)it.second;
             };
+
+        string get_help_string() const
+        {
+            stringstream out;
+            for(auto it : my_map) // what is this magic??
+            {
+                out << it.first;
+                //*looks shifty*
+                auto setting = it.second.second;
+                if(setting->is_bounded())
+                {
+                    out << " [" << setting.get_minimum() << ", " 
+                        << setting.get_maximum() << "]";
+                }
+                out << ": " << setting->get_description() << endl;
+            }
+            return out.str();
+        };
+
+        bool parse(const string& cmd)
+        {
+            int pos = 0, end = 0, equal = 0;
+            string sub_cmd, lv, rv;
+            while(pos < cmd.length())
+            {
+                end = cmd.find(';', pos);
+                //last substring
+                if(pos < 0) pos = cmd.length();
+                sub_cmd = cmd.substr(pos, end-pos);
+                
+                //parse the sub command
+                //is there an equals?
+                equal = sub_cmd.find('=');
+                //no
+                if(equal == string::npos)
+                {
+                    //infer: setting is a bool, set to true
+                    get_setting<bool>(sub_cmd).set_value(true);
+                }
+                //yes
+                else
+                {
+                    lv = sub_cmd.substr(pos, equal-pos);
+                    rv = sub_cmd.substr(equal+1, end-equal-1);
+                    //boolean
+                    if(rv == "true")
+                    {
+                        get_setting<bool>(sub_cmd).set_value(true);
+                    }
+                    else if(rv == "false")
+                    {
+                        get_setting<bool>(sub_cmd).set_value(false);
+                    }
+                    else //int, float, or string
+                    {
+                        try
+                        {
+                            int v = stoi(rv);
+                            if(!get_setting<int>(lv).set_value(v))
+                                throw invalid_argument(string_format("Argument \'%s\' outside bounds", lv));
+                        }
+                        catch(invalid_argument e)
+                        {
+                            try
+                            {
+                                float v = stof(rv);
+                                if(!get_setting<float>(lv).set_value(v))
+                                    throw invalid_argument(string_format("Argument \'%s\' outside bounds", lv));
+                            }
+                            catch(invalid_argument f)
+                            {
+                                get_settings<string>(lv).set_value(rv);
+                            }
+                        }
+                    }
+                }
+                pos = end;
+            }
+        };
 
 
     private:
