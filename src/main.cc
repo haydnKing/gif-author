@@ -26,8 +26,11 @@ bool extract(std::string fname, int frame, int length, int out_width)
 
     GIFAuthor ga;
     std::list<pVideoFrame> frames = vfile.extract(frame, frame+length);
-    for(std::list<pVideoFrame>::iterator it = frames.begin(); it != frames.end(); it++)
-        ga.add_frame(*it);
+    for(auto it : frames)
+    {
+        std::cout << "ga.add_frame(it)" << std::endl;
+        ga.add_frame(it);
+    }
     std::cout << "Got frames" << std::endl;
     ga.set_output_size(out_width);
     ga.update_output();

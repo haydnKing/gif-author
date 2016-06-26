@@ -260,8 +260,8 @@ std::list<pVideoFrame> VideoFile::extract(int64_t start, int64_t end){
 
     //seek to the first frame
     seek_to(start);
-    //extract subsequent frames
-    while(position() < end){
+    //extract subsequent frames. position() is the position of the frame we just extracted
+    while(position() < end-1){
         ret.push_back(get_frame());
     }
 
