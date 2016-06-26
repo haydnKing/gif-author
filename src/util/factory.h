@@ -22,7 +22,8 @@ template<class C> class Factory
         Factory(std::string factory_name, std::string factory_description) : 
             my_name(factory_name),
             my_desc(factory_description),
-            my_option()
+            my_option(),
+            my_default()
         {};
         virtual ~Factory() {};
 
@@ -33,6 +34,7 @@ template<class C> class Factory
 
         bool register_type(const std::string& name, C* cfg)
         {
+            if(my_default.empty()) my_default = name;
             auto r = my_map.insert(make_pair(name, cfg));
             return r.second;
         };
@@ -45,10 +47,12 @@ template<class C> class Factory
             oe.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
 
             std::stringstream ss;
-            ss << "Select the " << my_name << " to use. Valid values are:\n";
+            ss << "Select the " << my_name << " to use. Valid values are: ";
             for(auto it : my_map)
             {
-                ss << "\"" << it.first << "\": Description here later\n";
+                ss << "\"" << it.first << "\"";
+                if(it.first == my_default) ss << " (default)";
+                if(it != *--my_map.end()) ss << ",";
             }
             oe.set_description(ss.str());
             og.add_entry(oe, sigc::mem_fun(*this, &Factory::on_option_name));
@@ -60,6 +64,7 @@ template<class C> class Factory
          */
         const std::string& get_chosen_name() const
         {
+            if(my_option.empty()) return my_default;
             return my_option;
         };
 
@@ -68,7 +73,8 @@ template<class C> class Factory
          */
         C* get_chosen_item() 
         {
-            return my_map.find(my_option);
+            if(my_option.empty()) return my_map.at(my_default);
+            return my_map.at(my_option);
         };
 
 
@@ -85,7 +91,7 @@ template<class C> class Factory
             }
             return false;
         };
-        std::string my_name, my_desc, my_option;
+        std::string my_name, my_desc, my_option, my_default;
         std::map<std::string, C*> my_map;
 };
 

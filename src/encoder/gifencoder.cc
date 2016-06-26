@@ -33,7 +33,7 @@ GIF *GIFEncoder::get_output()
 
     std::vector<pBitset> masks;
     std::vector<pVideoFrame> sframes;
-    Segmenter *sm = segmenterFactory.get("SimpleDelta");
+    Segmenter *sm = segmenterFactory.get_chosen_item();
     sm->segment(frames, sframes, masks);
 
     std::cout << "Background detection done" << std::endl;
