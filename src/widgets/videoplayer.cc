@@ -1,6 +1,6 @@
 #include "videoplayer.h"
 
-#include "../input/videofile.h"
+#include "../video/videofile.h"
 #include <iostream>
 
 VideoPlayer::VideoPlayer():

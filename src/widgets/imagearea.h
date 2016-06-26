@@ -5,7 +5,7 @@
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/pixbuf.h>
 
-#include "../input/videoframe.h"
+#include "../video/videoframe.h"
 
 /**
  * Display an image, automatically scaled to the available space

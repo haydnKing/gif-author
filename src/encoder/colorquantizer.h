@@ -3,9 +3,7 @@
 
 #include <vector>
 #include <glibmm/refptr.h>
-#include "output/gif.h"
-
-#include <iostream>
+#include "../output/gif.h"
 
 enum QuantizerMethod {
     QUANT_MMC //Modified Median Cut

@@ -1,6 +1,8 @@
 #include "segmenter.h"
 #include <cstring>
 
+Factory<Segmenter> segmenterFactory("segmenter", "the segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream");
+
 void Segmenter::output_average(const std::vector<pVideoFrame> frames,
                                std::vector<pVideoFrame>& out_frames,
                                std::vector<pBitset>& out_bits)
@@ -376,5 +378,5 @@ void RecursiveNormalSegmenter::process_pixel(int length,
 
 void register_segmenters()
 {
-    SegmenterFactory::register_type(SM_SIMPLE_DELTA, new DeltaSegmenter());
+    segmenterFactory.register_type("SimpleDelta", new DeltaSegmenter());
 };

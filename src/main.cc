@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 
-#include "input/videofile.h"
+#include "video/videofile.h"
 #include "gifauthor.h"
 
 bool extract(std::string fname, int frame, int length, int out_width)

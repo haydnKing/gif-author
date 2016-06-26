@@ -5,8 +5,8 @@
  * Turn a sequence of pre-processed images into an efficient GIF
  */
 
-#include "input/videoframe.h"
-#include "output/gif.h"
+#include "../video/videoframe.h"
+#include "../output/gif.h"
 #include "colorquantizer.h"
 #include "segmenter.h"
 

@@ -5,7 +5,7 @@
  * Underlying application code, does not require UI
  */
 
-#include "gifencoder.h"
+#include "encoder/gifencoder.h"
 
 
 /**

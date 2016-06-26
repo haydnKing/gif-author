@@ -127,7 +127,7 @@ class Configurable
                 if(it.first != typeid(T)) throw bad_cast();
                 return *(Setting<T>*)it.second;
             };
-
+/*
         string get_help_string() const
         {
             stringstream out;
@@ -205,7 +205,7 @@ class Configurable
                 }
                 pos = end;
             }
-        };
+        };*/
 
 
     private:

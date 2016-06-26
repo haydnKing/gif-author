@@ -5,7 +5,7 @@
 #include <string>
 #include <glibmm/optiongroup.h>
 #include <glibmm/optionentry.h>
-#include <sigc>
+#include <sigc++/sigc++.h>
 #include <sstream>
 
 #include "settings.h"
@@ -22,16 +22,16 @@ template<class C> class Factory
         Factory(std::string factory_name, std::string factory_description) : 
             my_name(factory_name),
             my_desc(factory_description),
-            my_option('')
+            my_option()
         {};
         virtual ~Factory() {};
 
-        static C *get(const std::string& name)
+        C *get(const std::string& name)
         {
-            return my_map.at(type);
+            return my_map.at(name);
         };
 
-        static bool register_type(const std::string& name, C* cfg)
+        bool register_type(const std::string& name, C* cfg)
         {
             auto r = my_map.insert(make_pair(name, cfg));
             return r.second;
@@ -42,7 +42,7 @@ template<class C> class Factory
             Glib::OptionGroup og(my_name, my_desc);
             Glib::OptionEntry oe();
             oe.set_long_name(my_name);
-            oe.set_flags(Glib::FLAG_OPTIONAL_ARG);
+            oe.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
 
             std::stringstream ss;
             ss << "Select the " << my_name << " to use. " << my_desc << "\nValid values are:\n";
@@ -85,10 +85,8 @@ template<class C> class Factory
             return false;
         };
         std::string my_name, my_desc, my_option;
-        static std::map<std::string, C*> my_map;
+        std::map<std::string, C*> my_map;
 };
 
-template<class C>
-std::map<std::string,C*> Factory<std::string,C>::my_map = std::map<std::string,C*>();
 
 #endif // GIFAUTHOR_FACTORY_H

@@ -5,17 +5,14 @@
  * Given a sequence of frames, decide which pixels should be updated at each frame
  */
 
-#include "input/videoframe.h"
-#include "settings.h"
 #include <stdint.h>
 #include <vector>
 
-#include "bitset.h"
-#include "factory.h"
+#include "../util/factory.h"
+#include "../util/settings.h"
 
-enum SegmentationMethod {
-    SM_SIMPLE_DELTA,
-};
+#include "../video/videoframe.h"
+#include "../util/bitset.h"
 
 /**
  * A class to decide which pixels in each frame should be updated,
@@ -45,10 +42,9 @@ class Segmenter : public Configurable
                             std::vector<pBitset>& out_bits);
 };
 
-class SegmenterFactory : public Factory<SegmentationMethod, Segmenter> {};
+extern Factory<Segmenter> segmenterFactory;
 
 void register_segmenters();
-
 
 #endif //GTKMM_IMAGESEGMENTER_H
 
