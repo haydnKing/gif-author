@@ -44,10 +44,20 @@ int GIFColorTable::push_color(uint8_t r, uint8_t g, uint8_t b)
     return -1;
 };
 
-void GIFColorTable::write(std::ostream& str) const {
+void GIFColorTable::write(std::ostream& str) const 
+{
     int full_colors = std::pow(2, log_colors());
     str.write(reinterpret_cast<const char*>(data), 3*full_colors);
-}
+};
+        
+void GIFColorTable::write_ppm(const char *fname) const
+{
+    int full_colors = std::pow(2, log_colors());
+    std::ofstream o(fname);
+    o << "P6 " << full_colors << " 1 255\n";
+    o.write(reinterpret_cast<const char*>(data), 3*full_colors);
+};
+
 
 GIFImage::GIFImage(int _left, 
                    int _top,
@@ -159,6 +169,24 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
 
     //End image block
     str.put(0);
+};
+
+void GIFImage::write_ppm(const char *fname, const GIFColorTable *global_ct) const
+{
+    const GIFColorTable *the_ct = ct;
+    if(ct == NULL)
+        the_ct = global_ct;
+    if(the_ct == NULL)
+        return;
+    std::ofstream o(fname);
+    o << "P6 " << get_width() << " " << get_height() << " 255\n";
+    for(int y = 0; y < get_height(); y++)
+    {
+        for(int x = 0; x < get_width(); x++)
+        {
+            o.write((const char*)the_ct->get_index(get_value(x,y)), 3);
+        }
+    }
 };
 
 GIF::GIF(uint16_t _width, 

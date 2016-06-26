@@ -98,15 +98,13 @@ void GIFAuthor::update_output()
         out_width = int(0.5+r*float(frames[0]->get_width()));
     }
 
-    std::vector<pVideoFrame>::iterator it;
-    pVideoFrame fr;
     GIFEncoder encoder(out_width, out_height, qm, dm);
-    for(it = frames.begin(); it < frames.end(); it++)
+    int frame_no = 0;
+    for(auto fr : frames)
     {
-        fr = *it;
         //scale
         fr = fr->scale_to(out_width, out_height);
-
+        
         encoder.push_frame(fr);
     }
     

@@ -174,6 +174,11 @@ class VideoFrame : public Glib::Object
         static pVideoFrame create(int width, int height, uint8_t initial=0);
 
         /**
+         * create a copy of the data
+         */
+        pVideoFrame copy() const;
+
+        /**
          * Get a Gdk::Pixbuf of the image with the same underlying data
          */
         Glib::RefPtr<Gdk::Pixbuf> get_pixbuf();

@@ -29,7 +29,6 @@ GIF *GIFEncoder::get_output()
     int x, y;
     const uint8_t *px;
     int64_t last_timestamp, delay = 4;
-    int64_t frame_no = 0;
 
     std::vector<pBitset> masks;
     std::vector<pVideoFrame> sframes;
@@ -46,6 +45,13 @@ GIF *GIFEncoder::get_output()
         std::cout << "Frame " << i << " of " << frames.size() << std::endl;
         fr = sframes[i];
         fr_mask = masks[i];
+        
+        stringstream ss;
+        ss << "frames/segmented" << i << ".ppm";
+        fr->write_ppm(ss.str().c_str());
+        ss.str("");
+        ss << "frames/scaled" << i << ".ppm";
+        frames[i]->write_ppm(ss.str().c_str());
 
         //create a quantizer
         pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
@@ -71,7 +77,13 @@ GIF *GIFEncoder::get_output()
             pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
             dither_image(img, fr, fr_mask, cq, 255);
             //debug_ct(img, cq->get_ct());
-            
+           /* ss.str("");
+            ss << "frames/quantized" << i << ".ppm";
+            img->write_ppm(ss.str().c_str());
+            ss.str("");
+            ss << "frames/colortable" << i << ".ppm";
+            cq->get_ct()->write_ppm(ss.str().c_str());
+            */
             //set delay_time
             if(i > 0)
             {
@@ -84,7 +96,7 @@ GIF *GIFEncoder::get_output()
         }
     }
     //set delay for last frame
-    out->back()->set_delay_time(delay);
+    if(sframes.size() > 0) out->back()->set_delay_time(delay);
 
     return out;
 };

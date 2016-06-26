@@ -238,6 +238,19 @@ Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf()
                                          get_height(),
                                          get_rowstride());
 };   
+        
+pVideoFrame VideoFrame::copy() const
+{
+    uint8_t* cdata = new uint8_t[rowstride*height];
+    std::memcpy(cdata, data, rowstride*height);
+    return VideoFrame::create_from_data(cdata,
+                                        get_width(),
+                                        get_height(),
+                                        get_rowstride(),
+                                        false,
+                                        get_timestamp(),
+                                        get_position());
+};
 
 cv::Mat* VideoFrame::get_mat()
 {

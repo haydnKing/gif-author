@@ -8,6 +8,7 @@
 #include <list>
 #include <stdint.h>
 #include <ostream>
+#include <fstream>
 #include <glibmm/object.h>
 
 #include <iostream>
@@ -75,6 +76,11 @@ class GIFColorTable
          */
         void write(std::ostream& str) const;
 
+        /**
+         * write to a ppm for debugging
+         */
+        void write_ppm(const char *fname) const;
+
     private:
         int depth, colors;
         bool sorted;
@@ -115,6 +121,7 @@ class GIFImage : public Glib::Object
         bool is_interlaced() const {return flag_interlaced;};
         bool has_local_colortable() const {return ct!=NULL;};
         void set_local_colortable(const GIFColorTable* _ct) {ct = _ct;};
+        const GIFColorTable* get_local_colortable() const {return ct;};
         bool has_transparency() const {return flag_transparency;};
         bool set_transparency(bool t) {flag_transparency = t;};
         bool is_user_input() const {return flag_user_input;};
@@ -127,6 +134,7 @@ class GIFImage : public Glib::Object
 
         // methods        
         void write(std::ostream& str, GIFColorTable* global_ct) const;
+        void write_ppm(const char *fname, const GIFColorTable *global_ct=NULL) const;
 
         uint8_t* get_data() {return data;};
         const uint8_t* get_data() const {return data;};

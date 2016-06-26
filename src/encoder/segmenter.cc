@@ -10,6 +10,7 @@ void Segmenter::output_average(const std::vector<pVideoFrame> frames,
     double r,g,b;
     int x,y,z,last_update;
     uint8_t *px;
+
     //create output data
     for(z = 0; z < frames.size(); z++)
     {
@@ -20,7 +21,10 @@ void Segmenter::output_average(const std::vector<pVideoFrame> frames,
     {
         for(x = 0; x < frames[0]->get_width(); x++)
         {
-            r = g = b = 0.;
+            px = frames[0]->get_pixel(x,y);
+            r = px[0];
+            g = px[1];
+            b = px[2];
             last_update = 0;
             for(z = 1; z < frames.size(); z++)
             {
@@ -31,10 +35,13 @@ void Segmenter::output_average(const std::vector<pVideoFrame> frames,
                 if(out_bits[z]->get(x,y))
                 {
                     px = out_frames[last_update]->get_pixel(x,y);
-                    px[0] = uint8_t(0.5 + r / (z-last_update));
-                    px[1] = uint8_t(0.5 + g / (z-last_update));
-                    px[2] = uint8_t(0.5 + b / (z-last_update));
-                    r = g = b = 0;
+                    px[0] = uint8_t(0.5 + r / (z+1-last_update));
+                    px[1] = uint8_t(0.5 + g / (z+1-last_update));
+                    px[2] = uint8_t(0.5 + b / (z+1-last_update));
+                    px = frames[z]->get_pixel(x,y);
+                    r = px[0];
+                    g = px[1];
+                    b = px[2];
                     last_update = z;
                 }   
             }
