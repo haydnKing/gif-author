@@ -11,9 +11,7 @@ GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
     canvas_height(ch),
     qm(_qm),
     dm(_dm)
-{
-    register_segmenters();
-};
+{};
 
 GIFEncoder::~GIFEncoder() {};
 

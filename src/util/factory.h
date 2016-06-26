@@ -37,21 +37,22 @@ template<class C> class Factory
             return r.second;
         };
 
-        Glib::OptionGroup get_option_group() const
+        Glib::OptionGroup get_option_group()
         {
             Glib::OptionGroup og(my_name, my_desc);
-            Glib::OptionEntry oe();
+            Glib::OptionEntry oe;
             oe.set_long_name(my_name);
             oe.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
 
             std::stringstream ss;
-            ss << "Select the " << my_name << " to use. " << my_desc << "\nValid values are:\n";
+            ss << "Select the " << my_name << " to use. Valid values are:\n";
             for(auto it : my_map)
             {
                 ss << "\"" << it.first << "\": Description here later\n";
             }
             oe.set_description(ss.str());
-            og.add_entry(oe, sigc::bind(sigc::mem_fun(*this, &Factory::on_option_name)));
+            og.add_entry(oe, sigc::mem_fun(*this, &Factory::on_option_name));
+            return og;
         };
 
         /**

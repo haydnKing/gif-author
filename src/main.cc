@@ -6,6 +6,7 @@
 
 #include "video/videofile.h"
 #include "gifauthor.h"
+#include "encoder/segmenter.h"
 
 bool extract(std::string fname, int frame, int length, int out_width)
 {
@@ -74,6 +75,8 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     group.add_entry(width_entry, width);
 
     ctx.set_main_group(group);
+    Glib::OptionGroup sg = segmenterFactory.get_option_group();
+    ctx.add_group(sg);
 
     // add GTK options, --help-gtk, etc
     Glib::OptionGroup gtkgroup(gtk_get_option_group(true));
@@ -97,6 +100,7 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
 
 int main (int argc, char *argv[])
 {
+    register_segmenters();
     
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.gtkmm.gifauthor", Gio::APPLICATION_HANDLES_COMMAND_LINE);
 
