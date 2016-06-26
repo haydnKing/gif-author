@@ -42,7 +42,7 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
 {
     // parse arguments:
     Glib::OptionContext ctx("Create GIFs");
-    Glib::OptionGroup group("options", "main options");
+    Glib::OptionGroup group("extract", "Author a gif from the command line");
 
     std::string fname;
     Glib::OptionEntry file_entry;
@@ -56,7 +56,7 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     Glib::OptionEntry frame_entry;
     frame_entry.set_long_name("frame");
     frame_entry.set_short_name('f');
-    frame_entry.set_description("the frame to extract");
+    frame_entry.set_description("the first frame to extract");
     group.add_entry(frame_entry, frame);
 
     int length = 1;
@@ -73,7 +73,7 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     width_entry.set_description("the output width of the gif");
     group.add_entry(width_entry, width);
 
-    ctx.add_group(group);
+    ctx.set_main_group(group);
 
     // add GTK options, --help-gtk, etc
     Glib::OptionGroup gtkgroup(gtk_get_option_group(true));
@@ -84,7 +84,10 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
 
     // maybe show the gui
     if(fname == "")
+    {
+        std::cout << "Starting GUI, see --help to run on commang line" << std::endl;
         app->activate();
+    }
     else
     {
         extract(fname, frame, length, width);
