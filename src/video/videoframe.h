@@ -7,6 +7,7 @@
 #include <gdkmm/pixbuf.h>
 #include <glibmm/refptr.h>
 #include <sstream>
+#include <fstream>
 
 #include <opencv2/opencv.hpp>
 
@@ -232,6 +233,11 @@ class VideoFrame : public Glib::Object
          * Check if the VideoFrame is initiated
          */
         bool is_ok() const;
+
+        /*
+         * Write a debug PPM image to file
+         */
+        void write_ppm(const char *fname) const;
 
 
         // ############################################## Operations

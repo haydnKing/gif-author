@@ -287,6 +287,17 @@ uint8_t* VideoFrame::get_data(){
 bool VideoFrame::is_ok() const{
     return height>0 && width>0 && rowstride>0 && data!=NULL;
 };
+        
+void VideoFrame::write_ppm(const char *fname) const
+{
+    std::ofstream o(fname);
+    //header line
+    o << "P6 " << get_width() << " " << get_height() << " 255\n";
+    for(int y = 0; y < get_height(); y++)
+    {
+        o.write((const char*)get_pixel(0,y), get_width() * 3);
+    }
+};
 
 pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
 {

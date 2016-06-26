@@ -3,6 +3,7 @@
 #include <glibmm/optioncontext.h>
 #include <string>
 #include <fstream>
+#include <sstream>
 
 #include "video/videofile.h"
 #include "gifauthor.h"
@@ -26,9 +27,13 @@ bool extract(std::string fname, int frame, int length, int out_width)
 
     GIFAuthor ga;
     std::list<pVideoFrame> frames = vfile.extract(frame, frame+length);
+    int frame_no = 0;
     for(auto it : frames)
     {
         std::cout << "ga.add_frame(it)" << std::endl;
+        stringstream ss;
+        ss << "frames/" << ++frame_no << ".ppm";
+        it->write_ppm(ss.str().c_str());
         ga.add_frame(it);
     }
     std::cout << "Got frames" << std::endl;
