@@ -28,22 +28,19 @@ void Segmenter::output_average(const std::vector<pVideoFrame> frames,
             last_update = 0;
             for(z = 1; z < frames.size(); z++)
             {
+                if(out_bits[z]->get(x,y))
+                {
+                    px = out_frames[last_update]->get_pixel(x,y);
+                    px[0] = uint8_t(0.5 + r / (z-last_update));
+                    px[1] = uint8_t(0.5 + g / (z-last_update));
+                    px[2] = uint8_t(0.5 + b / (z-last_update));
+                    r = g = b = 0.;
+                    last_update = z;
+                }   
                 px = frames[z]->get_pixel(x,y);
                 r += px[0];
                 g += px[1];
                 b += px[2];
-                if(out_bits[z]->get(x,y))
-                {
-                    px = out_frames[last_update]->get_pixel(x,y);
-                    px[0] = uint8_t(0.5 + r / (z+1-last_update));
-                    px[1] = uint8_t(0.5 + g / (z+1-last_update));
-                    px[2] = uint8_t(0.5 + b / (z+1-last_update));
-                    px = frames[z]->get_pixel(x,y);
-                    r = px[0];
-                    g = px[1];
-                    b = px[2];
-                    last_update = z;
-                }   
             }
             px = out_frames[last_update]->get_pixel(x,y);
             px[0] = uint8_t(0.5 + r / (z-last_update));
