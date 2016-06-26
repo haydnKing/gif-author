@@ -60,7 +60,8 @@ class DeltaSegmenter : public Segmenter
 {
     public:
         DeltaSegmenter() {
-            add_setting("delta", 4.5, 0., std::numeric_limits<double>::infinity(), "Pixel changes of less than this value will be ignored");
+            add_setting("delta", 4.0, 0., std::numeric_limits<double>::infinity(), "Pixel changes of less than this value will be ignored");
+            add_setting("sigma", 1.0, 0., std::numeric_limits<double>::infinity(), "Amount to pre-blur by when calculating deltas");
         };
         ~DeltaSegmenter() {};
 
@@ -74,9 +75,16 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                              std::vector<pBitset>& out_bits)
 {
     double delta = get_setting<double>("delta").get_value();
+    double sigma = get_setting<double>("sigma").get_value();
 
     //No transparency in the first frame
     out_bits.push_back(pBitset());
+
+    std::vector<pVideoFrame> bframes;
+    for(auto it : frames)
+    {
+        bframes.push_back(it->blur(sigma));
+    }
 
     //cycle through each frame
     int i, x,y;
@@ -89,8 +97,8 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
         {
             for(x=0; x < frames[i]->get_width(); x++)
             {
-                px_this = frames[i]->get_pixel(x,y);
-                px_prev = frames[i-1]->get_pixel(x,y);
+                px_this = bframes[i]->get_pixel(x,y);
+                px_prev = bframes[i-1]->get_pixel(x,y);
                 if(((px_this[0] - px_prev[0])*(px_this[0] - px_prev[0])+ 
                     (px_this[1] - px_prev[1])*(px_this[1] - px_prev[1])+ 
                     (px_this[2] - px_prev[2])*(px_this[2] - px_prev[2])) > delta*delta)
