@@ -127,9 +127,17 @@ class Configurable
                 if(it.first != typeid(T)) throw bad_cast();
                 return *(Setting<T>*)it.second;
             };
-/*
+
+        template <class T>
+            Setting<T>& get_setting(const string& name)
+            {
+                auto it = my_map.at(name);
+                if(it.first != typeid(T)) throw bad_cast();
+                return *(Setting<T>*)it.second;
+            };
+
         string get_help_string() const
-        {
+        {/*
             stringstream out;
             for(auto it : my_map) // what is this magic??
             {
@@ -143,7 +151,8 @@ class Configurable
                 }
                 out << ": " << setting->get_description() << endl;
             }
-            return out.str();
+            return out.str();*/
+            return "Help String";
         };
 
         bool parse(const string& cmd)
@@ -198,14 +207,14 @@ class Configurable
                             }
                             catch(invalid_argument f)
                             {
-                                get_settings<string>(lv).set_value(rv);
+                                get_setting<string>(lv).set_value(rv);
                             }
                         }
                     }
                 }
                 pos = end;
             }
-        };*/
+        };
 
 
     private:

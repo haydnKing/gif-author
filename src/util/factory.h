@@ -42,9 +42,11 @@ template<class C> class Factory
         Glib::OptionGroup get_option_group()
         {
             Glib::OptionGroup og(my_name, my_desc);
-            Glib::OptionEntry oe;
-            oe.set_long_name(my_name);
-            oe.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
+            
+            //select
+            Glib::OptionEntry select_entry;
+            select_entry.set_long_name(my_name);
+            select_entry.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
 
             std::stringstream ss;
             ss << "Select the " << my_name << " to use. Valid values are: ";
@@ -54,8 +56,22 @@ template<class C> class Factory
                 if(it.first == my_default) ss << " (default)";
                 if(it != *--my_map.end()) ss << ",";
             }
-            oe.set_description(ss.str());
-            og.add_entry(oe, sigc::mem_fun(*this, &Factory::on_option_name));
+            select_entry.set_description(ss.str());
+            og.add_entry(select_entry, 
+                         sigc::mem_fun(*this, &Factory::on_option_name));
+            
+            //settings
+            Glib::OptionEntry settings_entry;
+            settings_entry.set_long_name(my_name + "-settings");
+            settings_entry.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
+            ss.str("");
+            ss << "Available settings depends on choice of " << my_name << ".\n";
+            for(auto it : my_map)
+            {
+                ss << "\"" << it.first << "\": " << it.second->get_help_string();
+                if(it != *--my_map.end()) ss << "\n";
+            }
+            settings_entry.set_description(ss.str());
             return og;
         };
 
