@@ -69,6 +69,18 @@ template <class T> class Setting
             return true;
         };
 
+        std::string get_help_string() const
+        {
+            stringstream out;
+            if(is_bounded())
+            {
+                out << " [" << get_minimum() << ", " 
+                    << get_maximum() << "]";
+            }
+            out << " : " << get_description();
+            return out.str();
+        }
+
 
 
     private:
@@ -103,6 +115,7 @@ class Configurable
             bool add_setting(const string& name, const T& default_value, const T& min_value, const T& max_value, const string& description)
             {
                 Setting<T> s = Setting<T>(default_value, min_value, max_value, description);
+                help_strings.push_back(name + s.get_help_string());
                 return add_setting(name, s);
             };
 
@@ -136,22 +149,9 @@ class Configurable
                 return *(Setting<T>*)it.second;
             };
 
-        string get_help_string() const
+        std::vector<std::string> get_help_strings() const
         {
-            stringstream out;
-            for(auto it : my_map) // what is this magic??
-            {
-                out << it.first;
-                //*looks shifty*
-                Setting<T> setting = get_setting(it.first);
-                if(setting->is_bounded())
-                {
-                    out << " [" << setting.get_minimum() << ", " 
-                        << setting.get_maximum() << "]";
-                }
-                out << ": " << setting->get_description() << endl;
-            }
-            return out.str();
+            return help_strings;
         };
 
         bool parse(const string& cmd)
@@ -218,6 +218,7 @@ class Configurable
 
     private:
         map<string, setting_type> my_map;
+        std::vector<std::string> help_strings;
 };
 
 #endif //GIFAUTHOR_SETTINGS_H

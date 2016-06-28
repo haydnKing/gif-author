@@ -65,11 +65,21 @@ template<class C> class Factory
             settings_entry.set_long_name(my_name + "-settings");
             settings_entry.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
             ss.str("");
-            ss << "Available settings depends on choice of " << my_name << ".\n";
-            for(auto it : my_map)
+            ss << "Settings for the chosen " << my_name << " as listed below, in the format NAME1:VALUE1;NAME2:VALUE2;....\n";
+            for(auto f_type = my_map.begin(); f_type != my_map.end(); f_type++)
             {
-                ss << "\"" << it.first << "\": " << it.second->get_help_string();
-                if(it != *--my_map.end()) ss << "\n";
+                ss << "\t\t\t\t--" << my_name << " " << f_type->first << ": ";
+                std::vector<std::string> help_strings = f_type->second->get_help_strings();
+                if(!help_strings.empty())
+                {
+                    ss << std::endl;
+                    for(auto help_string = help_strings.begin(); help_string != help_strings.end(); help_string++)
+                    {
+                        ss << "\t\t\t\t\t" << *help_string;
+                        if(help_string != --help_strings.end()) ss << std::endl;
+                    }
+                }
+                if(f_type != --my_map.end()) ss << std::endl;
             }
             settings_entry.set_description(ss.str());
             //should probably hook into post parse for this
