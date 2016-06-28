@@ -72,6 +72,8 @@ template<class C> class Factory
                 if(it != *--my_map.end()) ss << "\n";
             }
             settings_entry.set_description(ss.str());
+            //should probably hook into post parse for this
+            og.add_entry(settings_entry, settings_string);
             return og;
         };
 
@@ -108,6 +110,7 @@ template<class C> class Factory
             return false;
         };
         std::string my_name, my_desc, my_option, my_default;
+        Glib::ustring settings_string;
         std::map<std::string, C*> my_map;
 };
 

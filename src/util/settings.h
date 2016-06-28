@@ -137,13 +137,13 @@ class Configurable
             };
 
         string get_help_string() const
-        {/*
+        {
             stringstream out;
             for(auto it : my_map) // what is this magic??
             {
                 out << it.first;
                 //*looks shifty*
-                auto setting = it.second.second;
+                Setting<T> setting = get_setting(it.first);
                 if(setting->is_bounded())
                 {
                     out << " [" << setting.get_minimum() << ", " 
@@ -151,8 +151,7 @@ class Configurable
                 }
                 out << ": " << setting->get_description() << endl;
             }
-            return out.str();*/
-            return "Help String";
+            return out.str();
         };
 
         bool parse(const string& cmd)
