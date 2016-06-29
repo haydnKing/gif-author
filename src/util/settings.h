@@ -14,80 +14,90 @@ using namespace std;
 #include <string>
 #include <cstdio>
 
-
-template<typename ... Args>
-string string_format( const std::string& format, Args ... args )
-{
-    size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
-    unique_ptr<char[]> buf( new char[ size ] ); 
-    snprintf( buf.get(), size, format.c_str(), args ... );
-    return string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
-}
-
 /**
- * An individual setting object
+ * An individual setting
  */
-template <class T> class Setting
+class Setting
 {
     public:
-        Setting(const T& default_value, string description) :
-            value(default_value),
-            description(description),
-            bounds(false)
-        {};
-        Setting(const T& default_value, const T& min_value, const T& max_value, string description) :
-            value(default_value),
-            min_value(min_value),
-            max_value(max_value),
-            description(description),
-            bounds(true)
-        {};
-        Setting(const Setting<T>& rhs) :
-            value(rhs.get_value()),
-            min_value(rhs.get_minimum()),
-            max_value(rhs.get_maximum()),
-            description(rhs.get_description()),
-            bounds(rhs.is_bounded())
-        {};
-        ~Setting() {};
+        Setting(std::string name, std::string description);
 
-        const T& get_value() const {return value;}
-        const T& get_minimum() const {return min_value;}
-        const T& get_maximum() const {return max_value;}
+        const std::string& get_name() const;
+        const std::string& get_description() const;
 
-        const string& get_description() const {return description;}
-        bool is_bounded() const {return bounds;}
+        //get value - need to call the right method
+        bool get_bool() const;
+        int get_int() const;
+        float get_float() const;
+        std::string get_str() const;
 
-        bool set_value(const T& new_value)
-        {
-            if(bounds)
-            {
-                if(new_value > max_value || new_value < min_value)
-                    return false;
-            }
-            value = new_value;
-            return true;
-        };
+        //configure from command line
+        bool from_str(std::string rvalue) = 0;
 
-        std::string get_help_string() const
-        {
-            stringstream out;
-            out << "=" << value;
-            //if(is_bounded())
-            //{
-            //    out << " [" << get_minimum() << ", " 
-            //        << get_maximum() << "]";
-            //}
-            out << " : " << get_description();
-            return out.str();
-        }
-
-
+        std::string to_str() const = 0;
 
     private:
-        T value, min_value, max_value;
-        string description;
-        bool bounds;
+        void throw_error(std::string attempted_type);
+        std::string name, description, typestr;
+        bool bounded;
+};
+
+class IntSetting : public Setting
+{
+    public:
+        IntSetting(std::string name, std::string description, int default_value=0);
+        IntSetting(std::string name, std::string description, int default_value, int min_value, int max_value);
+
+        int get_int() const;
+
+        bool from_str(std::string rvalue);
+        std::string to_str() const = 0;
+
+    private:
+        int value, min_value, max_value;
+};
+
+class PositiveIntSetting : public IntSetting
+{
+    public:
+        PositiveIntSetting(std::string name, std::string description, int default_value=0);
+        PositiveIntSetting(std::string name, std::string description, int default_value, int max_value);
+};
+
+class FloatSetting : public Setting
+{
+    public:
+        FloatSetting(std::string name, std::string description, float default_value=0);
+        FloatSetting(std::string name, std::string description, float default_value, float min_value, float max_value);
+
+        float get_float() const;
+
+        bool from_str(std::string rvalue);
+        std::string to_str() const = 0;
+
+    private:
+        float value, min_value, max_value;
+};
+
+class PositiveFloatSetting : public FloatSetting
+{
+    public:
+        PositiveFloatSetting(std::string name, std::string description, float default_value=0.);
+        PositiveFloatSetting(std::string name, std::string description, float default_value, float max_value);
+};
+
+class StringSetting : public Setting
+{
+    public:
+        StringSetting(std::string name, std::string description, string default_value="");
+
+        std::string get_str() const;
+
+        bool from_str(std::string rvalue);
+        std::string to_str() const = 0;
+
+    private:
+        std::string value;
 };
 
 
@@ -97,142 +107,27 @@ template <class T> class Setting
 class Configurable
 {
     public:
-        Configurable(std::string description) :
-            my_description(description)
+        Configurable(std::string name, std::string description) :
+            name(name),
+            description(description)
         {};
-        typedef pair<const type_info&, void*> setting_type;
 
         /**
-         * Add a new setting, without bounds
+         * Add a new setting
          */
-        template <class T>
-            bool add_setting(const string& name, const T& default_value, const string& description)
-            {
-                Setting<T> s = Setting<T>(default_value, description);
-                return add_setting(name, s);
-            };
+        bool add_setting(Setting s);
+        
+        const Setting& get_setting(const string& name) const;
 
-        /**
-         * Add a new setting, with bounds
-         */
-        template <class T>
-            bool add_setting(const string& name, const T& default_value, const T& min_value, const T& max_value, const string& description)
-            {
-                Setting<T> s = Setting<T>(default_value, min_value, max_value, description);
-                help_strings.push_back(name + s.get_help_string());
-                return add_setting(name, s);
-            };
+        Setting& get_setting(const string& name);
 
-        /**
-         * Directly add a new setting
-         */
-        template <class T>
-            bool add_setting(const string& name, const Setting<T> setting)
-            {
-                auto it = my_map.insert(make_pair(name, setting_type(typeid(T), nullptr)));
-                //if we failed
-                if(!it.second) return false;
-                //otherwise set the object
-                it.first->second.second = new Setting<T>(setting);
-                return true;
-            };
+        std::string get_description() const;
 
-        template <class T>
-            const Setting<T>& get_setting(const string& name) const
-            {
-                auto it = my_map.at(name);
-                if(it.first != typeid(T)) throw bad_cast();
-                return *(Setting<T>*)it.second;
-            };
-
-        template <class T>
-            Setting<T>& get_setting(const string& name)
-            {
-                auto it = my_map.at(name);
-                if(it.first != typeid(T)) throw bad_cast();
-                return *(Setting<T>*)it.second;
-            };
-
-        std::vector<std::string> get_help_strings() const
-        {
-            return help_strings;
-        };
-
-        std::string get_description() const {return my_description;};
-
-        bool configure(const string& cmd)
-        {
-            std::cout << "Settings.configure(\"" << cmd << "\")" << std::endl;
-            int pos = 0, end = 0, equal = 0;
-            string sub_cmd, lv, rv;
-            while(pos < cmd.length())
-            {
-                end = cmd.find(';', pos);
-                //last substring
-                if(pos < 0) pos = cmd.length();
-                sub_cmd = cmd.substr(pos, end-pos);
-                
-                //parse the sub command
-                //is there an equals?
-                equal = sub_cmd.find('=');
-                //no
-                if(equal == string::npos)
-                {
-                    //infer: setting is a bool, set to true
-                    get_setting<bool>(sub_cmd).set_value(true);
-                    std::cout << sub_cmd << "<bool> = true;" << std::endl;
-                }
-                //yes
-                else
-                {
-                    lv = sub_cmd.substr(pos, equal-pos);
-                    rv = sub_cmd.substr(equal+1, end-equal-1);
-                    //boolean
-                    if(rv == "true")
-                    {
-                        get_setting<bool>(lv).set_value(true);
-                        std::cout << lv << "<bool> = true;" << std::endl;
-                    }
-                    else if(rv == "false")
-                    {
-                        get_setting<bool>(lv).set_value(false);
-                        std::cout << lv << "<bool> = false;" << std::endl;
-                    }
-                    else //int, float, or string
-                    {
-                        try
-                        {
-                            int v = stoi(rv);
-                            std::cout << lv << "<int> = " << v << ";" << std::endl;
-                            if(!get_setting<int>(lv).set_value(v))
-                                throw invalid_argument(string_format("Argument \'%s\' outside bounds", lv));
-                        }
-                        catch(invalid_argument e)
-                        {
-                            try
-                            {
-                                float v = stof(rv);
-                                std::cout << lv << "<float> = " << v << ";" << std::endl;
-                                if(!get_setting<float>(lv).set_value(v))
-                                    throw invalid_argument(string_format("Argument \'%s\' outside bounds", lv));
-                            }
-                            catch(invalid_argument f)
-                            {
-                                get_setting<string>(lv).set_value(rv);
-                                std::cout << lv << "<string> = " << rv << ";" << std::endl;
-                            }
-                        }
-                    }
-                }
-                pos = end;
-            }
-        };
-
+        bool configure(const string& cmd);
 
     private:
-        map<string, setting_type> my_map;
-        std::vector<std::string> help_strings;
-        std::string my_description;
+        map<std::string, Setting> my_map;
+        std::string name, description;
 };
 
 #endif //GIFAUTHOR_SETTINGS_H
