@@ -1,7 +1,7 @@
 #include "segmenter.h"
 #include <cstring>
 
-Factory<Segmenter> segmenterFactory("segmenter", "the segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream");
+Factory<Segmenter> segmenterFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream");
 
 void Segmenter::output_average(const std::vector<pVideoFrame> frames,
                                std::vector<pVideoFrame>& out_frames,
@@ -59,9 +59,13 @@ void Segmenter::output_average(const std::vector<pVideoFrame> frames,
 class DeltaSegmenter : public Segmenter
 {
     public:
-        DeltaSegmenter() {
-            add_setting("delta", 4.0, 0., std::numeric_limits<double>::infinity(), "Pixel changes of less than this value will be ignored");
-            add_setting("sigma", 1.0, 0., std::numeric_limits<double>::infinity(), "Amount to pre-blur by when calculating deltas");
+        DeltaSegmenter() :
+            Segmenter("Update pixels when the next pixel changes by greater than delta")
+        {
+            add_setting("delta", 4.0, 0., std::numeric_limits<double>::infinity(), 
+                    "Don't update pixels that change by less than this value");
+            add_setting("sigma", 1.0, 0., std::numeric_limits<double>::infinity(), 
+                    "Amount to pre-blur by when calculating deltas");
         };
         ~DeltaSegmenter() {};
 

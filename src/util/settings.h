@@ -72,11 +72,12 @@ template <class T> class Setting
         std::string get_help_string() const
         {
             stringstream out;
-            if(is_bounded())
-            {
-                out << " [" << get_minimum() << ", " 
-                    << get_maximum() << "]";
-            }
+            out << "=" << value;
+            //if(is_bounded())
+            //{
+            //    out << " [" << get_minimum() << ", " 
+            //        << get_maximum() << "]";
+            //}
             out << " : " << get_description();
             return out.str();
         }
@@ -96,6 +97,9 @@ template <class T> class Setting
 class Configurable
 {
     public:
+        Configurable(std::string description) :
+            my_description(description)
+        {};
         typedef pair<const type_info&, void*> setting_type;
 
         /**
@@ -153,6 +157,8 @@ class Configurable
         {
             return help_strings;
         };
+
+        std::string get_description() const {return my_description;};
 
         bool parse(const string& cmd)
         {
@@ -219,6 +225,7 @@ class Configurable
     private:
         map<string, setting_type> my_map;
         std::vector<std::string> help_strings;
+        std::string my_description;
 };
 
 #endif //GIFAUTHOR_SETTINGS_H

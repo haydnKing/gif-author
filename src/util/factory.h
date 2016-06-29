@@ -44,46 +44,38 @@ template<class C> class Factory
             Glib::OptionGroup og(my_name, my_desc);
             
             //select
-            Glib::OptionEntry select_entry;
-            select_entry.set_long_name(my_name);
-            select_entry.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
+            Glib::OptionEntry oe;
+            oe.set_long_name(my_name);
+            oe.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
 
             std::stringstream ss;
-            ss << "Select the " << my_name << " to use. Valid values are: ";
-            for(auto it : my_map)
-            {
-                ss << "\"" << it.first << "\"";
-                if(it.first == my_default) ss << " (default)";
-                if(it != *--my_map.end()) ss << ",";
-            }
-            select_entry.set_description(ss.str());
-            og.add_entry(select_entry, 
-                         sigc::mem_fun(*this, &Factory::on_option_name));
+            ss << "Select and configure the " << my_name 
+               << " in the form \"";
+            for(auto ch : my_name) ss << (char)std::toupper(ch);
+            ss << "_TYPE[;SETTING1=VALUE1[;...]]\". Valid values are:\n";
             
             //settings
-            Glib::OptionEntry settings_entry;
-            settings_entry.set_long_name(my_name + "-settings");
-            settings_entry.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
-            ss.str("");
-            ss << "Settings for the chosen " << my_name << " as listed below, in the format NAME1:VALUE1;NAME2:VALUE2;....\n";
+            std::string indent = "          ";
             for(auto f_type = my_map.begin(); f_type != my_map.end(); f_type++)
             {
-                ss << "\t\t\t\t--" << my_name << " " << f_type->first << ": ";
+                ss << indent << "--" << my_name << " " << f_type->first << " ";
+                if(f_type->first == my_default) ss << "(default) ";
+                ss << f_type->second->get_description();
                 std::vector<std::string> help_strings = f_type->second->get_help_strings();
                 if(!help_strings.empty())
                 {
                     ss << std::endl;
                     for(auto help_string = help_strings.begin(); help_string != help_strings.end(); help_string++)
                     {
-                        ss << "\t\t\t\t\t" << *help_string;
+                        ss << indent << "     " << *help_string;
                         if(help_string != --help_strings.end()) ss << std::endl;
                     }
                 }
                 if(f_type != --my_map.end()) ss << std::endl;
             }
-            settings_entry.set_description(ss.str());
-            //should probably hook into post parse for this
-            og.add_entry(settings_entry, settings_string);
+            oe.set_description(ss.str());
+            og.add_entry(oe, 
+                         sigc::mem_fun(*this, &Factory::on_option_name));
             return og;
         };
 

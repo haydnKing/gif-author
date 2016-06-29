@@ -36,7 +36,9 @@ class Segmenter : public Configurable
                              std::vector<pBitset>& out_bits) = 0;
 
     protected:
-        Segmenter() {};
+        Segmenter(std::string description) :
+            Configurable(description)
+        {};
         void output_average(const std::vector<pVideoFrame> frames,
                             std::vector<pVideoFrame>& out_frames,
                             std::vector<pBitset>& out_bits);

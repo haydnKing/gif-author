@@ -3,9 +3,10 @@
 
 # TODO List
 
-- Change factory args to --factory-name CHOICE[;SETTING1=VALUE[;SETTING2=VALUE2[;...]]]
-- Factories to pass command line arguments to Configurables
+- Factories to pass command line arguments to Configurables for parsing
 - Configureables Parse Command Line Arguments
+- rewrite SimpleDelta
+- add SmoothDelta
 
 - ColorQuantizer and Ditherer to follow Factory/Configurable pattern
 
