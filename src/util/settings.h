@@ -160,8 +160,9 @@ class Configurable
 
         std::string get_description() const {return my_description;};
 
-        bool parse(const string& cmd)
+        bool configure(const string& cmd)
         {
+            std::cout << "Settings.configure(\"" << cmd << "\")" << std::endl;
             int pos = 0, end = 0, equal = 0;
             string sub_cmd, lv, rv;
             while(pos < cmd.length())
@@ -179,6 +180,7 @@ class Configurable
                 {
                     //infer: setting is a bool, set to true
                     get_setting<bool>(sub_cmd).set_value(true);
+                    std::cout << sub_cmd << "<bool> = true;" << std::endl;
                 }
                 //yes
                 else
@@ -188,17 +190,20 @@ class Configurable
                     //boolean
                     if(rv == "true")
                     {
-                        get_setting<bool>(sub_cmd).set_value(true);
+                        get_setting<bool>(lv).set_value(true);
+                        std::cout << lv << "<bool> = true;" << std::endl;
                     }
                     else if(rv == "false")
                     {
-                        get_setting<bool>(sub_cmd).set_value(false);
+                        get_setting<bool>(lv).set_value(false);
+                        std::cout << lv << "<bool> = false;" << std::endl;
                     }
                     else //int, float, or string
                     {
                         try
                         {
                             int v = stoi(rv);
+                            std::cout << lv << "<int> = " << v << ";" << std::endl;
                             if(!get_setting<int>(lv).set_value(v))
                                 throw invalid_argument(string_format("Argument \'%s\' outside bounds", lv));
                         }
@@ -207,12 +212,14 @@ class Configurable
                             try
                             {
                                 float v = stof(rv);
+                                std::cout << lv << "<float> = " << v << ";" << std::endl;
                                 if(!get_setting<float>(lv).set_value(v))
                                     throw invalid_argument(string_format("Argument \'%s\' outside bounds", lv));
                             }
                             catch(invalid_argument f)
                             {
                                 get_setting<string>(lv).set_value(rv);
+                                std::cout << lv << "<string> = " << rv << ";" << std::endl;
                             }
                         }
                     }

@@ -5,6 +5,7 @@
 #include <string>
 #include <glibmm/optiongroup.h>
 #include <glibmm/optionentry.h>
+#include <glibmm/optioncontext.h>
 #include <sigc++/sigc++.h>
 #include <sstream>
 
@@ -74,8 +75,10 @@ template<class C> class Factory
                 if(f_type != --my_map.end()) ss << std::endl;
             }
             oe.set_description(ss.str());
+            std::cout << "Add entry" << std::endl;
             og.add_entry(oe, 
                          sigc::mem_fun(*this, &Factory::on_option_name));
+            std::cout << "Added entry" << std::endl;
             return og;
         };
 
@@ -98,21 +101,45 @@ template<class C> class Factory
         };
 
 
-    private:
         bool on_option_name(const Glib::ustring& option_name, 
                             const Glib::ustring& option_value,
                             bool has_value)
         {
-            //check that option_value is a valid Factory object, otherwise return false
-            if(my_map.count(std::string(option_value)) > 0)
+            stringstream ss;
+            std::cout << "on_option_name(" << option_name << ", " 
+                                           << option_value << ", " 
+                                           << has_value << ")" << std::endl;
+            if(!has_value) 
             {
-                my_option = std::string(option_value);
+                ss << option_name << " requires an argument";
+                throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
+            }
+            //first extract the name part
+            int end = option_value.find(';');
+            std::string name, arglist;
+            if(end != std::string::npos)
+            {
+                name = option_value.substr(0, end);
+                if(option_value.length() > end+1)
+                    arglist = option_value.substr(end+1);
+            }
+            else
+                name = option_value;
+            //check that option_value is a valid Factory object, otherwise return false
+            if(my_map.count(name) > 0)
+            {
+                my_option = name;
+                std::cout << "Selecting facotry: " << name << std::endl;
+                if(!arglist.empty())
+                    my_map.at(name)->configure(arglist);
                 return true;
             }
-            return false;
+
+            ss << "Unknown " << my_name << ": \'" << name << "\'";
+            throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
         };
+    private:
         std::string my_name, my_desc, my_option, my_default;
-        Glib::ustring settings_string;
         std::map<std::string, C*> my_map;
 };
 
