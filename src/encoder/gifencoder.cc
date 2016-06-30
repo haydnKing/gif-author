@@ -32,7 +32,7 @@ GIF *GIFEncoder::get_output()
 
     std::vector<pBitset> masks;
     std::vector<pVideoFrame> sframes;
-    Segmenter *sm = segmenterFactory.get_chosen_item();
+    Segmenter *sm = segmenterFactory.get_selected();
     sm->segment(frames, sframes, masks);
 
     std::cout << "Background detection done" << std::endl;
@@ -46,7 +46,7 @@ GIF *GIFEncoder::get_output()
         fr = sframes[i];
         fr_mask = masks[i];
         
-        stringstream ss;
+        std::stringstream ss;
         ss << "frames/segmented" << i << ".ppm";
         fr->write_ppm(ss.str().c_str());
         ss.str("");

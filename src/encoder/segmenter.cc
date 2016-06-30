@@ -1,8 +1,6 @@
 #include "segmenter.h"
 #include <cstring>
 
-Factory<Segmenter> segmenterFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream");
-
 void Segmenter::output_average(const std::vector<pVideoFrame> frames,
                                std::vector<pVideoFrame>& out_frames,
                                std::vector<pBitset>& out_bits)
@@ -60,12 +58,14 @@ class DeltaSegmenter : public Segmenter
 {
     public:
         DeltaSegmenter() :
-            Segmenter("Update pixels when the next pixel changes by greater than delta")
+            Segmenter("DeltaSegmenter", "Update pixels when the next pixel changes by greater than delta")
         {
-            add_setting("delta", 4.0, 0., std::numeric_limits<double>::infinity(), 
-                    "Don't update pixels that change by less than this value");
-            add_setting("sigma", 1.0, 0., std::numeric_limits<double>::infinity(), 
-                    "Amount to pre-blur by when calculating deltas");
+            add_setting(new PositiveFloatSetting("delta", 
+                "Don't update pixels that change by less than this value", 
+                4.0));
+            add_setting(new PositiveFloatSetting("sigma", 
+                        "Amount to pre-blur by when calculating deltas", 
+                        1.0));
         };
         ~DeltaSegmenter() {};
 
@@ -78,8 +78,8 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                              std::vector<pVideoFrame>& out_frames,
                              std::vector<pBitset>& out_bits)
 {
-    double delta = get_setting<double>("delta").get_value();
-    double sigma = get_setting<double>("sigma").get_value();
+    float delta = get_setting("delta")->get_float();
+    float sigma = get_setting("sigma")->get_float();
 
     //No transparency in the first frame
     out_bits.push_back(pBitset());
@@ -117,7 +117,10 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 
     
 
-void register_segmenters()
+SegmenterFactory::SegmenterFactory() : 
+    ProcessFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream")
 {
-    segmenterFactory.register_type("SimpleDelta", new DeltaSegmenter());
+    register_type("SimpleDelta", new DeltaSegmenter());
 };
+
+SegmenterFactory segmenterFactory;

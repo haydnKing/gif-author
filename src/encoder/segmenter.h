@@ -8,8 +8,7 @@
 #include <stdint.h>
 #include <vector>
 
-#include "../util/factory.h"
-#include "../util/settings.h"
+#include "../util/process.h"
 
 #include "../video/videoframe.h"
 #include "../util/bitset.h"
@@ -18,7 +17,7 @@
  * A class to decide which pixels in each frame should be updated,
  * and what value they should be set to. Initialise via SegmenterFactory
  */
-class Segmenter : public Configurable
+class Segmenter : public Process
 {
     public:
         ~Segmenter() {};
@@ -36,17 +35,24 @@ class Segmenter : public Configurable
                              std::vector<pBitset>& out_bits) = 0;
 
     protected:
-        Segmenter(std::string description) :
-            Configurable(description)
+        Segmenter(std::string name, std::string description) :
+            Process(name, description)
         {};
         void output_average(const std::vector<pVideoFrame> frames,
                             std::vector<pVideoFrame>& out_frames,
                             std::vector<pBitset>& out_bits);
 };
 
-extern Factory<Segmenter> segmenterFactory;
+/**
+ * A factory for Segmenters
+ */
+class SegmenterFactory : public ProcessFactory<Segmenter>
+{
+    public:
+        SegmenterFactory();
+};
 
-void register_segmenters();
+extern SegmenterFactory segmenterFactory;
 
 #endif //GTKMM_IMAGESEGMENTER_H
 

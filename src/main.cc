@@ -109,7 +109,6 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
 
 int main (int argc, char *argv[])
 {
-    register_segmenters();
     
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.gtkmm.gifauthor", Gio::APPLICATION_HANDLES_COMMAND_LINE);
 
