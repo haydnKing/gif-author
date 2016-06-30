@@ -3,8 +3,11 @@
 
 # TODO List
 
-- Factories to pass command line arguments to Configurables for parsing
-- Configureables Parse Command Line Arguments
+- fix naming scheme
+    - Configurable -> Process
+    - Factory -> ProcessFactory
+    - Merge files
+- harden parameter parsing/error reporting
 - rewrite SimpleDelta
 - add SmoothDelta
 
