@@ -19,6 +19,12 @@ bool Setting::get_bool() const {throw_error("bool");};
 int Setting::get_int() const {throw_error("bool");};
 float Setting::get_float() const {throw_error("float");};
 std::string Setting::get_str() const {throw_error("str");};
+        
+std::string Setting::get_help_string() const
+{
+    std::stringstream ss;
+    ss << name << "=" << to_str() << ": " << description;
+}
 
 void Setting::throw_error(std::string attempted_type) const
 {
@@ -183,7 +189,7 @@ std::vector<std::string> Process::get_help_strings() const
     std::vector<std::string> ret;
     for(auto it : my_map)
     {
-        ret.push_back(it.second->get_str());
+        ret.push_back(it.second->get_help_string());
     }
     return ret;
 }

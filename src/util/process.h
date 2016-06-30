@@ -33,6 +33,8 @@ class Setting
 
         virtual std::string to_str() const = 0;
 
+        std::string get_help_string() const;
+
     protected:
         void throw_error(std::string attempted_type) const;
         std::string name, description, typestr;
@@ -227,7 +229,7 @@ template<class P> class ProcessFactory
                     ss << std::endl;
                     for(auto help_string = help_strings.begin(); help_string != help_strings.end(); help_string++)
                     {
-                        ss << indent << "     " << *help_string;
+                        ss << indent << "     ";// << help_string;
                         if(help_string != --help_strings.end()) ss << std::endl;
                     }
                 }
