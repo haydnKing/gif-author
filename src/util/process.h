@@ -230,7 +230,7 @@ template<class P> class ProcessFactory
                     ss << std::endl;
                     for(auto help_string = help_strings.begin(); help_string != help_strings.end(); help_string++)
                     {
-                        ss << indent << "     ";// << help_string;
+                        ss << indent << "     " << *help_string;
                         if(help_string != --help_strings.end()) ss << std::endl;
                     }
                 }
