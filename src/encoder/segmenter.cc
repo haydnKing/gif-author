@@ -56,9 +56,9 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     
 
     //Do delta
-    for(x=0; x < frames[0]->get_width(); x++)
+    for(y=0; y < frames[0]->get_height(); y++)
     {
-        for(y=0; y < frames[0]->get_height(); y++)
+        for(x=0; x < frames[0]->get_width(); x++)
         {
             px_this = frames[0]->get_pixel(x,y);
             r = px_this[0];
