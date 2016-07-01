@@ -24,6 +24,7 @@ std::string Setting::get_help_string() const
 {
     std::stringstream ss;
     ss << name << "=" << to_str() << ": " << description;
+    return ss.str();
 }
 
 void Setting::throw_error(std::string attempted_type) const
