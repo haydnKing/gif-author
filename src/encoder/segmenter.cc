@@ -16,7 +16,10 @@ class DeltaSegmenter : public Segmenter
                 "Don't update pixels that change by less than this value", 
                 4.0));
             add_setting(new PositiveFloatSetting("sigma", 
-                        "Amount to pre-blur by when calculating deltas", 
+                        "Amount to spacially blur by when calculating deltas", 
+                        2.0));
+            add_setting(new PositiveFloatSetting("sigmaT", 
+                        "Amount to temporally blur by when calculating deltas", 
                         1.0));
         };
         ~DeltaSegmenter() {};
@@ -32,6 +35,8 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 {
     float delta = get_setting("delta")->get_float();
     float sigma = get_setting("sigma")->get_float();
+    float sigmaT= get_setting("sigmaT")->get_float();
+
     int x,y,z,start;
     float r,g,b,dr,dg,db;
     uint8_t *px_start, *px_this;
@@ -43,6 +48,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     {
         bframes.push_back(it->blur(sigma));
     }
+    bframes = VideoFrame::blur(bframes, sigmaT);
 
     //prepare output bits
     //No transparency in the first frame
