@@ -307,10 +307,14 @@ class VideoFrame : public Glib::Object
 
         pVideoFrame blur(float sigma) const;
 
+        static std::vector<pVideoFrame> blur(const std::vector<pVideoFrame> &rhs, float sigma);
+
     protected:
         VideoFrame();
 
     private:
+        static float *get_kernel(float sigma, int kernel_center);
+
         void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp); 
         void interpolate_nearest(double x, double y, uint8_t* out) const;
         void interpolate_bilinear(double x, double y, uint8_t* out) const;

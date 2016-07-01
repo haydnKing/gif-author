@@ -639,15 +639,22 @@ void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p,
     data_parent = dp;
 };
 
+float *VideoFrame::get_kernel(float sigma, int kernel_center)
+{
+    float *kernel = new float[kernel_center*2+1];
+    for(int k = 0; k < kernel_center*2+1; k++)
+        kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
+
+    return kernel;
+};
+
 pVideoFrame VideoFrame::blur(float sigma) const
 {
-    int kernel_length = int(3*sigma+1.0);
-    if(kernel_length%2==0) kernel_length++;
-    int kernel_center = kernel_length / 2;
-    float kernel[kernel_length], norm, val[3];
+    int kernel_center = int(1.5*sigma);
+    int kernel_length = kernel_center * 2 + 1; 
+    float *kernel = get_kernel(sigma, kernel_center);
+    float norm, val[3];
     int x,y,i,j,k;
-    for(k=0; k < kernel_length; k++)
-        kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
 
     pVideoFrame h = create(get_width(), get_height(), 0),
                 v = create(get_width(), get_height(), 0);
@@ -701,6 +708,58 @@ pVideoFrame VideoFrame::blur(float sigma) const
         }
     }
 
+    delete [] kernel;
     return v;
 };
+
+std::vector<pVideoFrame> VideoFrame::blur(const std::vector<pVideoFrame> &rhs, float sigma)
+{
+    int kernel_center = int(1.5*sigma);
+    int kernel_length = kernel_center * 2 + 1; 
+    float *kernel = get_kernel(sigma, kernel_center);
+    float norm, val[3];
+    int x,y,z,dz,k;
+    uint8_t* px;
+
+    //allocate output
+    std::vector<pVideoFrame> ret;
+    for(z=0; z < rhs.size(); z++)
+    {
+        ret.push_back(VideoFrame::create(rhs[z]->get_width(), rhs[z]->get_height()));
+    }
+
+    for(y=0; y < rhs[0]->get_height(); y++)
+    {
+        for(x=0; x < rhs[0]->get_height(); x++)
+        {
+            for(z=0; z < rhs.size(); z++)
+            {
+                norm = 0.;
+                val[0] = 0.;
+                val[1] = 0.;
+                val[2] = 0.;
+                for(k=0; k < kernel_length; k++)
+                {
+                    dz = z + k - kernel_center;
+                    if(dz > 0 && dz < rhs.size())
+                    {
+                        px = rhs[dz]->get_pixel(x,y);
+                        norm += kernel[k];
+                        val[0] += kernel[k] * px[0];
+                        val[1] += kernel[k] * px[1];
+                        val[2] += kernel[k] * px[2];
+                    }
+                }
+            }
+            ret[x]->set_pixel(x,y,
+                              uint8_t(0.5+val[0]/norm),
+                              uint8_t(0.5+val[1]/norm),
+                              uint8_t(0.5+val[2]/norm));
+        }
+    }
+
+    delete [] kernel;
+    return ret;
+};
+
 
