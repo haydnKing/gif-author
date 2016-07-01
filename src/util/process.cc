@@ -98,7 +98,7 @@ float FloatSetting::get_float() const {return value;};
 bool FloatSetting::from_str(std::string rvalue)
 {
     float v = std::stof(rvalue);
-    if(bounded && (v < min_value && v > max_value))
+    if(bounded && (v < min_value || v > max_value))
     {
         return false;
     }
@@ -198,7 +198,7 @@ std::vector<std::string> Process::get_help_strings() const
 bool Process::configure(std::string arg)
 {
     int end, equals;
-    bool err;
+    bool success;
     while(!arg.empty())
     {
         end = arg.find(';');
@@ -208,10 +208,21 @@ bool Process::configure(std::string arg)
         if(equals == std::string::npos)
             equals = arg.length();
 
-        err = my_map.at(arg.substr(0,equals))->from_str(arg.substr(equals+1, end-equals-1));
-        if(err)
+        try 
         {
-            return false;
+            success = my_map.at(arg.substr(0,equals))->from_str(arg.substr(equals+1, end-equals-1));
+        }
+        catch(std::invalid_argument err)
+        {
+            std::stringstream ss;
+            ss << "Couldn't parse " << my_map.at(arg.substr(0,equals))->get_typestr() << " from argument " << arg.substr(0,end);
+            throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
+        }
+        if(!success)
+        {
+            std::stringstream ss;
+            ss << "Value " << arg.substr(equals+1, end-equals-1) << " outside allowable range for option " << arg.substr(0,equals);
+            throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
         }
 
         arg = arg.substr(end+1);

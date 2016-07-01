@@ -34,6 +34,7 @@ class Setting
         virtual std::string to_str() const = 0;
 
         std::string get_help_string() const;
+        const std::string get_typestr() const {return typestr;};
 
     protected:
         void throw_error(std::string attempted_type) const;
