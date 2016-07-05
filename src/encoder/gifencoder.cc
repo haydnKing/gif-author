@@ -6,10 +6,9 @@ bool px_equal(uint8_t *lhs, uint8_t *rhs)
     return (lhs[0]==rhs[0] && lhs[1]==rhs[1] && lhs[2] == rhs[2]);
 };
 
-GIFEncoder::GIFEncoder(int cw, int ch, DitherMethod _dm):
+GIFEncoder::GIFEncoder(int cw, int ch):
     canvas_width(cw),
-    canvas_height(ch),
-    dm(_dm)
+    canvas_height(ch)
 {};
 
 GIFEncoder::~GIFEncoder() {};
@@ -38,6 +37,8 @@ GIF *GIFEncoder::get_output()
     std::cout << "frames: " << frames.size() << std::endl;
     std::cout << "sframes: " << sframes.size() << std::endl;
     std::cout << "masks: " << masks.size() << std::endl;
+
+    Ditherer *ditherer = dithererFactory.get_selected();
 
     for(int i = 0; i < sframes.size(); i++)
     {
@@ -73,8 +74,7 @@ GIF *GIFEncoder::get_output()
         if(cq->get_num_colors() > 0)
         {
             //Dither the image
-            pGIFImage img = create_gif_image(0,0,fr->get_width(),fr->get_height());
-            dither_image(img, fr, fr_mask, cq, 255);
+            pGIFImage img = ditherer->dither_image(fr, fr_mask, cq, 255);
             //debug_ct(img, cq->get_ct());
            /* ss.str("");
             ss << "frames/quantized" << i << ".ppm";
@@ -98,133 +98,6 @@ GIF *GIFEncoder::get_output()
     if(sframes.size() > 0) out->back()->set_delay_time(delay);
 
     return out;
-};
-
-void GIFEncoder::dither_image(pGIFImage out,
-                              const pVideoFrame vf,
-                              const pBitset mask,
-                              ColorQuantizer *cq,
-                              uint8_t colors) const
-{
-    if(mask)
-    {
-        out->set_transparency(true);
-        out->set_transparent_index(colors);
-        out->set_disposal_method(DISPOSAL_METHOD_NONE);
-        //out->set_disposal_method(DISPOSAL_METHOD_RESTORE_BACKGROUND);
-        cq->build_ct(colors-1);
-    }
-    else
-        cq->build_ct(colors);
-    out->set_local_colortable(cq->get_ct());
-    switch(dm)
-    {
-        case DITHER_FLOYD_STEINBERG:
-            dither_FS(vf, mask, out, cq);
-            break;
-        case DITHER_NONE:
-            dither_none(vf, mask, out, cq);
-            break;
-    }
-};
-
-void GIFEncoder::dither_FS(const pVideoFrame vf,
-                           const pBitset mask,
-                           pGIFImage out, 
-                           const ColorQuantizer *cq) const
-{
-    std::cout << "dither_fs" << std::endl;
-    //store 2 rows of RGB errors, set to zero
-    int32_t* errors = new int32_t[6*vf->get_width()];
-    std::memset(errors, 0, 6*vf->get_width()*sizeof(int32_t));
-    //pointers to the errors that can be swapped around
-    int32_t *this_row = errors, 
-            *next_row = errors + 3*vf->get_width(), 
-            *swap;
-    uint8_t pixel[3], * color;
-    int32_t error[3];
-
-    int x, y, index, i;
-
-    for(y = 0; y < vf->get_height(); y++)
-    {
-        for(x = 0; x < vf->get_width(); x++)
-        {
-            //transparency
-            if(mask && !mask->get(x,y))
-            {
-                out->set_value(x,y,out->transparent_index());
-                continue;
-            }
-            //get the pixel
-            std::memcpy(pixel, vf->get_pixel(x,y), 3*sizeof(uint8_t));
-            //add the errors, being wary of overflow
-            for(i = 0; i < 3; i++)
-            {
-                error[i] = this_row[3*x+i] + int32_t(pixel[i])*256;
-                pixel[i] = (uint8_t)std::max(0, std::min(UINT8_MAX, (error[i]+128)/256));
-            }
-
-            //get the closest ct
-            index = cq->map_to_ct(pixel);
-            //set the pixel
-            out->set_value(x, y, index);
-            //calculate the errors. Shift 8 places for accuracy
-            for(i = 0; i < 3; i++)
-                error[i] -= int32_t(cq->get_ct()->get_index(index)[i])*256;
-
-            
-            //propagate the errors
-            if(x+1 < vf->get_width())
-            {
-                for(i=0;i<3;i++)
-                    this_row[3*x+3+i] += (7 * error[i]) / 16;
-            }
-            if(y+1 < vf->get_height())
-            {
-                if(x > 0)
-                    for(i=0;i<3;i++)
-                        next_row[3*x-3+i] += (3 * error[i]) / 16;
-                for(i=0;i<3;i++)
-                    next_row[3*x+i] += (5 * error[i]) / 16;
-                if(x+1 < vf->get_width())
-                    for(i=0;i<3;i++)
-                        next_row[3*x+3+i] += error[i] / 16;
-            }
-        }
-        //moving to the next row
-        swap = this_row;
-        this_row = next_row;
-        next_row = this_row;
-        memset(next_row, 0, 3*vf->get_width()*sizeof(int32_t));
-    }
-
-    //the best way to cover up mistakes ;)
-    delete [] errors;
-};
-
-void GIFEncoder::dither_none(const pVideoFrame vf,
-                             const pBitset mask,
-                             pGIFImage out, 
-                             const ColorQuantizer *cq) const
-{
-    std::cout << "dither_none" << std::endl;
-    int x,y,index;
-    for(y = 0; y < vf->get_height(); y++)
-    {
-        for(x = 0; x < vf->get_width(); x++)
-        {
-            //transparency
-            if(mask && !mask->get(x,y))
-            {
-                out->set_value(x,y,out->transparent_index());
-                continue;
-            }
-            index = cq->map_to_ct(vf->get_pixel(x,y));
-            out->set_value(x, y, index);
-        }
-    }
-    
 };
         
 void GIFEncoder::dbg_save_POI(int x, int y, const char* name) const

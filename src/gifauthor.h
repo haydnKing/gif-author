@@ -17,15 +17,6 @@ class GIFAuthor
         GIFAuthor();
         ~GIFAuthor();
 
-        /**
-         * get the method used for dithering
-         */
-        DitherMethod get_dm() const;
-        /**
-         * set the method used for dithering
-         */
-        void set_dm(DitherMethod _dm);
-
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};
         void set_output_size(int width=-1, int height=-1)
@@ -63,8 +54,6 @@ class GIFAuthor
 
     protected:
         int out_width, out_height;
-        //general settings
-        DitherMethod dm;
         
         std::vector<pVideoFrame> frames;
         GIF *out;

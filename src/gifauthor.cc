@@ -2,7 +2,6 @@
 
 GIFAuthor::GIFAuthor() :
     out(NULL),
-    dm(DITHER_FLOYD_STEINBERG),
     out_width(-1),
     out_height(-1)
 {};
@@ -10,17 +9,6 @@ GIFAuthor::GIFAuthor() :
 GIFAuthor::~GIFAuthor() 
 {
     delete out;
-};
-
-
-DitherMethod GIFAuthor::get_dm() const
-{
-    return dm;
-};
-
-void GIFAuthor::set_dm(DitherMethod _dm)
-{
-    dm = _dm;
 };
 
 void GIFAuthor::clear_frames()
@@ -87,7 +75,7 @@ void GIFAuthor::update_output()
         out_width = int(0.5+r*float(frames[0]->get_width()));
     }
 
-    GIFEncoder encoder(out_width, out_height, dm);
+    GIFEncoder encoder(out_width, out_height);
     int frame_no = 0;
     for(auto fr : frames)
     {

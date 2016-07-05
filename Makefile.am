@@ -5,6 +5,7 @@ AM_CXXFLAGS = $(GTKMM_CFLAGS) $(CV2_CFLAGS) $(FFMPEG_CFLAGS) -D__STDC_CONSTANT_M
 gif_author_SOURCES = src/encoder/segmenter.cc \
 					 src/encoder/gifencoder.cc \
 					 src/encoder/colorquantizer.cc \
+					 src/encoder/ditherer.cc \
 					 src/util/bitset.cc \
 					 src/util/process.cc \
 					 src/gifauthor.cc \
