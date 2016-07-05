@@ -2,7 +2,6 @@
 #define GIFAUTHOR_PROCESS_H
 
 #include <string>
-#include <iostream>
 #include <sstream>
 #include <map>
 #include <limits>
@@ -237,10 +236,7 @@ template<class P> class ProcessFactory
                 if(f_type != --my_map.end()) ss << std::endl;
             }
             oe.set_description(ss.str());
-            std::cout << "Add entry" << std::endl;
-            og.add_entry(oe, 
-                         sigc::mem_fun(*this, &ProcessFactory::on_option_name));
-            std::cout << "Added entry" << std::endl;
+            og.add_entry(oe, sigc::mem_fun(*this, &ProcessFactory::on_option_name));
             return og;
         };
 
@@ -258,9 +254,6 @@ template<class P> class ProcessFactory
                             bool has_value)
         {
             std::stringstream ss;
-            std::cout << "on_option_name(" << option_name << ", " 
-                << option_value << ", " 
-                << has_value << ")" << std::endl;
             if(!has_value) 
             {
                 ss << option_name << " requires an argument";
@@ -281,7 +274,6 @@ template<class P> class ProcessFactory
             if(my_map.count(name) > 0)
             {
                 my_option = name;
-                std::cout << "Selecting facotry: " << name << std::endl;
                 if(!arglist.empty())
                     my_map.at(name)->configure(arglist);
                 return true;
