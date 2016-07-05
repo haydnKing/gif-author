@@ -2,24 +2,16 @@
 #define GTKMM_GIFAUTHOR_COLORQUANTIZER_H
 
 #include <vector>
-#include <glibmm/refptr.h>
+#include <string>
 #include "../output/gif.h"
 
-enum QuantizerMethod {
-    QUANT_MMC //Modified Median Cut
-};
+#include "../util/process.h"
 
-class ColorQuantizer;
-
-typedef Glib::RefPtr<ColorQuantizer> pColorQuantizer;
-
-class ColorQuantizer : public Glib::Object
+class ColorQuantizer : public Process
 {
     public:
-        ColorQuantizer();
+        ColorQuantizer(std::string name, std::string description);
         virtual ~ColorQuantizer();
-
-        static pColorQuantizer get_quantizer(QuantizerMethod m=QUANT_MMC);
 
         void set_max_colors(int max_colors);
         void add_color(const uint8_t* color);
@@ -35,7 +27,18 @@ class ColorQuantizer : public Glib::Object
         int max_colors, num_colors;
 };
 
+/**
+ * A factory for ColorQuantizers
+ */
+class QuantizerFactory : public ProcessFactory<ColorQuantizer>
+{
+    public: 
+        QuantizerFactory();
+};
 
-        
+/**
+ * The quantizerFactory
+ */
+extern QuantizerFactory quantizerFactory;
 
 #endif

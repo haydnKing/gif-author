@@ -3,7 +3,6 @@
 GIFAuthor::GIFAuthor() :
     out(NULL),
     dm(DITHER_FLOYD_STEINBERG),
-    qm(QUANT_MMC),
     out_width(-1),
     out_height(-1)
 {};
@@ -22,16 +21,6 @@ DitherMethod GIFAuthor::get_dm() const
 void GIFAuthor::set_dm(DitherMethod _dm)
 {
     dm = _dm;
-};
-
-QuantizerMethod GIFAuthor::get_qm() const
-{
-    return qm;
-};
-
-void GIFAuthor::set_dm(QuantizerMethod _qm)
-{
-    qm = _qm;
 };
 
 void GIFAuthor::clear_frames()
@@ -98,7 +87,7 @@ void GIFAuthor::update_output()
         out_width = int(0.5+r*float(frames[0]->get_width()));
     }
 
-    GIFEncoder encoder(out_width, out_height, qm, dm);
+    GIFEncoder encoder(out_width, out_height, dm);
     int frame_no = 0;
     for(auto fr : frames)
     {

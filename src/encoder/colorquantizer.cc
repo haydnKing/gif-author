@@ -4,7 +4,8 @@
  *                                         ColorQuantizer
  * *************************************************************/
 
-ColorQuantizer::ColorQuantizer() :
+ColorQuantizer::ColorQuantizer(std::string name, std::string description) :
+    Process(name, description),
     colors(NULL),
     max_colors(0),
     num_colors(0)
@@ -105,6 +106,7 @@ class MMCQuantizer : public ColorQuantizer
 
         
 MMCQuantizer::MMCQuantizer() :
+    ColorQuantizer("MMC", "A Modified Median Cut quantizer"),
     root(NULL)
 {};
 
@@ -407,15 +409,15 @@ void MMCQuantizer::vbox::split()
     right = new vbox(px+3*split_index, num_pixels - split_index);
 };
 
+/*
+ * Factory
+ */
 
-pColorQuantizer ColorQuantizer::get_quantizer(QuantizerMethod m)
+QuantizerFactory::QuantizerFactory() :
+    ProcessFactory("quantizer", "The quantizer takes the full colour spectrum of the image and chooses a palette of colours to represent it in the GIF")
 {
-    ColorQuantizer *cq;
-    switch(m)
-    {
-        case QUANT_MMC:
-            cq = new MMCQuantizer();
-            break;
-    }
-    return pColorQuantizer(cq);
+    register_type("MMC", new MMCQuantizer());
 };
+
+QuantizerFactory quantizerFactory;
+

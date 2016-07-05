@@ -6,10 +6,9 @@ bool px_equal(uint8_t *lhs, uint8_t *rhs)
     return (lhs[0]==rhs[0] && lhs[1]==rhs[1] && lhs[2] == rhs[2]);
 };
 
-GIFEncoder::GIFEncoder(int cw, int ch, QuantizerMethod _qm, DitherMethod _dm):
+GIFEncoder::GIFEncoder(int cw, int ch, DitherMethod _dm):
     canvas_width(cw),
     canvas_height(ch),
-    qm(_qm),
     dm(_dm)
 {};
 
@@ -53,8 +52,8 @@ GIF *GIFEncoder::get_output()
         ss << "frames/scaled" << i << ".ppm";
         frames[i]->write_ppm(ss.str().c_str());
 
-        //create a quantizer
-        pColorQuantizer cq = ColorQuantizer::get_quantizer(qm);
+        //get the quantizer
+        ColorQuantizer *cq = quantizerFactory.get_selected();
         cq->set_max_colors(fr->get_height() * fr->get_width());
         
         if(fr_mask)
@@ -104,7 +103,7 @@ GIF *GIFEncoder::get_output()
 void GIFEncoder::dither_image(pGIFImage out,
                               const pVideoFrame vf,
                               const pBitset mask,
-                              const pColorQuantizer cq,
+                              ColorQuantizer *cq,
                               uint8_t colors) const
 {
     if(mask)
@@ -132,7 +131,7 @@ void GIFEncoder::dither_image(pGIFImage out,
 void GIFEncoder::dither_FS(const pVideoFrame vf,
                            const pBitset mask,
                            pGIFImage out, 
-                           const pColorQuantizer cq) const
+                           const ColorQuantizer *cq) const
 {
     std::cout << "dither_fs" << std::endl;
     //store 2 rows of RGB errors, set to zero
@@ -207,7 +206,7 @@ void GIFEncoder::dither_FS(const pVideoFrame vf,
 void GIFEncoder::dither_none(const pVideoFrame vf,
                              const pBitset mask,
                              pGIFImage out, 
-                             const pColorQuantizer cq) const
+                             const ColorQuantizer *cq) const
 {
     std::cout << "dither_none" << std::endl;
     int x,y,index;

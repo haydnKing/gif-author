@@ -85,7 +85,10 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
 
     ctx.set_main_group(group);
     Glib::OptionGroup sg = segmenterFactory.get_option_group();
+    Glib::OptionGroup qg = quantizerFactory.get_option_group();
+
     ctx.add_group(sg);
+    ctx.add_group(qg);
 
     // add GTK options, --help-gtk, etc
     Glib::OptionGroup gtkgroup(gtk_get_option_group(true));

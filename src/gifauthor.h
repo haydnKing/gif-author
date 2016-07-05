@@ -26,16 +26,6 @@ class GIFAuthor
          */
         void set_dm(DitherMethod _dm);
 
-        /**
-         * get the method used for quantizing
-         */
-        QuantizerMethod get_qm() const;
-        /**
-         * set the method used for quantizing
-         */
-        void set_dm(QuantizerMethod _qm);
-
-
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};
         void set_output_size(int width=-1, int height=-1)
@@ -75,7 +65,6 @@ class GIFAuthor
         int out_width, out_height;
         //general settings
         DitherMethod dm;
-        QuantizerMethod qm;
         
         std::vector<pVideoFrame> frames;
         GIF *out;

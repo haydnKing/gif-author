@@ -35,7 +35,6 @@ class GIFEncoder
     public:
         GIFEncoder(int canvas_width,
                    int canvas_height,
-                   QuantizerMethod qm = QUANT_MMC,
                    DitherMethod dm = DITHER_FLOYD_STEINBERG);
         ~GIFEncoder();
 
@@ -48,23 +47,22 @@ class GIFEncoder
         int canvas_width, canvas_height;
         //general settings
         DitherMethod dm;
-        QuantizerMethod qm;
         
         std::vector<pVideoFrame> frames;
 
         void dither_image(pGIFImage out,
                           const pVideoFrame vf,
                           const pBitset mask,
-                          const pColorQuantizer cq,
+                          ColorQuantizer *cq,
                           uint8_t colors) const;
         void dither_FS(const pVideoFrame vf,
                        const pBitset mask,
                        pGIFImage out, 
-                       const pColorQuantizer cq) const;
+                       const ColorQuantizer *cq) const;
         void dither_none(const pVideoFrame vf,
                          const pBitset mask,
                          pGIFImage out, 
-                         const pColorQuantizer cq) const;
+                         const ColorQuantizer *cq) const;
 
 
         void dbg_save_POI(int x, int y, const char* name) const;
