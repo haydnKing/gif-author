@@ -22,10 +22,10 @@ class Setting
         const std::string& get_description() const;
 
         //get value - need to call the right method
-        bool get_bool() const;
-        int get_int() const;
-        float get_float() const;
-        std::string get_str() const;
+        virtual bool get_bool() const;
+        virtual int get_int() const;
+        virtual float get_float() const;
+        virtual std::string get_str() const;
 
         //configure from command line
         virtual bool from_str(std::string rvalue) = 0;
@@ -53,7 +53,7 @@ class IntSetting : public Setting
                    int min_value, 
                    int max_value);
 
-        int get_int() const;
+        virtual int get_int() const;
 
         bool from_str(std::string rvalue);
         std::string to_str() const;
@@ -86,7 +86,7 @@ class FloatSetting : public Setting
                      float min_value, 
                      float max_value);
 
-        float get_float() const;
+        virtual float get_float() const;
 
         bool from_str(std::string rvalue);
         std::string to_str() const;
@@ -114,7 +114,7 @@ class StringSetting : public Setting
                       std::string description, 
                       std::string default_value="");
 
-        std::string get_str() const;
+        virtual std::string get_str() const;
 
         bool from_str(std::string rvalue);
         std::string to_str() const;
