@@ -730,7 +730,7 @@ std::vector<pVideoFrame> VideoFrame::blur(const std::vector<pVideoFrame> &rhs, f
 
     for(y=0; y < rhs[0]->get_height(); y++)
     {
-        for(x=0; x < rhs[0]->get_height(); x++)
+        for(x=0; x < rhs[0]->get_width(); x++)
         {
             for(z=0; z < rhs.size(); z++)
             {
@@ -750,11 +750,11 @@ std::vector<pVideoFrame> VideoFrame::blur(const std::vector<pVideoFrame> &rhs, f
                         val[2] += kernel[k] * px[2];
                     }
                 }
+                ret[z]->set_pixel(x,y,
+                                  uint8_t(0.5+val[0]/norm),
+                                  uint8_t(0.5+val[1]/norm),
+                                  uint8_t(0.5+val[2]/norm));
             }
-            ret[x]->set_pixel(x,y,
-                              uint8_t(0.5+val[0]/norm),
-                              uint8_t(0.5+val[1]/norm),
-                              uint8_t(0.5+val[2]/norm));
         }
     }
 
