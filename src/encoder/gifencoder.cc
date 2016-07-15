@@ -33,6 +33,9 @@ GIF *GIFEncoder::get_output()
     Segmenter *sm = segmenterFactory.get_selected();
     sm->segment(frames, sframes, masks);
 
+    //VideoFrame::write_ppm(frames, "dbg/s_input");
+    //VideoFrame::write_ppm(sframes, "dbg/s_output");
+
     std::cout << "Background detection done" << std::endl;
     std::cout << "frames: " << frames.size() << std::endl;
     std::cout << "sframes: " << sframes.size() << std::endl;
@@ -45,13 +48,6 @@ GIF *GIFEncoder::get_output()
         std::cout << "Frame " << i << " of " << frames.size() << std::endl;
         fr = sframes[i];
         fr_mask = masks[i];
-        
-        std::stringstream ss;
-        ss << "frames/segmented" << i << ".ppm";
-        fr->write_ppm(ss.str().c_str());
-        ss.str("");
-        ss << "frames/scaled" << i << ".ppm";
-        frames[i]->write_ppm(ss.str().c_str());
 
         //get the quantizer
         ColorQuantizer *cq = quantizerFactory.get_selected();

@@ -71,7 +71,6 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
             g = px_this[1];
             b = px_this[2];
             start = 0;
-            px_start = px_this;
             for(z=1; z < frames.size(); z++)
             {
                 px_this = frames[z]->get_pixel(x,y);
@@ -82,19 +81,20 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                 if(dr*dr + dg*dg + db*db > delta*delta)
                 {
                     out_bits[start]->set(x,y);
-                    px_start[0] = uint8_t(0.5+r/(z-start));
-                    px_start[1] = uint8_t(0.5+g/(z-start));
-                    px_start[2] = uint8_t(0.5+b/(z-start));
-                    px_start = px_this;
+                    out_frames[start]->set_pixel(x,y,
+                        uint8_t(0.5+r/(z-start)),
+                        uint8_t(0.5+g/(z-start)),
+                        uint8_t(0.5+b/(z-start)));
                 }
                 r += px_this[0];
                 g += px_this[1];
                 b += px_this[2];
             }
             out_bits[start]->set(x,y);
-            px_start[0] = uint8_t(0.5+r/(z-start));
-            px_start[1] = uint8_t(0.5+g/(z-start));
-            px_start[2] = uint8_t(0.5+b/(z-start));
+            out_frames[start]->set_pixel(x,y,
+                uint8_t(0.5+r/(z-start)),
+                uint8_t(0.5+g/(z-start)),
+                uint8_t(0.5+b/(z-start)));
         }
     }
 };
