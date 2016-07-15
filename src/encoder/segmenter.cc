@@ -101,10 +101,35 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     }
 };
 
+/*******************************************************************
+ *************************************************** NULL SEGMENTER
+ *******************************************************************/
+
+class NullSegmenter : public Segmenter
+{
+    public:
+        NullSegmenter() :
+            Segmenter("NullSegmenter", "Update every pixel in every frame")
+        {};
+        ~NullSegmenter() {};
+
+        void segment(const std::vector<pVideoFrame> frames, 
+                     std::vector<pVideoFrame>& out_frames,
+                     std::vector<pBitset>& out_bits)
+        {
+            for(auto fr : frames)
+            {
+                out_frames.push_back(fr->copy());
+                out_bits.push_back(Bitset::create(fr->get_width(), fr->get_height(), true));
+            }
+        };
+};
+
 SegmenterFactory::SegmenterFactory() : 
     ProcessFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream")
 {
     register_type("SimpleDelta", new DeltaSegmenter());
+    register_type("NullSegmenter", new NullSegmenter());
 };
 
 SegmenterFactory segmenterFactory;
