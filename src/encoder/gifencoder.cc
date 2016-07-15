@@ -33,8 +33,8 @@ GIF *GIFEncoder::get_output()
     Segmenter *sm = segmenterFactory.get_selected();
     sm->segment(frames, sframes, masks);
 
-    //VideoFrame::write_ppm(frames, "dbg/s_input");
-    //VideoFrame::write_ppm(sframes, "dbg/s_output");
+    VideoFrame::write_ppm(frames, "dbg/s_input");
+    VideoFrame::write_ppm(sframes, "dbg/s_output");
 
     std::cout << "Background detection done" << std::endl;
     std::cout << "frames: " << frames.size() << std::endl;
@@ -57,8 +57,10 @@ GIF *GIFEncoder::get_output()
         {
             for(y = 0; y < fr->get_height(); y++)
                 for(x = 0; x < fr->get_width(); x++)
-                    if(fr_mask->get(x,y))
+                    if(fr_mask->get(x,y)) 
+                    {
                         cq->add_color(fr->get_pixel(x,y));
+                    }
         }
         else
         {
@@ -87,11 +89,14 @@ GIF *GIFEncoder::get_output()
             }
             last_timestamp = frames[i]->get_timestamp();
             
+            std::cout << "push_back() i = " << i << std::endl;
             out->push_back(img);
         }
     }
     //set delay for last frame
     if(sframes.size() > 0) out->back()->set_delay_time(delay);
+
+    std::cout << "Length of returned GIF: " << out->size() << std::endl;
 
     return out;
 };

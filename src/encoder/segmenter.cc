@@ -85,6 +85,8 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                         uint8_t(0.5+r/(z-start)),
                         uint8_t(0.5+g/(z-start)),
                         uint8_t(0.5+b/(z-start)));
+                    start = z;
+                    r = g = b = 0.;
                 }
                 r += px_this[0];
                 g += px_this[1];
