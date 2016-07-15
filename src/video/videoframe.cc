@@ -312,6 +312,18 @@ void VideoFrame::write_ppm(const char *fname) const
     }
 };
 
+void VideoFrame::write_ppm(const std::vector<pVideoFrame> frames, const char *head)
+{
+    std::stringstream ss;
+    int w = (int) std::ceil(std::log10((float)frames.size()));
+    for(int i=0; i < frames.size(); i++) 
+    {
+        ss.str("");
+        ss << head << std::setw(w) << std::setfill('0') << i << ".ppm";
+        frames[i]->write_ppm(ss.str().c_str());
+    }
+}
+
 pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
 {
     return VideoFrame::create_from_data(

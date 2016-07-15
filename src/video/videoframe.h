@@ -8,6 +8,7 @@
 #include <glibmm/refptr.h>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 
 #include <opencv2/opencv.hpp>
 
@@ -243,6 +244,11 @@ class VideoFrame : public Glib::Object
          * Write a debug PPM image to file
          */
         void write_ppm(const char *fname) const;
+
+        /*
+         * Write a series of debug PPM images to file
+         */
+        static void write_ppm(const std::vector<pVideoFrame> frames, const char *head);
 
 
         // ############################################## Operations
