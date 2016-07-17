@@ -101,7 +101,7 @@ class FSDither : public Ditherer
                 //moving to the next row
                 swap = this_row;
                 this_row = next_row;
-                next_row = this_row;
+                next_row = swap;
                 memset(next_row, 0, 3*vf->get_width()*sizeof(int32_t));
             }
 
