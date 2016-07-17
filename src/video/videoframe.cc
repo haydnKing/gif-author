@@ -213,6 +213,13 @@ pVideoFrame VideoFrame::create_from_mat(cv::Mat *mat, int64_t timestamp, int64_t
                             position);
 };
 
+pVideoFrame VideoFrame::create_from_file(const std::string& fname, int64_t timestamp, int64_t position)
+{
+    //use openCV
+    cv::Mat mat = cv::imread(fname.c_str());
+    return VideoFrame::create_from_mat(&mat, timestamp, position);
+};
+
 pVideoFrame VideoFrame::create(int width, int height, uint8_t initial)
 {
     uint8_t *data = new uint8_t[3*width*height];
