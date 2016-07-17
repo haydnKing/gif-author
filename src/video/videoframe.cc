@@ -217,7 +217,9 @@ pVideoFrame VideoFrame::create_from_file(const std::string& fname, int64_t times
 {
     //use openCV
     cv::Mat mat = cv::imread(fname.c_str());
-    return VideoFrame::create_from_mat(&mat, timestamp, position);
+    cv::Mat copy;
+    cv::cvtColor(mat, copy, CV_BGR2RGB);
+    return VideoFrame::create_from_mat(&copy, timestamp, position);
 };
 
 pVideoFrame VideoFrame::create(int width, int height, uint8_t initial)
