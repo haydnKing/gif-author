@@ -33,8 +33,8 @@ GIF *GIFEncoder::get_output()
     Segmenter *sm = segmenterFactory.get_selected();
     sm->segment(frames, sframes, masks);
 
-    VideoFrame::write_ppm(frames, "dbg/s_input");
-    VideoFrame::write_ppm(sframes, "dbg/s_output");
+    //VideoFrame::write_ppm(frames, "dbg/s_input");
+    //VideoFrame::write_ppm(sframes, "dbg/s_output");
 
     std::cout << "Background detection done" << std::endl;
     std::cout << "frames: " << frames.size() << std::endl;

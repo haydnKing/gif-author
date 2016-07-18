@@ -47,6 +47,54 @@ bool extract(std::string fname, int frame, int length, int out_width)
     ga.get_output()->write(outfile);
 };
 
+void from_images(std::vector<std::string> fnames, int delay, int width)
+{
+    GIFAuthor ga;
+    for(int i = 0; i < fnames.size(); i++)
+    {
+        pVideoFrame pv = VideoFrame::create_from_file(fnames[i], i*delay, i);
+
+        std::cout << "Load frame " << i << ": " << fnames[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
+        ga.add_frame(pv);
+    }
+
+    ga.set_output_size(width);
+    ga.update_output();
+
+    std::ofstream outfile("out.gif");
+    std::cout << "Writing" << std::endl;
+    ga.get_output()->write(outfile);
+}
+
+void test_dither()
+{
+    //Generate test image
+    int w = 256,
+        h = 256;
+    uint8_t col;
+    pVideoFrame img = VideoFrame::create(w,h,0);
+    for(int y = 0; y < h; y++)
+    {
+        col = uint8_t(256. * (float)y / (float) h);
+        for(int x = 0; x < w; x++){
+            img->set_pixel(x,y,col,col,col);
+        }
+    }
+    img->write_ppm("test/ditherin.ppm");
+
+    //black and white quantizer
+    ColorQuantizer *cq = quantizerFactory.get_selected();
+    cq->set_max_colors(2);
+    uint8_t black[] = {0,0,0};
+    uint8_t white[] = {255,255,255};
+    cq->add_color(black);
+    cq->add_color(white);
+
+    Ditherer *d = dithererFactory.get_selected();
+    pGIFImage out = d->dither_image(img, pBitset(NULL), cq, 2);
+    out->write_ppm("test/ditherout.ppm");
+}
+
 int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
                     Glib::RefPtr<Gtk::Application> &app) 
 {
@@ -84,6 +132,7 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     group.add_entry(width_entry, width);
 
     ctx.set_main_group(group);
+
     Glib::OptionGroup sg = segmenterFactory.get_option_group();
     Glib::OptionGroup qg = quantizerFactory.get_option_group();
     Glib::OptionGroup dg = dithererFactory.get_option_group();
@@ -112,13 +161,65 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     return 0;
 }
 
+int gif_from_images_cline(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
+                    Glib::RefPtr<Gtk::Application> &app) 
+{
+    // parse arguments:
+    Glib::OptionContext ctx("Create GIFs from images");
+    Glib::OptionGroup group("extract", "Author a gif from the command line");
+
+
+    int width = -1;
+    Glib::OptionEntry width_entry;
+    width_entry.set_long_name("width");
+    width_entry.set_short_name('w');
+    width_entry.set_description("the output width of the gif");
+    group.add_entry(width_entry, width);
+
+    int delay = 4;
+    Glib::OptionEntry delay_entry;
+    delay_entry.set_long_name("delay");
+    delay_entry.set_short_name('d');
+    delay_entry.set_description("delay between frames, *10 ms");
+    group.add_entry(delay_entry, delay);
+  
+    
+    ctx.set_main_group(group);
+    Glib::OptionGroup sg = segmenterFactory.get_option_group();
+    Glib::OptionGroup qg = quantizerFactory.get_option_group();
+    Glib::OptionGroup dg = dithererFactory.get_option_group();
+
+    ctx.add_group(sg);
+    ctx.add_group(qg);
+    ctx.add_group(dg);
+
+    // add GTK options, --help-gtk, etc
+    Glib::OptionGroup gtkgroup(gtk_get_option_group(true));
+    ctx.add_group(gtkgroup);
+    int argc;
+    char **argv = cmd->get_arguments(argc);
+    ctx.parse(argc, argv);
+
+    std::vector<std::string> fnames;
+    //argv should be filenames
+    for(int i = 1; i < argc; i++)
+    {
+        fnames.push_back(std::string(argv[i]));
+    }
+
+
+    from_images(fnames, delay, width);
+
+    return 0;
+}
+
 int main (int argc, char *argv[])
 {
     
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.gtkmm.gifauthor", Gio::APPLICATION_HANDLES_COMMAND_LINE);
 
     app->signal_command_line().connect(
-            sigc::bind(sigc::ptr_fun(*on_command_line), app), false);
+            sigc::bind(sigc::ptr_fun(*gif_from_images_cline), app), false);
 
     MainWindow mainwindow;
 

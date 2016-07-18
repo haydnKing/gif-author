@@ -68,7 +68,7 @@ class Affine2D
         static Affine2D Product(const Affine2D& left, const Affine2D& right);
         /**
          * Invert a transform
-         * @param rhs 
+         * @param rhs C++ image loading library
          * @returns inverted transform
          */
         static Affine2D Invert(const Affine2D& rhs);
@@ -172,6 +172,7 @@ class VideoFrame : public Glib::Object
 
         static pVideoFrame create_from_avframe(AVFrame *fr, int64_t timestamp, int64_t position);
         static pVideoFrame create_from_mat(cv::Mat *mat, int64_t timestamp=0, int64_t position=0);
+        static pVideoFrame create_from_file(const std::string& fname, int64_t timestamp=0, int64_t position=0);
         static pVideoFrame create(int width, int height, uint8_t initial=0);
 
         /**
