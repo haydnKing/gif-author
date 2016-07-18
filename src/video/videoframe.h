@@ -68,7 +68,7 @@ class Affine2D
         static Affine2D Product(const Affine2D& left, const Affine2D& right);
         /**
          * Invert a transform
-         * @param rhs C++ image loading library
+         * @param rhs
          * @returns inverted transform
          */
         static Affine2D Invert(const Affine2D& rhs);

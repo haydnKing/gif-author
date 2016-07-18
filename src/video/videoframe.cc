@@ -215,11 +215,15 @@ pVideoFrame VideoFrame::create_from_mat(cv::Mat *mat, int64_t timestamp, int64_t
 
 pVideoFrame VideoFrame::create_from_file(const std::string& fname, int64_t timestamp, int64_t position)
 {
-    //use openCV
-    cv::Mat mat = cv::imread(fname.c_str());
-    cv::Mat copy;
-    cv::cvtColor(mat, copy, CV_BGR2RGB);
-    return VideoFrame::create_from_mat(&copy, timestamp, position);
+    //pixbuf
+    Glib::RefPtr<Gdk::Pixbuf> pb = Gdk::Pixbuf::create_from_file(fname);
+    return create_from_data(pb->get_pixels(),
+                            pb->get_width(),
+                            pb->get_height(),
+                            pb->get_rowstride(),
+                            true,
+                            timestamp,
+                            position);
 };
 
 pVideoFrame VideoFrame::create(int width, int height, uint8_t initial)
