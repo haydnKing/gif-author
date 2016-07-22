@@ -71,8 +71,10 @@ GIF *GIFEncoder::get_output()
 
         if(cq->get_num_colors() > 0)
         {
+            //currently just using 256 colours for everything
+            cq->build_ct(255);
             //Dither the image
-            pGIFImage img = ditherer->dither_image(fr, fr_mask, cq, 255);
+            pGIFImage img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
             //debug_ct(img, cq->get_ct());
            /* ss.str("");
             ss << "frames/quantized" << i << ".ppm";

@@ -18,16 +18,14 @@ class Ditherer : public Process
 
         pGIFImage dither_image(const pVideoFrame vf,
                                const pBitset mask,
-                               ColorQuantizer *cq,
-                               uint8_t colors) const;
+                               GIFColorTable *ct) const;
 
     protected:
 
         virtual void _dither_image(pGIFImage out,
                                    const pVideoFrame vf,
                                    const pBitset mask,
-                                   ColorQuantizer *cq,
-                                   uint8_t colors) const = 0;
+                                   GIFColorTable *ct) const = 0;
 };
 
 /**

@@ -6,23 +6,19 @@ Ditherer::Ditherer(std::string name, std::string description) :
 
 pGIFImage Ditherer::dither_image(const pVideoFrame vf,
                                  const pBitset mask,
-                                 ColorQuantizer *cq,
-                                 uint8_t colors) const {
+                                 GIFColorTable *ct) const {
     //Create the output image
     pGIFImage out(new GIFImage(0, 0, vf->get_width(), vf->get_height()));
 
     if(mask)
     {
         out->set_transparency(true);
-        out->set_transparent_index(colors);
+        out->set_transparent_index(ct->num_colors());
         out->set_disposal_method(DISPOSAL_METHOD_NONE);
-        cq->build_ct(colors-1);
     }
-    else
-        cq->build_ct(colors);
-    out->set_local_colortable(cq->get_ct());
+    out->set_local_colortable(ct);
 
-    _dither_image(out, vf, mask, cq, colors);
+    _dither_image(out, vf, mask, ct);
 
     return out;
 };
@@ -38,8 +34,7 @@ class FSDither : public Ditherer
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
-                           ColorQuantizer *cq,
-                           uint8_t colors) const {
+                           GIFColorTable *ct) const {
             //store 2 rows of RGB errors, set to zero
             int32_t* errors = new int32_t[6*vf->get_width()];
             std::memset(errors, 0, 6*vf->get_width()*sizeof(int32_t));
@@ -123,8 +118,7 @@ class NoDither : public Ditherer
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
-                           ColorQuantizer *cq,
-                           uint8_t colors) const {
+                           GIFColorTable *ct) const {
             int x,y,index;
             for(y = 0; y < vf->get_height(); y++)
             {
