@@ -67,12 +67,12 @@ class FSDither : public Ditherer
                     }
 
                     //get the closest ct
-                    index = cq->map_to_ct(pixel);
+                    index = ct->get_closest(pixel);
                     //set the pixel
                     out->set_value(x, y, index);
                     //calculate the errors. Shift 8 places for accuracy
                     for(i = 0; i < 3; i++)
-                        error[i] -= int32_t(cq->get_ct()->get_index(index)[i])*256;
+                        error[i] -= int32_t(ct->get_index(index)[i])*256;
 
                     
                     //propagate the errors
@@ -130,7 +130,7 @@ class NoDither : public Ditherer
                         out->set_value(x,y,out->transparent_index());
                         continue;
                     }
-                    index = cq->map_to_ct(vf->get_pixel(x,y));
+                    index = ct->get_closest(vf->get_pixel(x,y));
                     out->set_value(x, y, index);
                 }
             }
