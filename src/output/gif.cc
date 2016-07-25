@@ -1,9 +1,10 @@
 #include "gif.h"
 
-GIFColorTable::GIFColorTable(int _depth, bool _sorted) :
-    depth(_depth),
-    sorted(_sorted),
-    colors(0)
+GIFColorTable::GIFColorTable(int size, int depth, bool sorted) :
+    size(size),
+    depth(depth),
+    sorted(sorted),
+    transparent_index(-1)
 {
     data = new uint8_t[256*3];
 };
@@ -13,35 +14,19 @@ GIFColorTable::~GIFColorTable()
     delete [] data;
 };
 
-uint8_t GIFColorTable::log_colors() const 
+void GIFColorTable::set_index(int index, uint8_t r, uint8_t g, uint8_t b)
 {
-    if(colors < 4)
-        return 2;
-    else
-        return uint8_t(std::ceil(std::log(colors)/std::log(2)));
+    data[index    ] = r;
+    data[index + 1] = g;
+    data[index + 2] = b;
 };
 
-int GIFColorTable::push_color(const uint8_t *col)
+uint8_t GIFColorTable::log_colors() const 
 {
-    if(colors < 256){
-        for(int i=0; i<3; i++)
-            data[3*colors+i] = col[i];
-        colors++;
-        return colors-1;
-    }
-    return -1;
-};
-        
-int GIFColorTable::push_color(uint8_t r, uint8_t g, uint8_t b)
-{
-    if(colors < 256){
-        data[3*colors+0] = r;
-        data[3*colors+1] = g;
-        data[3*colors+2] = b;
-        colors++;
-        return colors-1;
-    }
-    return -1;
+    if(size < 4)
+        return 2;
+    else
+        return uint8_t(std::ceil(std::log(size)/std::log(2)));
 };
 
 void GIFColorTable::write(std::ostream& str) const 
@@ -64,7 +49,6 @@ GIFImage::GIFImage(int _left,
                    int _width, 
                    int _height, 
                    int _delay_time, 
-                   bool transparency,
                    const GIFColorTable* _ct) :
     left(_left),
     top(_top),
@@ -73,7 +57,6 @@ GIFImage::GIFImage(int _left,
     ct(_ct),
     delay_time(_delay_time),
     flag_interlaced(false),
-    flag_transparency(transparency),
     disposal_method(DISPOSAL_METHOD_NOT_SPECIFIED),
     flag_user_input(false)
 {
@@ -102,6 +85,12 @@ void GIFImage::set_value(int x, int y, uint8_t value) {
 
 void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
 {
+    //get the active colortable
+    const GIFColorTable* active_ct = ct;
+    if(active_ct == NULL){
+        active_ct = global_ct;
+    }
+
     //Graphic Control Extension
     str.put(0x21);
     str.put(0xF9);
@@ -109,14 +98,14 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
 
     str.put(((disposal_method&0x07)<<2) + //disposal method
             (flag_user_input*0x02) + //user input
-            (flag_transparency*0x01));
+            (active_ct->is_transparent()*0x01));
 
     //delay time
     str.put(delay_time & 0xff);
     str.put((delay_time >> 8) & 0xff);
 
     //transparent color index
-    if(flag_transparency)
+    if(active_ct->get_transparent_index())
         str.put(t_color_index);
     else
         str.put(0);
@@ -153,11 +142,6 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     //local color table
     if(ct){
         ct->write(str);
-    }
-
-    const GIFColorTable* active_ct = ct;
-    if(active_ct == NULL){
-        active_ct = global_ct;
     }
 
     //minimum code size

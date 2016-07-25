@@ -25,7 +25,7 @@ class GIFColorTable
          * \param _depth number of bits per color channel
          * \param _sorted is the color table ordered according to priority
          */
-        GIFColorTable(int _depth = 8, bool _sorted = false);
+        GIFColorTable(int size, int depth = 8, bool sorted = false);
         ~GIFColorTable();
 
         /**
@@ -36,7 +36,7 @@ class GIFColorTable
         /**
          * \returns the number of colors
          */
-        int num_colors() const {return colors;};
+        int get_size() const {return size;};
 
         /**
          * \returns log of the number of colours which will actually be 
@@ -54,17 +54,28 @@ class GIFColorTable
          * \param index the index of the color
          * \returns uint8_t[3]
          */
-        uint8_t *operator[](int index) {return data+3*index;};
-        const uint8_t *operator[](int index) const {return data+3*index;};
         uint8_t *get_index(int index) {return data+3*index;};
         const uint8_t *get_index(int index) const {return data+3*index;};
 
         /**
-         * add a color to the colorscheme
-         * \returns index on success, -1 on failure
+         * set a colour
          */
-        int push_color(const uint8_t *col);
-        int push_color(uint8_t r, uint8_t g, uint8_t b);
+        void set_index(int index, uint8_t r, uint8_t g, uint8_t b);
+
+        /**
+         * get the transparent index
+         */
+        int get_transparent_index() const {return transparent_index;};
+
+        /**
+         * does the colour table have a transparent index?
+         */
+        bool is_transparent() const {return transparent_index >= 0;};
+
+        /**
+         * set the transparent index
+         */
+        void set_transparent_index(int idx) {transparent_index = idx;};
 
         /**
          * /returns the size of the saved color table in bytes
@@ -82,7 +93,7 @@ class GIFColorTable
         void write_ppm(const char *fname) const;
 
     private:
-        int depth, colors;
+        int depth, size, transparent_index;
         bool sorted;
         uint8_t *data;
 };
@@ -105,7 +116,6 @@ class GIFImage : public Glib::Object
                  int width, 
                  int height, 
                  int delay_time=0, 
-                 bool transparency=false,
                  const GIFColorTable* ct=NULL);
         ~GIFImage();
 
@@ -122,15 +132,10 @@ class GIFImage : public Glib::Object
         bool has_local_colortable() const {return ct!=NULL;};
         void set_local_colortable(const GIFColorTable* _ct) {ct = _ct;};
         const GIFColorTable* get_local_colortable() const {return ct;};
-        bool has_transparency() const {return flag_transparency;};
-        bool set_transparency(bool t) {flag_transparency = t;};
         bool is_user_input() const {return flag_user_input;};
 
         DisposalMethod get_disposal_method() const {return disposal_method;};
         void set_disposal_method(DisposalMethod dm) {disposal_method = dm;};
-
-        int transparent_index() const {return t_color_index;};
-        void set_transparent_index(uint8_t i) {t_color_index = i;};
 
         // methods        
         void write(std::ostream& str, GIFColorTable* global_ct) const;
@@ -146,8 +151,7 @@ class GIFImage : public Glib::Object
 
     private:
         uint16_t left, top, width, height, delay_time;
-        bool flag_interlaced, flag_transparency, flag_user_input;
-        uint8_t t_color_index;
+        bool flag_interlaced, flag_user_input;
         DisposalMethod disposal_method;
         const GIFColorTable* ct;
         uint8_t* data;
