@@ -76,7 +76,7 @@ class MMCQuantizer : public ColorQuantizer
                 vbox *get_left() {return left;};
                 vbox *get_right() {return right;};
                 vbox *get_largest(float volume_coef, float count_coef); 
-                void add_to_ct(int index, GIFColorTable *ct);
+                void add_to_ct(GIFColorTable *ct);
 
                 unsigned int get_volume() const;
                 int get_count() const;
@@ -90,7 +90,7 @@ class MMCQuantizer : public ColorQuantizer
                 uint8_t get_split_value(int channel);
 
                 vbox *left, *right;
-                int split_channel, ct_index;
+                int split_channel;
                 uint8_t split_value;
                 uint8_t *px;
                 int num_pixels;
@@ -120,7 +120,7 @@ void MMCQuantizer::build_ct(int quantized_colors)
 
     //first two colours are just lightest and darkest
     ct = new GIFColorTable();
-    uint8_t max_r[3] = {0,0,0},
+    uint8_t max_c[3] = {0,0,0},
             min_c[3] = {255,255,255};
     for(int i = 0; i < num_colors; i++)
     {
@@ -150,6 +150,7 @@ void MMCQuantizer::build_ct(int quantized_colors)
         box->split();
     }
     root->add_to_ct(ct);
+    ct->finalize();
 };
 
 const GIFColorTable *MMCQuantizer::get_ct() const
@@ -252,7 +253,7 @@ void MMCQuantizer::vbox::add_to_ct(GIFColorTable *ct)
         {
             value[j] = sum[j] / num_pixels;
         }
-        ct_index = ct->push_color(value);
+        ct->add_color(value);
     }
     else
     {

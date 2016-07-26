@@ -6,7 +6,7 @@ Ditherer::Ditherer(std::string name, std::string description) :
 
 pGIFImage Ditherer::dither_image(const pVideoFrame vf,
                                  const pBitset mask,
-                                 GIFColorTable *ct) const {
+                                 const GIFColorTable *ct) const {
     //Create the output image
     pGIFImage out(new GIFImage(0, 0, vf->get_width(), vf->get_height()));
 
@@ -34,7 +34,7 @@ class FSDither : public Ditherer
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
-                           GIFColorTable *ct) const {
+                           const GIFColorTable *ct) const {
             //store 2 rows of RGB errors, set to zero
             int32_t* errors = new int32_t[6*vf->get_width()];
             std::memset(errors, 0, 6*vf->get_width()*sizeof(int32_t));
@@ -54,7 +54,7 @@ class FSDither : public Ditherer
                     //transparency
                     if(mask && !mask->get(x,y))
                     {
-                        out->set_value(x,y,out->transparent_index());
+                        out->set_value(x,y,ct->get_transparent_index());
                         continue;
                     }
                     //get the pixel
@@ -118,7 +118,7 @@ class NoDither : public Ditherer
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
-                           GIFColorTable *ct) const {
+                           const GIFColorTable *ct) const {
             int x,y,index;
             for(y = 0; y < vf->get_height(); y++)
             {
@@ -127,7 +127,7 @@ class NoDither : public Ditherer
                     //transparency
                     if(mask && !mask->get(x,y))
                     {
-                        out->set_value(x,y,out->transparent_index());
+                        out->set_value(x,y,ct->get_transparent_index());
                         continue;
                     }
                     index = ct->get_closest(vf->get_pixel(x,y));
