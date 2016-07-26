@@ -25,7 +25,7 @@ class GIFColorTable
          * \param _depth number of bits per color channel
          * \param _sorted is the color table ordered according to priority
          */
-        GIFColorTable(int size, int depth = 8, bool sorted = false);
+        GIFColorTable(int depth = 8, bool sorted = false);
         ~GIFColorTable();
 
         /**
@@ -62,6 +62,17 @@ class GIFColorTable
          */
         void add_color(uint8_t *c);
 
+        /**
+         * indicate that no more colours will be added. Allows creation of fast
+         * colour lookup trees
+         */
+        void finalize();
+
+        /**
+         * Get the closest palette colour to v - currently L-2 norm in RGB space
+         */
+        int get_closest(const uint8_t *v);
+        
         /**
          * get the transparent index
          */

@@ -1,7 +1,6 @@
 #include "gif.h"
 
-GIFColorTable::GIFColorTable(int size, int depth, bool sorted) :
-    size(size),
+GIFColorTable::GIFColorTable(int depth, bool sorted) :
     depth(depth),
     sorted(sorted),
     transparent_index(-1),
@@ -25,10 +24,10 @@ void GIFColorTable::add_color(const uint8_t *c)
 
 uint8_t GIFColorTable::log_colors() const 
 {
-    if(size < 4)
+    if(colors < 4)
         return 2;
     else
-        return uint8_t(std::ceil(std::log(size)/std::log(2)));
+        return uint8_t(std::ceil(std::log(colors)/std::log(2)));
 };
 
 void GIFColorTable::write(std::ostream& str) const 
@@ -45,6 +44,30 @@ void GIFColorTable::write_ppm(const char *fname) const
     o.write(reinterpret_cast<const char*>(data), 3*full_colors);
 };
 
+void GIFColorTable::finalize()
+{
+    //one day I'll build some kind of balanced tree here
+};
+
+int GIFColorTable::get_closest(const uint8_t *v)
+{
+    //one day this will all be trees
+    float m = std::numeric_limits<float>::max(),
+          d;
+    int idx = 0;
+    for(int i = 0; i < colors; i++)
+    {
+        d = ((data[3*i  ] - v[0])*(data[3*i  ] - v[0]) + 
+             (data[3*i+1] - v[1])*(data[3*i+1] - v[1]) + 
+             (data[3*i+2] - v[2])*(data[3*i+2] - v[2]));
+        if(d < m)
+        {
+            idx = i;
+            m = d;
+        }
+    }
+    return idx;
+};
 
 GIFImage::GIFImage(int _left, 
                    int _top,
