@@ -76,12 +76,10 @@ class MMCQuantizer : public ColorQuantizer
                 vbox *get_left() {return left;};
                 vbox *get_right() {return right;};
                 vbox *get_largest(float volume_coef, float count_coef); 
-                void add_to_ct(GIFColorTable *ct);
+                void add_to_ct(int index, GIFColorTable *ct);
 
                 unsigned int get_volume() const;
                 int get_count() const;
-
-                int quantize(const uint8_t *color);
 
                 void split();
 
@@ -117,10 +115,26 @@ MMCQuantizer::~MMCQuantizer()
 
 void MMCQuantizer::build_ct(int quantized_colors)
 {
-    if(num_colors == 0)
+    if(num_colors < 2)
         return;
-    root = new vbox(colors, num_colors);
+
+    //first two colours are just lightest and darkest
     ct = new GIFColorTable();
+    uint8_t max_r[3] = {0,0,0},
+            min_c[3] = {255,255,255};
+    for(int i = 0; i < num_colors; i++)
+    {
+        for(int j = 0; j < 3; j++)
+        {
+            if(colors[i+j] > max_c[j]) max_c[j] = colors[i+j];
+            if(colors[i+j] < min_c[j]) min_c[j] = colors[i+j];
+        }
+    }
+    ct->add_color(max_c);
+    ct->add_color(min_c);
+
+    //rest of the colours are allocated using MMC
+    root = new vbox(colors, num_colors);
     float f = 0.5;
     vbox* box;
 
@@ -136,11 +150,6 @@ void MMCQuantizer::build_ct(int quantized_colors)
         box->split();
     }
     root->add_to_ct(ct);
-};
-
-int MMCQuantizer::map_to_ct(const uint8_t* color) const
-{
-    return root->quantize(color);
 };
 
 const GIFColorTable *MMCQuantizer::get_ct() const
@@ -222,18 +231,6 @@ unsigned int MMCQuantizer::vbox::get_volume() const
 int MMCQuantizer::vbox::get_count() const
 {
     return num_pixels;
-};
-
-int MMCQuantizer::vbox::quantize(const uint8_t *color)
-{
-    if(is_leaf())
-    {
-        return ct_index;
-    }
-
-    if(color[split_channel] <= split_value)
-        return left->quantize(color);
-    return right->quantize(color);
 };
                 
 void MMCQuantizer::vbox::add_to_ct(GIFColorTable *ct)

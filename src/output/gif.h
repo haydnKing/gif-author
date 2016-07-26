@@ -58,9 +58,9 @@ class GIFColorTable
         const uint8_t *get_index(int index) const {return data+3*index;};
 
         /**
-         * set a colour
+         * add a colour
          */
-        void set_index(int index, uint8_t r, uint8_t g, uint8_t b);
+        void add_color(uint8_t *c);
 
         /**
          * get the transparent index
@@ -93,7 +93,7 @@ class GIFColorTable
         void write_ppm(const char *fname) const;
 
     private:
-        int depth, size, transparent_index;
+        int depth, size, colors, transparent_index;
         bool sorted;
         uint8_t *data;
 };

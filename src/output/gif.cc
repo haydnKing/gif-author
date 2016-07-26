@@ -4,7 +4,8 @@ GIFColorTable::GIFColorTable(int size, int depth, bool sorted) :
     size(size),
     depth(depth),
     sorted(sorted),
-    transparent_index(-1)
+    transparent_index(-1),
+    colors(0)
 {
     data = new uint8_t[256*3];
 };
@@ -14,11 +15,12 @@ GIFColorTable::~GIFColorTable()
     delete [] data;
 };
 
-void GIFColorTable::set_index(int index, uint8_t r, uint8_t g, uint8_t b)
+void GIFColorTable::add_color(const uint8_t *c)
 {
-    data[index    ] = r;
-    data[index + 1] = g;
-    data[index + 2] = b;
+    data[colors    ] = c[0];
+    data[colors + 1] = c[1];
+    data[colors + 2] = c[2];
+    colors++;
 };
 
 uint8_t GIFColorTable::log_colors() const 
