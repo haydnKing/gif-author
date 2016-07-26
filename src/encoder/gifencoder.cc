@@ -33,6 +33,7 @@ GIF *GIFEncoder::get_output()
     Segmenter *sm = segmenterFactory.get_selected();
     sm->segment(frames, sframes, masks);
 
+    std::stringstream ss;
     //VideoFrame::write_ppm(frames, "dbg/s_input");
     //VideoFrame::write_ppm(sframes, "dbg/s_output");
 
@@ -76,13 +77,13 @@ GIF *GIFEncoder::get_output()
             //Dither the image
             pGIFImage img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
             //debug_ct(img, cq->get_ct());
-           /* ss.str("");
-            ss << "frames/quantized" << i << ".ppm";
+            ss.str("");
+            ss << "dbg/quantized" << i << ".ppm";
             img->write_ppm(ss.str().c_str());
             ss.str("");
-            ss << "frames/colortable" << i << ".ppm";
+            ss << "dbg/colortable" << i << ".ppm";
             cq->get_ct()->write_ppm(ss.str().c_str());
-            */
+            
             //set delay_time
             if(i > 0)
             {

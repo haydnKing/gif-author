@@ -16,9 +16,9 @@ GIFColorTable::~GIFColorTable()
 
 void GIFColorTable::add_color(const uint8_t *c)
 {
-    data[colors    ] = c[0];
-    data[colors + 1] = c[1];
-    data[colors + 2] = c[2];
+    data[3*colors    ] = c[0];
+    data[3*colors + 1] = c[1];
+    data[3*colors + 2] = c[2];
     colors++;
 };
 
