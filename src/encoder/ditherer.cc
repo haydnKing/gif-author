@@ -9,13 +9,6 @@ pGIFImage Ditherer::dither_image(const pVideoFrame vf,
                                  const GIFColorTable *ct) const {
     //Create the output image
     pGIFImage out(new GIFImage(0, 0, vf->get_width(), vf->get_height()));
-
-    if(mask)
-    {
-        out->set_transparency(true);
-        out->set_transparent_index(ct->num_colors());
-        out->set_disposal_method(DISPOSAL_METHOD_NONE);
-    }
     out->set_local_colortable(ct);
 
     _dither_image(out, vf, mask, ct);

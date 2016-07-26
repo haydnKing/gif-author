@@ -60,8 +60,7 @@ class MMCQuantizer : public ColorQuantizer
         MMCQuantizer();
         virtual ~MMCQuantizer();
 
-        virtual void build_ct(int quantized_colors=256);
-        virtual int map_to_ct(const uint8_t* color) const;
+        virtual void build_ct(bool transparency, int quantized_colors=256);
         virtual const GIFColorTable *get_ct() const;
 
     protected:
@@ -97,23 +96,21 @@ class MMCQuantizer : public ColorQuantizer
                 uint8_t min[3], max[3];
         };
 
+        void do_MMC(float f, int num_colors);
+
 
         GIFColorTable *ct;
-        vbox *root;
 };
 
         
 MMCQuantizer::MMCQuantizer() :
-    ColorQuantizer("MMC", "A Modified Median Cut quantizer"),
-    root(NULL)
+    ColorQuantizer("MMC", "A Modified Median Cut quantizer")
 {};
 
 MMCQuantizer::~MMCQuantizer()
-{
-    delete root;
-};
+{};
 
-void MMCQuantizer::build_ct(int quantized_colors)
+void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
 {
     if(num_colors < 2)
         return;
@@ -134,23 +131,32 @@ void MMCQuantizer::build_ct(int quantized_colors)
     ct->add_color(min_c);
 
     //rest of the colours are allocated using MMC
-    root = new vbox(colors, num_colors);
-    float f = 0.5;
+    if(transparent) {
+        do_MMC(0.5, quantized_colors - 3);
+        ct->set_transparent_index(255);
+    } else {
+        do_MMC(0.5, quantized_colors - 2);
+    }
+    ct->finalize();
+};
+
+void MMCQuantizer::do_MMC(float f, int colours_to_add)
+{
+    vbox root(colors, num_colors);
     vbox* box;
 
     //split up the color space
-    for(int i = 1; i < quantized_colors; i++)
+    for(int i = 1; i < colours_to_add; i++)
     {
-        if(i < quantized_colors * f)
-            box = root->get_largest(1.0,0.0);
+        if(i < colours_to_add * f)
+            box = root.get_largest(1.0,0.0);
         else
-            box = root->get_largest(1.0,1.0);
+            box = root.get_largest(1.0,1.0);
         if(box == NULL)
             break;
         box->split();
     }
-    root->add_to_ct(ct);
-    ct->finalize();
+    root.add_to_ct(ct);
 };
 
 const GIFColorTable *MMCQuantizer::get_ct() const

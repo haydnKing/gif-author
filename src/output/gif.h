@@ -60,7 +60,12 @@ class GIFColorTable
         /**
          * add a colour
          */
-        void add_color(uint8_t *c);
+        void add_color(const uint8_t *c);
+
+        /**
+         * number of colours added
+         */
+        int num_colors() const {return colors;};
 
         /**
          * indicate that no more colours will be added. Allows creation of fast
@@ -71,7 +76,7 @@ class GIFColorTable
         /**
          * Get the closest palette colour to v - currently L-2 norm in RGB space
          */
-        int get_closest(const uint8_t *v);
+        int get_closest(const uint8_t *v) const;
         
         /**
          * get the transparent index

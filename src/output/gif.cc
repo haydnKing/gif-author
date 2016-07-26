@@ -49,7 +49,7 @@ void GIFColorTable::finalize()
     //one day I'll build some kind of balanced tree here
 };
 
-int GIFColorTable::get_closest(const uint8_t *v)
+int GIFColorTable::get_closest(const uint8_t *v) const
 {
     //one day this will all be trees
     float m = std::numeric_limits<float>::max(),
@@ -57,6 +57,8 @@ int GIFColorTable::get_closest(const uint8_t *v)
     int idx = 0;
     for(int i = 0; i < colors; i++)
     {
+        if(i == transparent_index) continue;
+        
         d = ((data[3*i  ] - v[0])*(data[3*i  ] - v[0]) + 
              (data[3*i+1] - v[1])*(data[3*i+1] - v[1]) + 
              (data[3*i+2] - v[2])*(data[3*i+2] - v[2]));
@@ -130,8 +132,8 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put((delay_time >> 8) & 0xff);
 
     //transparent color index
-    if(active_ct->get_transparent_index())
-        str.put(t_color_index);
+    if(active_ct->is_transparent())
+        str.put(active_ct->get_transparent_index());
     else
         str.put(0);
 

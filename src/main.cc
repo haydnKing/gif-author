@@ -66,35 +66,6 @@ void from_images(std::vector<std::string> fnames, int delay, int width)
     ga.get_output()->write(outfile);
 }
 
-void test_dither()
-{
-    //Generate test image
-    int w = 256,
-        h = 256;
-    uint8_t col;
-    pVideoFrame img = VideoFrame::create(w,h,0);
-    for(int y = 0; y < h; y++)
-    {
-        col = uint8_t(256. * (float)y / (float) h);
-        for(int x = 0; x < w; x++){
-            img->set_pixel(x,y,col,col,col);
-        }
-    }
-    img->write_ppm("test/ditherin.ppm");
-
-    //black and white quantizer
-    ColorQuantizer *cq = quantizerFactory.get_selected();
-    cq->set_max_colors(2);
-    uint8_t black[] = {0,0,0};
-    uint8_t white[] = {255,255,255};
-    cq->add_color(black);
-    cq->add_color(white);
-
-    Ditherer *d = dithererFactory.get_selected();
-    pGIFImage out = d->dither_image(img, pBitset(NULL), cq, 2);
-    out->write_ppm("test/ditherout.ppm");
-}
-
 int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
                     Glib::RefPtr<Gtk::Application> &app) 
 {

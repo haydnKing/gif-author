@@ -18,7 +18,7 @@ class ColorQuantizer : public Process
         void add_colors(const uint8_t* color, int count);
         int get_num_colors() const {return num_colors;};
 
-        virtual void build_ct(int quantized_colors=256) = 0;
+        virtual void build_ct(bool transparency, int quantized_colors=256) = 0;
         virtual const GIFColorTable *get_ct() const = 0;
 
     protected:
