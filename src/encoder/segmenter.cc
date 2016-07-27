@@ -52,7 +52,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 
     //prepare output bits
     //No transparency in the first frame
-    out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), true));
+    out_bits.push_back(pBitset());//Bitset::create(frames[0]->get_width(), frames[0]->get_height(), true));
     for(z=1; z < frames.size(); z++)
         out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), false));
 
@@ -80,7 +80,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                 db = float(px_this[2]) - b/(z-start);
                 if(dr*dr + dg*dg + db*db > delta*delta)
                 {
-                    out_bits[start]->set(x,y);
+                    if(start != 0) out_bits[start]->set(x,y);
                     out_frames[start]->set_pixel(x,y,
                         uint8_t(0.5+r/(z-start)),
                         uint8_t(0.5+g/(z-start)),
@@ -92,7 +92,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                 g += px_this[1];
                 b += px_this[2];
             }
-            out_bits[start]->set(x,y);
+            if(start != 0) out_bits[start]->set(x,y);
             out_frames[start]->set_pixel(x,y,
                 uint8_t(0.5+r/(z-start)),
                 uint8_t(0.5+g/(z-start)),

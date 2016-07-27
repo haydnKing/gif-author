@@ -127,8 +127,6 @@ void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
             if(colors[i+j] < min_c[j]) min_c[j] = colors[i+j];
         }
     }
-    std::cout << "Max_C = RGB(" << (int)max_c[0] << ", " << (int)max_c[1] << ", " << (int)max_c[2] << ")" << std::endl;
-    std::cout << "Min_C = RGB(" << (int)min_c[0] << ", " << (int)min_c[1] << ", " << (int)min_c[2] << ")" << std::endl;
     ct->add_color(max_c);
     ct->add_color(min_c);
 

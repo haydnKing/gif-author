@@ -76,13 +76,14 @@ GIF *GIFEncoder::get_output()
             cq->build_ct(fr_mask, 255);
             //Dither the image
             pGIFImage img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
+            img->set_disposal_method(DISPOSAL_METHOD_NONE);
             //debug_ct(img, cq->get_ct());
             ss.str("");
-            ss << "dbg/quantized" << i << ".ppm";
+            ss << "dbg/quantized" << std::setw(5) << std::setfill('0') << i << ".ppm";
             img->write_ppm(ss.str().c_str());
-            ss.str("");
-            ss << "dbg/colortable" << i << ".ppm";
-            cq->get_ct()->write_ppm(ss.str().c_str());
+            //ss.str("");
+            //ss << "dbg/colortable" << i << ".ppm";
+            //cq->get_ct()->write_ppm(ss.str().c_str());
             
             //set delay_time
             if(i > 0)
@@ -92,7 +93,7 @@ GIF *GIFEncoder::get_output()
             }
             last_timestamp = frames[i]->get_timestamp();
             
-            std::cout << "push_back() i = " << i << std::endl;
+            std::cout << "push_back() i = " << i << " transparency : " << (bool)fr_mask << std::endl;
             out->push_back(img);
         }
     }

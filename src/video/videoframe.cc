@@ -217,6 +217,28 @@ pVideoFrame VideoFrame::create_from_file(const std::string& fname, int64_t times
 {
     //pixbuf
     Glib::RefPtr<Gdk::Pixbuf> pb = Gdk::Pixbuf::create_from_file(fname);
+    if(pb->get_n_channels() > 3)
+    {
+        //remove the alpha channel
+        uint8_t *data = new uint8_t[pb->get_width()*pb->get_height()*3];
+        int rs = pb->get_width()*3;
+        for(int y = 0; y < pb->get_height(); y++)
+        {
+            for(int x = 0; x < pb->get_width(); x++)
+            {
+                data[rs*y+3*x  ] = pb->get_pixels()[pb->get_rowstride()*y+4*x  ];
+                data[rs*y+3*x+1] = pb->get_pixels()[pb->get_rowstride()*y+4*x+1];
+                data[rs*y+3*x+2] = pb->get_pixels()[pb->get_rowstride()*y+4*x+2];
+            }
+        }
+        return create_from_data(data,
+                                pb->get_width(),
+                                pb->get_height(),
+                                rs,
+                                false,
+                                timestamp,
+                                position);
+    }
     return create_from_data(pb->get_pixels(),
                             pb->get_width(),
                             pb->get_height(),
@@ -352,7 +374,6 @@ pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
 
 pVideoFrame VideoFrame::scale_to(int w, int h, InterpolationMethod method) const
 {
-    std::cout << "scale_to(" << w << ", " << h << ", ...);" << std::endl;
     Affine2D tr = Affine2D::Scale(float(w)/float(get_width()),
                                   float(h)/float(get_height()));
     return transform(tr, method);
