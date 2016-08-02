@@ -6,7 +6,7 @@ AM_INIT_AUTOMAKE([-Wno-portability no-dist-gzip dist-xz foreign subdir-objects])
 
 
 PKG_CHECK_MODULES([GTKMM], [gtkmm-3.0 >= 3.8.0])
-PKG_CHECK_MODULES([CV2], [opencv >= 2.4.0])
+PKG_CHECK_MODULES([CV2], [opencv >= 3.1.0])
 PKG_CHECK_MODULES([FFMPEG], libavutil libavformat libavcodec libswscale)
 AC_SUBST(GTKMM_CFLAGS)
 AC_SUBST(GTKMM_LIBS)

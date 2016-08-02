@@ -1,6 +1,9 @@
 #include "segmenter.h"
 #include <cstring>
 
+//#include <opencv2/video.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
 
 /*******************************************************************
  *************************************************** DELTA SEGMENTER
@@ -125,11 +128,81 @@ class NullSegmenter : public Segmenter
         };
 };
 
+
+/*******************************************************************
+ *************************************************** MOTION SEGMENTER
+ *******************************************************************/
+
+class MotionSegmenter : public Segmenter
+{
+    public:
+        MotionSegmenter() :
+            Segmenter("MotionSegmenter", "Update pixels when they move")
+        {
+        };
+        ~MotionSegmenter() {};
+
+        void segment(const std::vector<pVideoFrame> frames, 
+                     std::vector<pVideoFrame>& out_frames,
+                     std::vector<pBitset>& out_bits)
+        {
+            if(frames.size() == 0) return;
+            out_frames.push_back(frames[0]->copy());
+            out_bits.push_back(pBitset());
+            
+            cv::Ptr<cv::DualTVL1OpticalFlow> tvl1 = cv::createOptFlow_DualTVL1();
+            cv::Mat_<cv::Point2f> flow;
+            cv::Mat prev, next;
+            cv::cvtColor(*(frames[0]->get_mat()), prev, cv::COLOR_RGB2GRAY);
+            pBitset b;
+            int x,y,z,dx,dy;
+
+            int count;
+            
+            for(z = 1; z < frames.size(); z++) {
+                std::cout << "z = " << z << std::endl;
+                count  = 0;
+                out_frames.push_back(frames[z]->copy());
+                cv::cvtColor(*(frames[z]->get_mat()), next, cv::COLOR_RGB2GRAY);
+                tvl1->calc(prev, next, flow);
+                cv::swap(prev, next);
+
+                //create a blank bitset
+                b = Bitset::create(frames[z]->get_width(), frames[z]->get_height(), false);
+                //set bits where the pixel moved more than a pixel
+                for(y = 0; y < frames[z]->get_height(); y++)
+                {
+                    for(x = 0; x < frames[z]->get_width(); x++)
+                    {
+                        dx = int(flow.at<cv::Point2f>(y,x).x+0.5);
+                        dy = int(flow.at<cv::Point2f>(y,x).y+0.5);
+                        if(dx > 0 || dy > 0)
+                        {
+                            b->set(x,y);
+                            count++;
+                            dx += x;
+                            dy += y;
+                            if(dx >= 0 && dx < frames[z]->get_width() &&
+                               dy >= 0 && dy < frames[z]->get_height())
+                            {
+                                b->set(dx,dy);
+                            }
+                        }
+                    }
+                }
+                out_bits.push_back(b);
+                std::cout << "  count = " << count << std::endl;
+            }
+
+        };
+};
+
 SegmenterFactory::SegmenterFactory() : 
     ProcessFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream")
 {
     register_type("SimpleDelta", new DeltaSegmenter());
     register_type("NullSegmenter", new NullSegmenter());
+    register_type("MotionSegmenter", new MotionSegmenter());
 };
 
 SegmenterFactory segmenterFactory;
