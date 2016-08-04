@@ -147,8 +147,6 @@ class MotionSegmenter : public Segmenter
                      std::vector<pBitset>& out_bits)
         {
             if(frames.size() == 0) return;
-            out_frames.push_back(frames[0]->copy());
-            out_bits.push_back(pBitset());
             
             cv::Ptr<cv::DualTVL1OpticalFlow> tvl1 = cv::createOptFlow_DualTVL1();
             cv::Mat_<cv::Point2f> flow;
@@ -157,41 +155,55 @@ class MotionSegmenter : public Segmenter
             pBitset b;
             int x,y,z,dx,dy;
 
+            out_frames.push_back(frames[0]->copy());
+            out_bits.push_back(pBitset());
+            for(z = 1; z < frames.size(); z++) 
+                out_bits.push_back(Bitset::create(frames[z]->get_width(), frames[z]->get_height(), false));
             int count;
+
+            pVideoFrame dbg = VideoFrame::create(frames[0]->get_width(), frames[0]->get_height());
+            std::stringstream ss;
             
             for(z = 1; z < frames.size(); z++) {
                 std::cout << "z = " << z << std::endl;
                 count  = 0;
+                float max_x = 0., max_y = 0.;
                 out_frames.push_back(frames[z]->copy());
                 cv::cvtColor(*(frames[z]->get_mat()), next, cv::COLOR_RGB2GRAY);
                 tvl1->calc(prev, next, flow);
                 cv::swap(prev, next);
 
-                //create a blank bitset
-                b = Bitset::create(frames[z]->get_width(), frames[z]->get_height(), false);
                 //set bits where the pixel moved more than a pixel
                 for(y = 0; y < frames[z]->get_height(); y++)
                 {
                     for(x = 0; x < frames[z]->get_width(); x++)
                     {
+                        if(flow.at<cv::Point2f>(y,x).x > max_x) max_x = flow.at<cv::Point2f>(y,x).x;
+                        if(flow.at<cv::Point2f>(y,x).y > max_y) max_y = flow.at<cv::Point2f>(y,x).y;
                         dx = int(flow.at<cv::Point2f>(y,x).x+0.5);
                         dy = int(flow.at<cv::Point2f>(y,x).y+0.5);
-                        if(dx > 0 || dy > 0)
+                        dbg->set_pixel(x,y, uint8_t(std::abs(dx)), uint8_t(std::abs(dy)), 0);
+                        if(dx != 0 || dy != 0)
                         {
-                            b->set(x,y);
+                            out_bits[z]->set(x,y);
                             count++;
                             dx += x;
                             dy += y;
-                            if(dx >= 0 && dx < frames[z]->get_width() &&
+                            if(z +1 < frames.size() && 
+                               dx >= 0 && dx < frames[z]->get_width() &&
                                dy >= 0 && dy < frames[z]->get_height())
                             {
-                                b->set(dx,dy);
+                                out_bits[z+1]->set(dx,dy);
                             }
                         }
                     }
                 }
-                out_bits.push_back(b);
                 std::cout << "  count = " << count << std::endl;
+                std::cout << "  max = (" << max_x << ", " << max_y << ")" << std::endl;
+                
+                ss.str("");
+                ss << "dbg/motion_" << std::setw(4) << std::setfill('0') << z << ".ppm";
+                dbg->write_ppm(ss.str().c_str());
             }
 
         };
