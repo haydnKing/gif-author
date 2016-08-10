@@ -14,6 +14,11 @@ void Segmenter::segment(const std::vector<pVideoFrame> frames,
     uint8_t *px;
 
     //smooth the out bits
+    for(z = 0; z < frames.size(); z++)
+    {
+        if(out_bits[z])
+            out_bits[z] = Bitset::smooth(out_bits[z], 2, 0.5);
+    }
 
     //calculate the value for each out frame
     for(z = 0; z < frames.size(); z++)

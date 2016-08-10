@@ -3,7 +3,7 @@
 
 # TODO List
 
-[ ] update bit smoothing
+[X] update bit smoothing
 [ ] motion reduction
 [ ] input deblocking
 

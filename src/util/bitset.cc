@@ -143,3 +143,55 @@ void Bitset::remove_islands()
     }
 };
 
+pBitset Bitset::smooth(const pBitset in, float sigma, float threshold)
+{ 
+    int kernel_center = int(1.5*sigma);
+    int kernel_length = kernel_center * 2 + 1; 
+    float *kernel = new float[kernel_length];
+    float norm = 0;
+    for(int k = 0; k < kernel_center*2+1; k++)
+    {
+        kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
+        norm += kernel[k];
+    }
+
+    pBitset out = Bitset::create(in->get_width(), in->get_height(), false);
+    int x,y,dy,ky,dx,kx;
+    float h_norm, v_norm, h_sum, v_sum;
+    for(y = 0; y < in->get_height(); y++)
+    {
+        for(x = 0; x < in->get_width(); x++)
+        {
+            v_norm = 0.;
+            v_sum = 0.;
+            for(ky=0; ky < kernel_length; ky++)
+            {
+                dy = y + ky - kernel_center;
+                if(dy >= 0 && dy < in->get_height())
+                {
+                    h_sum = 0.;
+                    h_norm = 0.;
+                    for(kx=0; kx < kernel_length; kx++)
+                    {
+                        dx = x + kx - kernel_center;
+                        if(dx >= 0 && dx < in->get_width())
+                        {
+                            h_norm += kernel[kx];
+                            if(in->get(dx,dy))
+                                h_sum += kernel[kx];
+                        }
+                    }
+                    v_sum += kernel[ky] * (h_sum / h_norm);
+                    v_norm += kernel[ky];
+                }
+            }
+
+        if(v_sum / v_norm >= threshold)
+            out->set(x,y);
+        }
+    }
+
+    delete [] kernel;
+    return out;
+};
+
