@@ -138,7 +138,9 @@ class GIFImage : public Glib::Object
         // accessors
 
         int get_left() const {return left;};
+        void set_left(int l) {left = l;};
         int get_top() const {return top;};
+        void set_top(int t) {top = t;};
         int get_width() const {return width;};
         int get_height() const {return height;};
         int get_delay_time() const {return delay_time;};

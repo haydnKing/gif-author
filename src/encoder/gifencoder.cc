@@ -74,8 +74,25 @@ GIF *GIFEncoder::get_output()
         {
             //currently just using 256 colours for everything
             cq->build_ct(fr_mask, 255);
-            //Dither the image
-            pGIFImage img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
+
+            //autocrop
+            pGIFImage img;
+            if(fr_mask)
+            {
+                int left   = fr_mask->get_left(),
+                    width  = fr_mask->get_right() - left,
+                    top    = fr_mask->get_top(),
+                    height = fr_mask->get_bottom() - top;
+                fr_mask = Bitset::crop(fr_mask, left, top, width, height);
+                fr = fr->crop(left, top, width, height);
+                img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
+                img->set_left(left);
+                img->set_top(top);
+            }
+            else {
+                //Dither the image
+                img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
+            }
             img->set_disposal_method(DISPOSAL_METHOD_NONE);
             //debug_ct(img, cq->get_ct());
             ss.str("");

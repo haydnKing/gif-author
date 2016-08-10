@@ -149,8 +149,15 @@ VideoFrame::VideoFrame():
 VideoFrame::~VideoFrame(){
     if(frame_parent != NULL)
         av_frame_free(&frame_parent);
-    else if(data != NULL)
+    else if(data != NULL && !data_parent)
+    {
+        std::cout << "delete data" << std::endl;
         delete [] data;
+    }
+    if(data_parent) {
+        std::cout << "Not deleting data due to data_parent" << std::endl;
+    }
+    data = NULL;
 };
 
 /*

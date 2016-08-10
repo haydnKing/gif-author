@@ -14,6 +14,7 @@ class Bitset : public Glib::Object
         ~Bitset();
         static pBitset create(int _width, int _height, bool initial=false);
         static pBitset smooth(pBitset in, float sigma, float threshold);
+        static pBitset crop(pBitset in, int x, int y, int width, int height);
 
         bool get(int x, int y) const;
         void set(int x, int y, bool s=true);
@@ -26,7 +27,11 @@ class Bitset : public Glib::Object
         //remove isolated pixels
         void remove_islands();
 
-        //smooth 
+        //get the position of the highest set pixel
+        int get_top() const;
+        int get_bottom() const;
+        int get_left() const;
+        int get_right() const;
 
     private:
         uint8_t *data;

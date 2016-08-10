@@ -17,6 +17,22 @@ pBitset Bitset::create(int _width, int _height, bool initial)
 {
     return pBitset(new Bitset(_width, _height, initial));
 };
+        
+pBitset Bitset::crop(pBitset in, int sx, int sy, int width, int height)
+{
+    pBitset out = Bitset::create(width, height, false);
+    int x,y;
+    for(y = sy; y < sy+height; y++)
+    {
+        for(x = sx; x < sx+width; x++)
+        {
+            if(in->get(x,y))
+                out->set(x-sx,y-sy);
+        }
+    }
+
+    return out;
+}
 
 bool Bitset::get(int x, int y) const
 {
@@ -195,3 +211,57 @@ pBitset Bitset::smooth(const pBitset in, float sigma, float threshold)
     return out;
 };
 
+int Bitset::get_top() const
+{
+    int x,y;
+    for(y = 0; y < height; y++)
+    {
+        for(x = 0; x < width; x++)
+        {
+            if(get(x,y))
+                return y;
+        }
+    }
+    return -1;
+};
+
+int Bitset::get_bottom() const
+{
+    int x,y;
+    for(y = height-1; y >= 0; y--)
+    {
+        for(x = 0; x < width; x++)
+        {
+            if(get(x,y))
+                return y;
+        }
+    }
+    return -1;
+};
+
+int Bitset::get_left() const
+{
+    int x,y;
+    for(x = 0; x < width; x++)
+    {
+        for(y = 0; y < height; y++)
+        {
+            if(get(x,y))
+                return x;
+        }
+    }
+    return -1;
+};
+int Bitset::get_right() const
+{
+    int x,y;
+    for(x = width-1; x >= 0; x--)
+    {
+        for(y = 0; y < height; y++)
+        {
+            if(get(x,y))
+                return x;
+        }
+    }
+    return -1;
+};
