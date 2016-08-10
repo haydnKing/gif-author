@@ -55,7 +55,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 
     //prepare output bits
     //No transparency in the first frame
-    out_bits.push_back(pBitset());//Bitset::create(frames[0]->get_width(), frames[0]->get_height(), true));
+    out_bits.push_back(pBitset());
     out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), true));
     for(z=2; z < frames.size(); z++)
         out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), false));
