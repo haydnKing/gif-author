@@ -131,6 +131,19 @@ int on_command_line(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     }
     return 0;
 }
+void frame_test()
+{
+    pVideoFrame f = VideoFrame::create_from_file("input/3649.png");
+
+    f->write_ppm("out/full.ppm");
+
+    pVideoFrame s = f->crop(10,10,10,10);
+
+    s->write_ppm("out/small.ppm");
+
+    std::cout << "f @ " << &f << std::endl;
+    std::cout << "s @ " << &s << std::endl;
+}
 
 int gif_from_images_cline(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
                     Glib::RefPtr<Gtk::Application> &app) 
@@ -184,9 +197,9 @@ int gif_from_images_cline(const Glib::RefPtr<Gio::ApplicationCommandLine> &cmd,
     return 0;
 }
 
+
 int main (int argc, char *argv[])
 {
-    
     Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.gtkmm.gifauthor", Gio::APPLICATION_HANDLES_COMMAND_LINE);
 
     app->signal_command_line().connect(

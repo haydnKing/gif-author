@@ -83,6 +83,7 @@ GIF *GIFEncoder::get_output()
                     width  = fr_mask->get_right() - left,
                     top    = fr_mask->get_top(),
                     height = fr_mask->get_bottom() - top;
+                std::cout << "img[" << i <<"] = "<<left<<","<<top<<"+"<<width<<"x"<<height << std::endl;
                 fr_mask = Bitset::crop(fr_mask, left, top, width, height);
                 fr = fr->crop(left, top, width, height);
                 img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
