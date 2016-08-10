@@ -5,6 +5,54 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 
+void Segmenter::segment(const std::vector<pVideoFrame> frames, 
+                             std::vector<pVideoFrame>& out_frames,
+                             std::vector<pBitset>& out_bits) {
+    get_update_bits(frames, out_bits);
+    int x,y,z,start;
+    double r,g,b;
+    uint8_t *px;
+
+    //smooth the out bits
+
+    //calculate the value for each out frame
+    for(z = 0; z < frames.size(); z++)
+    {
+        out_frames.push_back(VideoFrame::create(frames[z]->get_width(), frames[z]->get_height()));
+    }
+    for(y = 0; y < frames[0]->get_height(); y++)
+    {
+        for(x = 0; x < frames[0]->get_width(); x++)
+        {
+            start = 0;
+            px = frames[0]->get_pixel(x,y);
+            r = px[0];
+            g = px[1];
+            b = px[2];
+
+            for(z = 1; z < frames.size(); z++)
+            {
+                if(!out_bits[z] || out_bits[z]->get(x,y)) {
+                    r /= z-start;
+                    g /= z-start;
+                    b /= z-start;
+                    out_frames[start]->set_pixel(x,y,uint8_t(r+0.5),uint8_t(g+0.5),uint8_t(b+0.5));
+                    r = g = b = 0.;
+                    start = z;
+                }
+                px = frames[z]->get_pixel(x,y);
+                r += px[0];
+                g += px[1];
+                b += px[2];
+            }
+            r /= z-start;
+            g /= z-start;
+            b /= z-start;
+            out_frames[start]->set_pixel(x,y,uint8_t(r+0.5),uint8_t(g+0.5),uint8_t(b+0.5));
+        }
+    }
+}
+
 /*******************************************************************
  *************************************************** DELTA SEGMENTER
  *******************************************************************/
@@ -27,14 +75,12 @@ class DeltaSegmenter : public Segmenter
         };
         ~DeltaSegmenter() {};
 
-        void segment(const std::vector<pVideoFrame> frames, 
-                     std::vector<pVideoFrame>& out_frames,
+        void get_update_bits(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits);
 };
 
-void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames, 
-                             std::vector<pVideoFrame>& out_frames,
-                             std::vector<pBitset>& out_bits)
+void DeltaSegmenter::get_update_bits(const std::vector<pVideoFrame> frames, 
+                                     std::vector<pBitset>& out_bits)
 {
     float delta = get_setting("delta")->get_float();
     float sigma = get_setting("sigma")->get_float();
@@ -60,11 +106,6 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     for(z=2; z < frames.size(); z++)
         out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), false));
 
-    //prepare output frames
-    out_frames.push_back(frames[0]->copy());
-    for(z=1; z < frames.size(); z++)
-        out_frames.push_back(VideoFrame::create(frames[z]->get_width(), frames[z]->get_height()));
-    
 
     //Do delta
     for(y=0; y < frames[0]->get_height(); y++)
@@ -85,11 +126,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                 db = float(px_this[2]) - b/(z-start);
                 if(dr*dr + dg*dg + db*db > delta*delta)
                 {
-                    if(start != 0) out_bits[start]->set(x,y);
-                    out_frames[start]->set_pixel(x,y,
-                        uint8_t(0.5+r/(z-start)),
-                        uint8_t(0.5+g/(z-start)),
-                        uint8_t(0.5+b/(z-start)));
+                    if(out_bits[start]) out_bits[start]->set(x,y);
                     start = z;
                     r = g = b = 0.;
                 }
@@ -97,11 +134,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                 g += px_this[1];
                 b += px_this[2];
             }
-            if(start != 0) out_bits[start]->set(x,y);
-            out_frames[start]->set_pixel(x,y,
-                uint8_t(0.5+r/(z-start)),
-                uint8_t(0.5+g/(z-start)),
-                uint8_t(0.5+b/(z-start)));
+            if(out_bits[start]) out_bits[start]->set(x,y);
         }
     }
 };
@@ -118,13 +151,11 @@ class NullSegmenter : public Segmenter
         {};
         ~NullSegmenter() {};
 
-        void segment(const std::vector<pVideoFrame> frames, 
-                     std::vector<pVideoFrame>& out_frames,
+        void get_update_bits(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits)
         {
             for(auto fr : frames)
             {
-                out_frames.push_back(fr->copy());
                 out_bits.push_back(Bitset::create(fr->get_width(), fr->get_height(), true));
             }
         };
@@ -134,7 +165,7 @@ class NullSegmenter : public Segmenter
 /*******************************************************************
  *************************************************** MOTION SEGMENTER
  *******************************************************************/
-
+/*
 class MotionSegmenter : public Segmenter
 {
     public:
@@ -210,13 +241,13 @@ class MotionSegmenter : public Segmenter
 
         };
 };
-
+*/
 SegmenterFactory::SegmenterFactory() : 
     ProcessFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream")
 {
     register_type("SimpleDelta", new DeltaSegmenter());
     register_type("NullSegmenter", new NullSegmenter());
-    register_type("MotionSegmenter", new MotionSegmenter());
+ //   register_type("MotionSegmenter", new MotionSegmenter());
 };
 
 SegmenterFactory segmenterFactory;
