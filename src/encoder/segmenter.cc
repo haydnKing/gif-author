@@ -56,11 +56,13 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
     //prepare output bits
     //No transparency in the first frame
     out_bits.push_back(pBitset());//Bitset::create(frames[0]->get_width(), frames[0]->get_height(), true));
-    for(z=1; z < frames.size(); z++)
+    out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), true));
+    for(z=2; z < frames.size(); z++)
         out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), false));
 
     //prepare output frames
-    for(z=0; z < frames.size(); z++)
+    out_frames.push_back(frames[0]->copy());
+    for(z=1; z < frames.size(); z++)
         out_frames.push_back(VideoFrame::create(frames[z]->get_width(), frames[z]->get_height()));
     
 
@@ -73,8 +75,8 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
             r = px_this[0];
             g = px_this[1];
             b = px_this[2];
-            start = 0;
-            for(z=1; z < frames.size(); z++)
+            start = 1;
+            for(z=2; z < frames.size(); z++)
             {
                 px_this = frames[z]->get_pixel(x,y);
                 //have we jumped more than delta?
