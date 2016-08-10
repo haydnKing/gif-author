@@ -156,7 +156,7 @@ class MotionSegmenter : public Segmenter
             int x,y,z,dx,dy;
 
             out_frames.push_back(frames[0]->copy());
-            out_bits.push_back(pBitset());
+            out_bits.push_back(Bitset::create(frames[z]->get_width(), frames[z]->get_height(), true));
             for(z = 1; z < frames.size(); z++) 
                 out_bits.push_back(Bitset::create(frames[z]->get_width(), frames[z]->get_height(), false));
             int count;
@@ -185,15 +185,15 @@ class MotionSegmenter : public Segmenter
                         dbg->set_pixel(x,y, uint8_t(std::abs(dx)), uint8_t(std::abs(dy)), 0);
                         if(dx != 0 || dy != 0)
                         {
-                            out_bits[z]->set(x,y);
+                            out_bits[z-1]->set(x,y);
                             count++;
                             dx += x;
                             dy += y;
-                            if(z +1 < frames.size() && 
-                               dx >= 0 && dx < frames[z]->get_width() &&
+                            if(dx >= 0 && dx < frames[z]->get_width() &&
                                dy >= 0 && dy < frames[z]->get_height())
                             {
-                                out_bits[z+1]->set(dx,dy);
+                                out_bits[z]->set(dx,dy);
+                                //if(z +1 < frames.size()) out_bits[z+1]->set(dx,dy);
                             }
                         }
                     }
