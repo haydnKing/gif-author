@@ -149,13 +149,9 @@ VideoFrame::VideoFrame():
 VideoFrame::~VideoFrame(){
     if(frame_parent != NULL)
         av_frame_free(&frame_parent);
-    else if(data != NULL && !data_parent)
+    else if(data != NULL)
     {
-        std::cout << "delete data" << std::endl;
         delete [] data;
-    }
-    if(data_parent) {
-        std::cout << "Not deleting data due to data_parent" << std::endl;
     }
     data = NULL;
 };
@@ -175,16 +171,15 @@ pVideoFrame VideoFrame::create_from_data(
                 int rowstride,
                 bool copy,
                 int64_t timestamp,
-                int64_t position,
-                pVideoFrame data_parent)
+                int64_t position)
 {
     uint8_t* cdata = data;
     if(copy){
-        cdata = new uint8_t[rowstride*height];
-        std::memcpy(cdata, data, rowstride*height);
+        cdata = new uint8_t[height*rowstride];
+        std::memcpy(cdata, data, height*rowstride);
     }
     VideoFrame* f = new VideoFrame();
-    f->init(cdata, width, height, rowstride, timestamp, position, data_parent);
+    f->init(cdata, width, height, rowstride, timestamp, position);
     return pVideoFrame(f);
 };
         
@@ -368,15 +363,19 @@ void VideoFrame::write_ppm(const std::vector<pVideoFrame> frames, const char *he
 
 pVideoFrame VideoFrame::crop(int left, int top, int width, int height)
 {
+    uint8_t *cdata = new uint8_t[height*width*3];
+    for(int y = 0; y < height; y++) 
+    {
+        memcpy(cdata+y*3*width, get_pixel(left, top+y), 3*width);
+    }
     return VideoFrame::create_from_data(
-            data+3*(left+width*height),
+            cdata,
             width,
             height,
-            rowstride,
+            3*width,
             false,
             timestamp,
-            position,
-            pVideoFrame(this));
+            position);
 };
 
 pVideoFrame VideoFrame::scale_to(int w, int h, InterpolationMethod method) const
@@ -679,7 +678,7 @@ void VideoFrame::set_pixel(int x, int y, uint8_t r, uint8_t g, uint8_t b)
     p[2] = b;
 };
 
-void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp){
+void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p){
     if(data != NULL){
         delete data;
     }
@@ -689,7 +688,6 @@ void VideoFrame::init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p,
     rowstride = r;
     timestamp = t;
     position = p;
-    data_parent = dp;
 };
 
 float *VideoFrame::get_kernel(float sigma, int kernel_center)

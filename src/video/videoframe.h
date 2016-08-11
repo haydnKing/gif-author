@@ -167,8 +167,7 @@ class VideoFrame : public Glib::Object
                 int rowstride,
                 bool copy=true,
                 int64_t _timestamp=-1,
-                int64_t _position=-1,
-                pVideoFrame _data_parent=pVideoFrame());
+                int64_t _position=-1);
 
         static pVideoFrame create_from_avframe(AVFrame *fr, int64_t timestamp, int64_t position);
         static pVideoFrame create_from_mat(cv::Mat *mat, int64_t timestamp=0, int64_t position=0);
@@ -322,7 +321,7 @@ class VideoFrame : public Glib::Object
     private:
         static float *get_kernel(float sigma, int kernel_center);
 
-        void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p, pVideoFrame dp); 
+        void init(uint8_t* _data, int w, int h, int r, int64_t t, int64_t p); 
         void interpolate_nearest(double x, double y, uint8_t* out) const;
         void interpolate_bilinear(double x, double y, uint8_t* out) const;
         void interpolate_bicubic(double x, double y, uint8_t* out) const;
@@ -335,7 +334,6 @@ class VideoFrame : public Glib::Object
         int64_t timestamp, position;
         uint8_t* data;
         //keep a pointer to the data parent (if any) so that the data isn't deleted
-        pVideoFrame data_parent;
         AVFrame *frame_parent;
 };
 
