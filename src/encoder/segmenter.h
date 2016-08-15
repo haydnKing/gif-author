@@ -31,12 +31,9 @@ class Segmenter : public Process
          * to be updated.
          */
         virtual void segment(const std::vector<pVideoFrame> frames, 
-                             std::vector<pVideoFrame>& out_frames,
-                             std::vector<pBitset>& out_bits);
+                             std::vector<pBitset>& out_bits) = 0;
 
     protected:
-        virtual void get_update_bits(const std::vector<pVideoFrame> frames, 
-                             std::vector<pBitset>& out_bits) = 0;
         Segmenter(std::string name, std::string description) :
             Process(name, description)
         {};

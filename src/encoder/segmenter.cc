@@ -5,59 +5,6 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 
-void Segmenter::segment(const std::vector<pVideoFrame> frames, 
-                             std::vector<pVideoFrame>& out_frames,
-                             std::vector<pBitset>& out_bits) {
-    get_update_bits(frames, out_bits);
-    int x,y,z,start;
-    double r,g,b;
-    uint8_t *px;
-
-    //smooth the out bits
-    for(z = 0; z < frames.size(); z++)
-    {
-        if(out_bits[z])
-            out_bits[z] = Bitset::smooth(out_bits[z], 2, 0.5);
-    }
-
-    //calculate the value for each out frame
-    for(z = 0; z < frames.size(); z++)
-    {
-        out_frames.push_back(VideoFrame::create(frames[z]->get_width(), frames[z]->get_height()));
-    }
-    for(y = 0; y < frames[0]->get_height(); y++)
-    {
-        for(x = 0; x < frames[0]->get_width(); x++)
-        {
-            start = 0;
-            px = frames[0]->get_pixel(x,y);
-            r = px[0];
-            g = px[1];
-            b = px[2];
-
-            for(z = 1; z < frames.size(); z++)
-            {
-                if(!out_bits[z] || out_bits[z]->get(x,y)) {
-                    r /= z-start;
-                    g /= z-start;
-                    b /= z-start;
-                    out_frames[start]->set_pixel(x,y,uint8_t(r+0.5),uint8_t(g+0.5),uint8_t(b+0.5));
-                    r = g = b = 0.;
-                    start = z;
-                }
-                px = frames[z]->get_pixel(x,y);
-                r += px[0];
-                g += px[1];
-                b += px[2];
-            }
-            r /= z-start;
-            g /= z-start;
-            b /= z-start;
-            out_frames[start]->set_pixel(x,y,uint8_t(r+0.5),uint8_t(g+0.5),uint8_t(b+0.5));
-        }
-    }
-}
-
 /*******************************************************************
  *************************************************** DELTA SEGMENTER
  *******************************************************************/
@@ -80,11 +27,11 @@ class DeltaSegmenter : public Segmenter
         };
         ~DeltaSegmenter() {};
 
-        void get_update_bits(const std::vector<pVideoFrame> frames, 
+        void segment(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits);
 };
 
-void DeltaSegmenter::get_update_bits(const std::vector<pVideoFrame> frames, 
+void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames, 
                                      std::vector<pBitset>& out_bits)
 {
     float delta = get_setting("delta")->get_float();
@@ -155,7 +102,7 @@ class NullSegmenter : public Segmenter
         {};
         ~NullSegmenter() {};
 
-        void get_update_bits(const std::vector<pVideoFrame> frames, 
+        void segment(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits)
         {
             for(auto fr : frames)

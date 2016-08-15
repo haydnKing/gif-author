@@ -33,12 +33,19 @@ class GIFEncoder
 
         GIF *get_output();
 
+        void set_sigma(float s) {sm_sigma = s;};
+        void set_threshold(float t) {sm_thresh = t;};
+
 
     protected:
         int canvas_width, canvas_height;
+        float sm_sigma, sm_thresh;
         //general settings
         
         std::vector<pVideoFrame> frames;
+        void smooth_transparency(const std::vector<pVideoFrame> frames, 
+                                     std::vector<pVideoFrame>& out_frames,
+                                     std::vector<pBitset>& bits);
 
         void dbg_save_POI(int x, int y, const char* name) const;
         void dbg_thresholding(int len, uint8_t *px, float *fpx, const char *name) const;

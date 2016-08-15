@@ -8,7 +8,9 @@ bool px_equal(uint8_t *lhs, uint8_t *rhs)
 
 GIFEncoder::GIFEncoder(int cw, int ch):
     canvas_width(cw),
-    canvas_height(ch)
+    canvas_height(ch),
+    sm_sigma(2.),
+    sm_thresh(0.5)
 {};
 
 GIFEncoder::~GIFEncoder() {};
@@ -31,7 +33,8 @@ GIF *GIFEncoder::get_output()
     std::vector<pBitset> masks;
     std::vector<pVideoFrame> sframes;
     Segmenter *sm = segmenterFactory.get_selected();
-    sm->segment(frames, sframes, masks);
+    sm->segment(frames,  masks);
+    smooth_transparency(frames, sframes, masks);
 
     std::stringstream ss;
     //VideoFrame::write_ppm(frames, "dbg/s_input");
@@ -122,6 +125,58 @@ GIF *GIFEncoder::get_output()
 
     return out;
 };
+
+void GIFEncoder::smooth_transparency(const std::vector<pVideoFrame> frames, 
+                                     std::vector<pVideoFrame>& out_frames,
+                                     std::vector<pBitset>& bits) {
+    int x,y,z,start;
+    double r,g,b;
+    uint8_t *px;
+
+    //smooth the out bits
+    for(z = 0; z < frames.size(); z++)
+    {
+        if(bits[z])
+            bits[z] = Bitset::smooth(bits[z], sm_sigma, sm_thresh);
+    }
+
+    //calculate the value for each out frame
+    for(z = 0; z < frames.size(); z++)
+    {
+        out_frames.push_back(VideoFrame::create(frames[z]->get_width(), frames[z]->get_height()));
+    }
+    for(y = 0; y < frames[0]->get_height(); y++)
+    {
+        for(x = 0; x < frames[0]->get_width(); x++)
+        {
+            start = 0;
+            px = frames[0]->get_pixel(x,y);
+            r = px[0];
+            g = px[1];
+            b = px[2];
+
+            for(z = 1; z < frames.size(); z++)
+            {
+                if(!bits[z] || bits[z]->get(x,y)) {
+                    r /= z-start;
+                    g /= z-start;
+                    b /= z-start;
+                    out_frames[start]->set_pixel(x,y,uint8_t(r+0.5),uint8_t(g+0.5),uint8_t(b+0.5));
+                    r = g = b = 0.;
+                    start = z;
+                }
+                px = frames[z]->get_pixel(x,y);
+                r += px[0];
+                g += px[1];
+                b += px[2];
+            }
+            r /= z-start;
+            g /= z-start;
+            b /= z-start;
+            out_frames[start]->set_pixel(x,y,uint8_t(r+0.5),uint8_t(g+0.5),uint8_t(b+0.5));
+        }
+    }
+}
         
 void GIFEncoder::dbg_save_POI(int x, int y, const char* name) const
 {
