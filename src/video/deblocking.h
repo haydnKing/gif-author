@@ -8,14 +8,18 @@
 class Deblocker : public Process
 {
     public:
-        Deblocker();
+        Deblocker(int width, int height);
         virtual ~Deblocker();
 
-        pVideoFrame deblock(const pVideoFrame vf);
+        void process(std::vector<pVideoFrame> frames);
+        void deblock(pVideoFrame vf);
 
     private:
-        int block_size;
-}
+        float vscore(const pVideoFrame vf, int x, int y_min, int y_max);
+        float hscore(const pVideoFrame vf, int y, int x_min, int x_max);
+        int width, height;
+        pVideoFrame buff;
+};
 
 
 #endif
