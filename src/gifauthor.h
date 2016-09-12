@@ -4,18 +4,23 @@
 /**
  * Underlying application code, does not require UI
  */
+#include <gtkmm/application.h>
 
 #include "encoder/gifencoder.h"
 
-
 /**
- * Central class. Contains all the information required to write out a GIF
+ * Central class
  */
-class GIFAuthor
+class GIFAuthor : Gtk::Application
 {
     public:
         GIFAuthor();
         ~GIFAuthor();
+
+        virtual void on_startup();
+        virtual void on_shutdown();
+        virtual void on_activate();
+        virtual void on_open(const type_vec_files& files, const Glib::ustring& hint);
 
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};

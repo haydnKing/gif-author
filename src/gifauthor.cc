@@ -11,6 +11,14 @@ GIFAuthor::~GIFAuthor()
     delete out;
 };
 
+void GIFAuthor::on_startup() {};
+
+void GIFAuthor::on_shutdown() {};
+
+void GIFAuthor::on_activate() {};
+
+void GIFAuthor::on_open(const type_vec_files& files, const Glib::ustring& hint) {};
+
 void GIFAuthor::clear_frames()
 {
     frames.clear();
