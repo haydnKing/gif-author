@@ -23,69 +23,29 @@ void Deblocker::process(std::vector<pVideoFrame> frames)
 
 void Deblocker::deblock(pVideoFrame vf)
 {
-    int kernel_center = (block_size+1)/2;
-    float weights[kernel_center];
-    for(int i = 0; i < kernel_center; i++) 
+    //blur weights - linear for now
+    float weights[block_size];
+    for(int i = 0; i < block_size/2; i++) 
     {
-        weights[i] = float(kernel_center - i) / float(kernel_center);
+        weights[i] = i / (block_size/2-1);
+    }
+    for(int i = block_size/2; i < block_size; i++)
+    {
+        weights[i] = weights[block_size-1-i];
     }
 
+    //build the kernel
+    int kernel_center = (block_size+1)/2;
     float sigma = float(kernel_center) / 1.5;
     int kernel_length = kernel_center * 2 + 1; 
     float *kernel = new float[kernel_length];
     for(int k = 0; k < kernel_length; k++)
         kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
     float norm, val[3];
-    int x,y,i,j,k;
 
-    //blur horizontally
-    for(y = 0; y < get_height(); y++)
-    {
-        for(x = 0; x < get_width(); x++)
-        {
-            norm = 0.;
-            val[0] = 0.;
-            val[1] = 0.;
-            val[2] = 0.;
-            for(k=0; k < kernel_length; k++)
-            {
-                i = x+k-kernel_center;
-                if(i >= 0 && i < get_width())
-                {
-                    norm+=kernel[k];
-                    for(j=0; j <3; j++)
-                    {
-                        val[j] += float(get_pixel(i, y)[j]) * kernel[k];
-                    }
-                }
-            }
-            buff->set_pixel(x,y,uint8_t(val[0]/norm),uint8_t(val[1]/norm),uint8_t(val[2]/norm));
-        }
-    }
-    //blur vertically
-    for(y = 0; y < get_height(); y++)
-    {
-        for(x = 0; x < get_width(); x++)
-        {
-            norm = 0.;
-            val[0] = 0.;
-            val[1] = 0.;
-            val[2] = 0.;
-            for(k=0; k < kernel_length; k++)
-            {
-                i = y+k-kernel_center;
-                if(i >= 0 && i < get_height())
-                {
-                    norm+=kernel[k];
-                    for(j=0; j <3; j++)
-                    {
-                        val[j] += float(h->get_pixel(x, i)[j]) * kernel[k];
-                    }
-                }
-            }
-            vf->set_pixel(x,y,uint8_t(val[0]/norm),uint8_t(val[1]/norm),uint8_t(val[2]/norm));
-        }
-    }
+    int block_start, block_end, block_pos;
+
+
 
     delete [] kernel;
 
