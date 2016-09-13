@@ -119,6 +119,24 @@ void GIFAuthor::register_command_line()
                           "The delay beween frames in ms (default = 40ms)",
                           "delta");
   
+
+    add_main_option_entry(sigc::mem_fun(segmenterFactory, &SegmenterFactory::on_parse),
+                          "segmenter",
+                          '\0',
+                          segmenterFactory.get_help_string(),
+                          "name;arg1=val1;...");
+
+    add_main_option_entry(sigc::mem_fun(quantizerFactory, &QuantizerFactory::on_parse),
+                          "quantizer",
+                          '\0',
+                          quantizerFactory.get_help_string(),
+                          "name;arg1=val1;...");
+
+    add_main_option_entry(sigc::mem_fun(dithererFactory, &DithererFactory::on_parse),
+                          "ditherer",
+                          '\0',
+                          dithererFactory.get_help_string(),
+                          "name;arg1=val1;...");
 /* 
     ctx.set_main_group(group);
     Glib::OptionGroup sg = segmenterFactory.get_option_group();

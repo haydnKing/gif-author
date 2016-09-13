@@ -201,15 +201,8 @@ template<class P> class ProcessFactory
          * OptionGroup to give to an OptionContext for
          * Glib Command line parsing
          */
-        Glib::OptionGroup get_option_group()
+        std::string get_help_string()
         {
-            Glib::OptionGroup og(my_name, my_desc);
-            
-            //select
-            Glib::OptionEntry oe;
-            oe.set_long_name(my_name);
-            oe.set_flags(Glib::OptionEntry::FLAG_OPTIONAL_ARG);
-
             std::stringstream ss;
             ss << "Select and configure the " << my_name 
                << " in the form \"";
@@ -235,23 +228,12 @@ template<class P> class ProcessFactory
                 }
                 if(f_type != --my_map.end()) ss << std::endl;
             }
-            oe.set_description(ss.str());
-            og.add_entry(oe, sigc::mem_fun(*this, &ProcessFactory::on_option_name));
-            return og;
+            return ss.str();
         };
 
-
-    protected:
-        bool register_type(const std::string& name, P* cfg)
-        {
-            if(my_default.empty()) my_default = name;
-            auto r = my_map.insert(make_pair(name, cfg));
-            return r.second;
-        };
-    private:
-        bool on_option_name(const Glib::ustring& option_name, 
-                            const Glib::ustring& option_value,
-                            bool has_value)
+        bool on_parse(const Glib::ustring& option_name, 
+                      const Glib::ustring& option_value,
+                      bool has_value)
         {
             std::stringstream ss;
             if(!has_value) 
@@ -282,6 +264,16 @@ template<class P> class ProcessFactory
             ss << "Unknown " << my_name << ": \'" << name << "\'";
             throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
         };
+
+
+    protected:
+        bool register_type(const std::string& name, P* cfg)
+        {
+            if(my_default.empty()) my_default = name;
+            auto r = my_map.insert(make_pair(name, cfg));
+            return r.second;
+        };
+    private:
         std::string my_name, my_desc, my_option, my_default;
         std::map<std::string, P*> my_map;
 };

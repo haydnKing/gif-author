@@ -67,7 +67,10 @@ class GIFAuthor : public Gtk::Application
         
         std::vector<pVideoFrame> frames;
         GIF *out;
-
+        
+        SegmenterFactory segmenterFactory;
+        QuantizerFactory quantizerFactory;
+        DithererFactory dithererFactory;
 };
 
 
