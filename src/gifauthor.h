@@ -4,23 +4,23 @@
 /**
  * Underlying application code, does not require UI
  */
-#include <gtkmm/application.h>
+#include <gtkmm.h>
+#include <iostream>
 
 #include "encoder/gifencoder.h"
+
 
 /**
  * Central class
  */
-class GIFAuthor : Gtk::Application
+class GIFAuthor : public Gtk::Application
 {
-    public:
+    protected:
         GIFAuthor();
         ~GIFAuthor();
-
-        virtual void on_startup();
-        virtual void on_shutdown();
-        virtual void on_activate();
-        virtual void on_open(const type_vec_files& files, const Glib::ustring& hint);
+    public:
+    
+        static Glib::RefPtr<GIFAuthor> create();
 
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};
@@ -58,6 +58,10 @@ class GIFAuthor : Gtk::Application
         void update_output();
 
     protected:
+        void register_command_line();
+        int on_handle_local_options(const Glib::RefPtr<Glib::VariantDict>& options);
+        void from_images(std::vector<std::string> fnames, int delay, int width);
+        
         int out_width, out_height;
         
         std::vector<pVideoFrame> frames;
