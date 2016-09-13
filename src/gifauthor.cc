@@ -11,7 +11,7 @@ GIFAuthor::GIFAuthor() :
     signal_handle_local_options().connect(
         sigc::mem_fun(*this, &GIFAuthor::on_handle_local_options), false);
 
-    add_main_option_entry(Gio::Application::OPTION_TYPE_BOOL, "version", 'v', "Show the application version.");
+    register_command_line();
 };
 
 GIFAuthor::~GIFAuthor() 
@@ -102,32 +102,24 @@ void GIFAuthor::update_output()
 
 void GIFAuthor::register_command_line() 
 {
-    std::cout << "register_command_line" << std::endl;
     add_main_option_entry(Gio::Application::OPTION_TYPE_BOOL,
                           "version",
                           'v',
                           "Show the version number and exit");
 
-  /*  // parse arguments:
-    Glib::OptionContext ctx("Create GIFs from images");
-    Glib::OptionGroup group("extract", "Author a gif from the command line");
+    add_main_option_entry(sigc::mem_fun(*this, &GIFAuthor::parse_width_height),
+                          "size",
+                          's',
+                          "Change the size of the output GIF. Setting either W or H to _ will preserve aspect ration",
+                          "WxH");
 
-
-    int width = -1;
-    Glib::OptionEntry width_entry;
-    width_entry.set_long_name("width");
-    width_entry.set_short_name('w');
-    width_entry.set_description("the output width of the gif");
-    group.add_entry(width_entry, width);
-
-    int delay = 4;
-    Glib::OptionEntry delay_entry;
-    delay_entry.set_long_name("delay");
-    delay_entry.set_short_name('d');
-    delay_entry.set_description("delay between frames, *10 ms");
-    group.add_entry(delay_entry, delay);
+    add_main_option_entry(Gio::Application::OPTION_TYPE_INT,
+                          "delay",
+                          'd',
+                          "The delay beween frames in ms (default = 40ms)",
+                          "delta");
   
-    
+/* 
     ctx.set_main_group(group);
     Glib::OptionGroup sg = segmenterFactory.get_option_group();
     Glib::OptionGroup qg = quantizerFactory.get_option_group();
@@ -157,7 +149,6 @@ void GIFAuthor::register_command_line()
 
 int GIFAuthor::on_handle_local_options(const Glib::RefPtr<Glib::VariantDict>& options)
 {
-    std::cout << "on_handle_local_options" << std::endl;
     bool version;
     options->lookup_value("version", version);
     if(version){
@@ -183,5 +174,43 @@ void GIFAuthor::from_images(std::vector<std::string> fnames, int delay, int widt
     std::ofstream outfile("out.gif");
     std::cout << "Writing" << std::endl;
     get_output()->write(outfile);
+}
+
+bool GIFAuthor::parse_width_height(const Glib::ustring& name, const Glib::ustring& value, bool has_value) {
+    if(!has_value) 
+    {
+        return false;
+    }
+    int pos = value.find('x');
+    if (pos < 0) return false;
+    
+    try {
+        Glib::ustring lhs = value.substr(0, pos);
+        if(lhs.compare("_") == 0)
+        {
+            out_width = -1;
+        } else {
+            out_width = std::stoi(lhs);
+            if(out_width <= 0) {
+                return false;
+            }
+        }
+        Glib::ustring rhs = value.substr(pos+1, Glib::ustring::npos);
+        if(rhs.compare("_") == 0)
+        {
+            out_height = -1;
+        } else {
+            out_height = std::stoi(rhs);
+            if(out_height <= 0) 
+            {
+                return false;
+            }
+        }
+    } catch (...) {
+        return false;
+    }
+
+
+    return true;
 }
 

@@ -61,6 +61,7 @@ class GIFAuthor : public Gtk::Application
         void register_command_line();
         int on_handle_local_options(const Glib::RefPtr<Glib::VariantDict>& options);
         void from_images(std::vector<std::string> fnames, int delay, int width);
+        bool parse_width_height(const Glib::ustring& name, const Glib::ustring& value, bool has_value);
         
         int out_width, out_height;
         
