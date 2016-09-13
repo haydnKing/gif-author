@@ -124,36 +124,20 @@ void GIFAuthor::register_command_line()
                           "segmenter",
                           '\0',
                           segmenterFactory.get_help_string(),
-                          "name;arg1=val1;...");
+                          segmenterFactory.get_format_string());
 
     add_main_option_entry(sigc::mem_fun(quantizerFactory, &QuantizerFactory::on_parse),
                           "quantizer",
                           '\0',
                           quantizerFactory.get_help_string(),
-                          "name;arg1=val1;...");
+                          quantizerFactory.get_format_string());
 
     add_main_option_entry(sigc::mem_fun(dithererFactory, &DithererFactory::on_parse),
                           "ditherer",
                           '\0',
                           dithererFactory.get_help_string(),
-                          "name;arg1=val1;...");
+                          dithererFactory.get_format_string());
 /* 
-    ctx.set_main_group(group);
-    Glib::OptionGroup sg = segmenterFactory.get_option_group();
-    Glib::OptionGroup qg = quantizerFactory.get_option_group();
-    Glib::OptionGroup dg = dithererFactory.get_option_group();
-
-    ctx.add_group(sg);
-    ctx.add_group(qg);
-    ctx.add_group(dg);
-
-    // add GTK options, --help-gtk, etc
-    Glib::OptionGroup gtkgroup(gtk_get_option_group(true));
-    ctx.add_group(gtkgroup);
-    int argc;
-    char **argv = cmd->get_arguments(argc);
-    ctx.parse(argc, argv);
-
     std::vector<std::string> fnames;
     //argv should be filenames
     for(int i = 1; i < argc; i++)

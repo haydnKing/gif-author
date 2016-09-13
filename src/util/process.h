@@ -204,16 +204,13 @@ template<class P> class ProcessFactory
         std::string get_help_string()
         {
             std::stringstream ss;
-            ss << "Select and configure the " << my_name 
-               << " in the form \"";
-            for(auto ch : my_name) ss << (char)std::toupper(ch);
-            ss << "_TYPE[;SETTING1=VALUE1[;...]]\". Valid values are:\n";
+            ss << my_desc << ". Valid arguments are:\n";
             
             //settings
             std::string indent = "          ";
             for(auto f_type = my_map.begin(); f_type != my_map.end(); f_type++)
             {
-                ss << indent << "--" << my_name << " " << f_type->first << " ";
+                ss << indent << f_type->first << " ";
                 if(f_type->first == my_default) ss << "(default) ";
                 ss << f_type->second->get_description();
                 std::vector<std::string> help_strings = f_type->second->get_help_strings();
@@ -229,6 +226,11 @@ template<class P> class ProcessFactory
                 if(f_type != --my_map.end()) ss << std::endl;
             }
             return ss.str();
+        };
+
+        std::string get_format_string() 
+        {
+            return "name;arg1=val1;...";
         };
 
         bool on_parse(const Glib::ustring& option_name, 
