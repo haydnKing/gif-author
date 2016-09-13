@@ -1,10 +1,12 @@
 #include "gifauthor.h"
 
 GIFAuthor::GIFAuthor() :
-    Gtk::Application::Application("org.gtkmm.gifauthor"/*, Gio::APPLICATION_HANDLES_COMMAND_LINE*/),
+    Gtk::Application::Application("org.gtkmm.gifauthor", Gio::APPLICATION_HANDLES_OPEN),
     out(NULL),
     out_width(-1),
-    out_height(-1)
+    out_height(-1),
+    delay(40),
+    out_file("out.gif")
 {
     Glib::set_application_name("GIFAuthor");
 
@@ -118,7 +120,12 @@ void GIFAuthor::register_command_line()
                           'd',
                           "The delay beween frames in ms (default = 40ms)",
                           "delta");
-  
+
+    add_main_option_entry(sigc::mem_fun(*this, &GIFAuthor::parse_filename),
+                          "out",
+                          'o',
+                          "The file to output to (default out.gif)",
+                          "filename");
 
     add_main_option_entry(sigc::mem_fun(segmenterFactory, &SegmenterFactory::on_parse),
                           "segmenter",
@@ -157,25 +164,9 @@ int GIFAuthor::on_handle_local_options(const Glib::RefPtr<Glib::VariantDict>& op
         std::cout << "GifAuthor 0.1" << std::endl;
         return 0;
     }
-    return 0;
-}
-
-void GIFAuthor::from_images(std::vector<std::string> fnames, int delay, int width)
-{
-    for(int i = 0; i < fnames.size(); i++)
-    {
-        pVideoFrame pv = VideoFrame::create_from_file(fnames[i], i*delay, i);
-
-        std::cout << "Load frame " << i << ": " << fnames[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
-        add_frame(pv);
-    }
-
-    set_output_size(width);
-    update_output();
-
-    std::ofstream outfile("out.gif");
-    std::cout << "Writing" << std::endl;
-    get_output()->write(outfile);
+    options->lookup_value("delay", delay);
+    if(delay <=0) return 1;
+    return -1;
 }
 
 bool GIFAuthor::parse_width_height(const Glib::ustring& name, const Glib::ustring& value, bool has_value) {
@@ -215,4 +206,31 @@ bool GIFAuthor::parse_width_height(const Glib::ustring& name, const Glib::ustrin
 
     return true;
 }
+        
+bool GIFAuthor::parse_filename(const Glib::ustring& name, const Glib::ustring& value, bool has_value) {
+    if(has_value) 
+    {
+        out_file = value;
+    }
+    return true;
+}
 
+void GIFAuthor::on_open(const type_vec_files &files, const Glib::ustring &hint)
+{
+    std::cout << "on_open " << hint << " delay = " << delay << std::endl;
+    Gtk::Application::on_open(files, hint);
+
+    for(int i = 0; i < files.size(); i++)
+    {
+        pVideoFrame pv = VideoFrame::create_from_file(files[i]->get_path(), i*delay, i);
+
+        std::cout << "Load frame " << i << ": " << files[i]->get_path() << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
+        add_frame(pv);
+    }
+
+    update_output();
+
+    std::ofstream outfile(out_file);
+    std::cout << "Writing to " << out_file << std::endl;
+    get_output()->write(outfile);
+}
