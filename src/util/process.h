@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <limits>
+#include <iostream>
 
 #include <glibmm/optiongroup.h>
 #include <glibmm/optionentry.h>
@@ -230,13 +231,14 @@ template<class P> class ProcessFactory
 
         std::string get_format_string() 
         {
-            return "name;arg1=val1;...";
+            return "name:arg1=val1,...";
         };
 
         bool on_parse(const Glib::ustring& option_name, 
                       const Glib::ustring& option_value,
                       bool has_value)
         {
+            std::cout << "ProcessFactory::on_parse(" << option_name << ", " << option_value << ", " << has_value << ")"<< std::endl;
             std::stringstream ss;
             if(!has_value) 
             {
@@ -244,7 +246,7 @@ template<class P> class ProcessFactory
                 throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
             }
             //first extract the name part
-            int end = option_value.find(';');
+            int end = option_value.find(':');
             std::string name, arglist;
             if(end != std::string::npos)
             {

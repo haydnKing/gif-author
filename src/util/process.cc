@@ -197,17 +197,19 @@ std::vector<std::string> Process::get_help_strings() const
 
 bool Process::configure(std::string arg)
 {
+    std::cout << "\tProcess::configure(\"" << arg << "\")" << std::endl;
     int end, equals;
     bool success;
     while(!arg.empty())
     {
-        end = arg.find(';');
+        end = arg.find(',');
         if(end == std::string::npos)
-            end = arg.length();
+            end = arg.length()-1;
         equals = arg.find('=');
         if(equals == std::string::npos)
             equals = arg.length();
 
+        std::cout << "\t\tequals, end = (" << equals << ", " << end << ")" << std::endl;
         try 
         {
             success = my_map.at(arg.substr(0,equals))->from_str(arg.substr(equals+1, end-equals-1));
@@ -225,7 +227,9 @@ bool Process::configure(std::string arg)
             throw Glib::OptionError(Glib::OptionError::BAD_VALUE, ss.str());
         }
 
+        std::cout << "\t\targ = arg.substr(" << end+1 << ")" << std::endl;
         arg = arg.substr(end+1);
+        std::cout << "done" << std::endl;
     }
     return true;
 }
