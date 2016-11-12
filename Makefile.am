@@ -11,13 +11,6 @@ gif_author_SOURCES = src/encoder/segmenter.cc \
 					 src/gifauthor.cc \
 					 src/output/LZW.cc \
 					 src/output/gif.cc \
-					 src/widgets/navigation.cc \
-					 src/widgets/videoclipper.cc \
-					 src/widgets/videocontrol.cc \
-					 src/widgets/imagearea.cc \
-					 src/widgets/videoplayer.cc \
-					 src/widgets/videoscrollbar.cc \
-					 src/mainwindow.cc \
 					 src/video/videofile.cc \
 					 src/video/videoframe.cc \
 					 src/main.cc 

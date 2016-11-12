@@ -1,14 +1,14 @@
 #ifndef GTKMM_GIFAUTHOR_H
 #define GTKMM_GIFAUTHOR_H
 
-/**
- * Underlying application code, does not require UI
- */
 #include <gtkmm.h>
 #include <iostream>
+#include <memory>
 
 #include "encoder/gifencoder.h"
 
+class GIFAuthor;
+typedef std::shared_ptr<GIFAuthor> pGIFAuthor;
 
 /**
  * Central class
@@ -17,10 +17,10 @@ class GIFAuthor : public Gtk::Application
 {
     protected:
         GIFAuthor();
-        ~GIFAuthor();
     public:
+        virtual ~GIFAuthor();
     
-        static Glib::RefPtr<GIFAuthor> create();
+        static pGIFAuthor create();
 
         virtual void on_open(const type_vec_files &files, const Glib::ustring &hint);
 

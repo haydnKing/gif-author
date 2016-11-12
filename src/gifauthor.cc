@@ -21,8 +21,8 @@ GIFAuthor::~GIFAuthor()
     delete out;
 };
 
-Glib::RefPtr<GIFAuthor> GIFAuthor::create() {
-    return Glib::RefPtr<GIFAuthor>(new GIFAuthor());
+pGIFAuthor GIFAuthor::create() {
+    return pGIFAuthor(new GIFAuthor());
 }
 
 void GIFAuthor::clear_frames()

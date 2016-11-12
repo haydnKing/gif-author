@@ -76,7 +76,7 @@ GIF *GIFEncoder::get_output()
         if(cq->get_num_colors() > 0)
         {
             //currently just using 256 colours for everything
-            cq->build_ct(fr_mask, 255);
+            cq->build_ct((bool)fr_mask, 255);
 
             //autocrop
             pGIFImage img;
@@ -219,7 +219,7 @@ pGIFImage GIFEncoder::create_gif_image(int left, int top, int width, int height)
                                  width, 
                                  height);
 
-    return Glib::RefPtr<GIFImage>(ret);
+    return pGIFImage(ret);
 };
  
 

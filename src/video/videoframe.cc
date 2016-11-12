@@ -217,37 +217,13 @@ pVideoFrame VideoFrame::create_from_mat(cv::Mat *mat, int64_t timestamp, int64_t
 
 pVideoFrame VideoFrame::create_from_file(const std::string& fname, int64_t timestamp, int64_t position)
 {
-    //pixbuf
-    Glib::RefPtr<Gdk::Pixbuf> pb = Gdk::Pixbuf::create_from_file(fname);
-    if(pb->get_n_channels() > 3)
-    {
-        //remove the alpha channel
-        uint8_t *data = new uint8_t[pb->get_width()*pb->get_height()*3];
-        int rs = pb->get_width()*3;
-        for(int y = 0; y < pb->get_height(); y++)
-        {
-            for(int x = 0; x < pb->get_width(); x++)
-            {
-                data[rs*y+3*x  ] = pb->get_pixels()[pb->get_rowstride()*y+4*x  ];
-                data[rs*y+3*x+1] = pb->get_pixels()[pb->get_rowstride()*y+4*x+1];
-                data[rs*y+3*x+2] = pb->get_pixels()[pb->get_rowstride()*y+4*x+2];
-            }
-        }
-        return create_from_data(data,
-                                pb->get_width(),
-                                pb->get_height(),
-                                rs,
-                                false,
-                                timestamp,
-                                position);
+    cv::Mat image, copy;
+    image = cv::imread(fname, CV_LOAD_IMAGE_COLOR);
+    if(!image.data) {
+        return pVideoFrame(NULL);
     }
-    return create_from_data(pb->get_pixels(),
-                            pb->get_width(),
-                            pb->get_height(),
-                            pb->get_rowstride(),
-                            true,
-                            timestamp,
-                            position);
+    cv::cvtColor(image, copy, CV_BGR2RGB);
+    return create_from_mat(&copy, timestamp, position);
 };
 
 pVideoFrame VideoFrame::create(int width, int height, uint8_t initial)
@@ -264,18 +240,6 @@ pVideoFrame VideoFrame::create(int width, int height, uint8_t initial)
                             0);
 };
 
-        
-Glib::RefPtr<Gdk::Pixbuf> VideoFrame::get_pixbuf()
-{
-    return Gdk::Pixbuf::create_from_data(get_data(),
-                                         Gdk::COLORSPACE_RGB,
-                                         false,
-                                         8,
-                                         get_width(),
-                                         get_height(),
-                                         get_rowstride());
-};   
-        
 pVideoFrame VideoFrame::copy() const
 {
     uint8_t* cdata = new uint8_t[rowstride*height];

@@ -9,7 +9,8 @@
 #include <stdint.h>
 #include <ostream>
 #include <fstream>
-#include <glibmm/object.h>
+#include <memory>
+#include <limits>
 
 #include <iostream>
 
@@ -124,7 +125,7 @@ enum DisposalMethod {
 /**
  * Store an individual GIF Image
  */
-class GIFImage : public Glib::Object
+class GIFImage
 {
     public:
         GIFImage(int left, 
@@ -175,7 +176,7 @@ class GIFImage : public Glib::Object
         uint8_t* data;
 };
 
-typedef Glib::RefPtr<GIFImage> pGIFImage;
+typedef std::shared_ptr<GIFImage> pGIFImage;
 
 /**
  * Store an entire GIF

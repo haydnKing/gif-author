@@ -52,7 +52,7 @@ class Video : public Glib::Object
         /**
          * Get the current frame in the sequence and increment the position by
          * one
-         * @returns RefPtr to the fetched frame, points to NULL on failure
+         * @returns std::shared_ptr to the fetched frame, points to NULL on failure
          */
         virtual pVideoFrame get_frame() = 0;
 

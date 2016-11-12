@@ -5,10 +5,10 @@
 #include <glibmm/main.h>
 #include <glibmm/object.h>
 #include <gdkmm/pixbuf.h>
-#include <glibmm/refptr.h>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 
 #include <opencv2/opencv.hpp>
 
@@ -117,7 +117,7 @@ class Affine2D
 
 //forward declaration
 class VideoFrame;
-typedef Glib::RefPtr<VideoFrame> pVideoFrame;
+typedef std::shared_ptr<VideoFrame> pVideoFrame;
 
 /**
  * Extrapolation Method
@@ -140,7 +140,7 @@ enum InterpolationMethod {
 /**
  * Hold a frame of video
  */
-class VideoFrame : public Glib::Object
+class VideoFrame 
 {
     public:
         virtual ~VideoFrame();
@@ -178,11 +178,6 @@ class VideoFrame : public Glib::Object
          * create a copy of the data
          */
         pVideoFrame copy() const;
-
-        /**
-         * Get a Gdk::Pixbuf of the image with the same underlying data
-         */
-        Glib::RefPtr<Gdk::Pixbuf> get_pixbuf();
 
         /**
          * Convert to an openCV Mat

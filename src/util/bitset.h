@@ -4,9 +4,10 @@
 #include <glibmm/refptr.h>
 #include <glibmm/object.h>
 #include <cstring>
+#include <memory>
 
 class Bitset;
-typedef Glib::RefPtr<Bitset> pBitset;
+typedef std::shared_ptr<Bitset> pBitset;
 
 class Bitset : public Glib::Object
 {
