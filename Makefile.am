@@ -7,7 +7,7 @@ gif_author_SOURCES = src/encoder/segmenter.cc \
 					 src/encoder/colorquantizer.cc \
 					 src/encoder/ditherer.cc \
 					 src/util/bitset.cc \
-					 src/util/process.cc \
+					 src/util/cline.cc \
 					 src/gifauthor.cc \
 					 src/output/LZW.cc \
 					 src/output/gif.cc \
