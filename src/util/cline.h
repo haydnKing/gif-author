@@ -59,6 +59,22 @@ template <typename T> string Option<T>::help() const
     return out.str();
 };
 
+template <>
+class Option<bool> : public BaseOption
+{
+    public:
+        virtual ~Option();
+        
+        static pOption create(string name, string description);
+
+        virtual string help() const;
+
+    protected:
+        Option(string name, string description);
+
+        bool my_value;
+};
+
 class OptionGroup;
 typedef shared_ptr<OptionGroup> pOptionGroup;
 
@@ -70,8 +86,9 @@ class OptionGroup
         static pOptionGroup create(string name);
 
         template <typename T> void add_option(string name, string description, const T& default_value);
+        void add_option(string name, string description);
 
-        string get_help();
+        string help();
 
     protected:
         OptionGroup(string name);
@@ -79,12 +96,11 @@ class OptionGroup
         string my_name;
         map<string, pOption> options;
 };
-template <typename T> void OptionGroup::add_option<T>(string name, string description, const T& default_value)
+template <typename T> void OptionGroup::add_option(string name, string description, const T& default_value)
 {
     pOption op = Option<T>::create(name, description, default_value);
     options[name] = op;
 };
-
 
 
 #endif //GIFAUTHOR_CLINE_H
