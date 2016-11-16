@@ -19,6 +19,8 @@ class BaseOption
         string name() const {return my_name;};
         string description() const {return my_description;};
 
+        virtual void parse(vector<string>::const_iterator& it) = 0;
+
     protected:
         BaseOption(string name, string description);
 
@@ -36,6 +38,7 @@ class Option : public BaseOption
         static pOption create(string name, string description, const T& default_value);
 
         virtual string help() const;
+        virtual void parse(vector<string>::const_iterator& it);
 
     protected:
         Option(string name, string description, const T& default_value);
@@ -58,6 +61,15 @@ template <typename T> string Option<T>::help() const
     out << "--" << my_name << "[=" << my_value << "]: " << my_description;
     return out.str();
 };
+template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
+{
+    //attempt to consume the next option
+    it++;
+    istringstream in(*it);
+    in >> my_value;
+    cout << "my_name = " << my_value << endl;
+    it++;
+};
 
 template <>
 class Option<bool> : public BaseOption
@@ -68,6 +80,8 @@ class Option<bool> : public BaseOption
         static pOption create(string name, string description);
 
         virtual string help() const;
+        
+        virtual void parse(vector<string>::const_iterator& it);
 
     protected:
         Option(string name, string description);
@@ -89,6 +103,9 @@ class OptionGroup
         void add_option(string name, string description);
 
         string help();
+
+        //parse the arguments, return vector of unused arguments
+        vector<string> parse(const vector<string>& args);
 
     protected:
         OptionGroup(string name);

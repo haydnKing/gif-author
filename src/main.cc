@@ -13,5 +13,23 @@ int main (int argc, char *argv[])
     og->add_option("boolopt", "an option that's a bool");
 
     std::cout << og->help() << std::endl;
+    std::cout << "parsing..." << std::endl;
+
+    std::vector<string> args;
+    for(int i = 1; i < argc; i++)
+    {
+        args.push_back(argv[i]);
+        std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
+    }
+    std::vector<string> uk = og->parse(args);
+
+    if(uk.size() > 0)
+    {
+        for(auto it : uk)
+        {
+            std::cout << "Unknown argument: " << it << std::endl;
+        }
+    }
+
     return 0;
 }
