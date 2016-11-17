@@ -43,11 +43,11 @@ class Option : public BaseOption
     protected:
         Option(string name, string description, T& value);
 
-        T my_value;
+        T* my_value;
 };
 template <typename T> Option<T>::Option(string name, string description, T& value) :
     BaseOption(name, description),
-    my_value(value)
+    my_value(&value)
 {};
 template <typename T> Option<T>::~Option()
 {};
@@ -58,7 +58,7 @@ template <typename T> pOption Option<T>::create(string name, string description,
 template <typename T> string Option<T>::help() const
 {
     ostringstream out;
-    out << "--" << my_name << "[=" << my_value << "]: " << my_description;
+    out << "--" << my_name << "[=" << *my_value << "]: " << my_description;
     return out.str();
 };
 template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
@@ -66,8 +66,8 @@ template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
     //attempt to consume the next option
     it++;
     istringstream in(*it);
-    in >> my_value;
-    cout << "my_name = " << my_value << endl;
+    in >> *my_value;
+    cout << "parsed " << my_name << " = " << *my_value << endl;
     it++;
 };
 
@@ -86,7 +86,7 @@ class Option<bool> : public BaseOption
     protected:
         Option(string name, string description, bool& value);
 
-        bool my_value;
+        bool* my_value;
 };
 
 class OptionGroup;

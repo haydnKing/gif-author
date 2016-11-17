@@ -10,8 +10,10 @@ BaseOption::~BaseOption()
 
 Option<bool>::Option(string name, string description, bool& value) :
     BaseOption(name, description),
-    my_value(value)
-{};
+    my_value(&value)
+{
+    *my_value = false;
+};
 Option<bool>::~Option()
 {};
 pOption Option<bool>::create(string name, string description, bool& value)
@@ -27,7 +29,7 @@ string Option<bool>::help() const
 void Option<bool>::parse(vector<string>::const_iterator& it)
 {
     cout << my_name << " = true" << endl;
-    my_value = true;
+    *my_value = true;
     it++;
 };
 
@@ -69,7 +71,7 @@ vector<string> OptionGroup::parse(const vector<string>& args)
         if(it->compare(0, 2, "--") == 0)
         {
             name = it->substr(2);
-        } else if(it->compare(0, 1, "-")) {
+        } else if(it->compare(0, 1, "-") == 0) {
             name = it->substr(1);
         } else {
             cout << "  ignoring: " << *it << endl;

@@ -35,7 +35,7 @@ int main (int argc, char *argv[])
         }
     }
 
-    cout << "Parsed values: " << endl;
+    cout << "\n-----\nParsed values: " << endl;
     cout << "  intopt: " << intopt << endl;
     cout << "  floatopt: " << floatopt << endl;
     cout << "  boolopt: " << boolopt << endl;
