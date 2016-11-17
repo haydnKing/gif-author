@@ -35,25 +35,25 @@ class Option : public BaseOption
     public:
         virtual ~Option();
         
-        static pOption create(string name, string description, const T& default_value);
+        static pOption create(string name, string description, T& value);
 
         virtual string help() const;
         virtual void parse(vector<string>::const_iterator& it);
 
     protected:
-        Option(string name, string description, const T& default_value);
+        Option(string name, string description, T& value);
 
         T my_value;
 };
-template <typename T> Option<T>::Option(string name, string description, const T& default_value) :
+template <typename T> Option<T>::Option(string name, string description, T& value) :
     BaseOption(name, description),
-    my_value(default_value)
+    my_value(value)
 {};
 template <typename T> Option<T>::~Option()
 {};
-template <typename T> pOption Option<T>::create(string name, string description, const T& default_value)
+template <typename T> pOption Option<T>::create(string name, string description, T& value)
 {
-    return pOption(new Option<T>(name, description, default_value));
+    return pOption(new Option<T>(name, description, value));
 };
 template <typename T> string Option<T>::help() const
 {
@@ -77,14 +77,14 @@ class Option<bool> : public BaseOption
     public:
         virtual ~Option();
         
-        static pOption create(string name, string description);
+        static pOption create(string name, string description, bool& value);
 
         virtual string help() const;
         
         virtual void parse(vector<string>::const_iterator& it);
 
     protected:
-        Option(string name, string description);
+        Option(string name, string description, bool& value);
 
         bool my_value;
 };
@@ -99,8 +99,9 @@ class OptionGroup
 
         static pOptionGroup create(string name);
 
-        template <typename T> void add_option(string name, string description, const T& default_value);
-        void add_option(string name, string description);
+        template <typename T> void add_option(string name, string description, T& value);
+
+        template <typename T> T value(string name);
 
         string help();
 
@@ -113,9 +114,9 @@ class OptionGroup
         string my_name;
         map<string, pOption> options;
 };
-template <typename T> void OptionGroup::add_option(string name, string description, const T& default_value)
+template <typename T> void OptionGroup::add_option(string name, string description, T& value)
 {
-    pOption op = Option<T>::create(name, description, default_value);
+    pOption op = Option<T>::create(name, description, value);
     options[name] = op;
 };
 

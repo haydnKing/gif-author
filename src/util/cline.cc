@@ -8,15 +8,15 @@ BaseOption::BaseOption(string name, string description) :
 BaseOption::~BaseOption()
 {};
 
-Option<bool>::Option(string name, string description) :
+Option<bool>::Option(string name, string description, bool& value) :
     BaseOption(name, description),
-    my_value(false)
+    my_value(value)
 {};
 Option<bool>::~Option()
 {};
-pOption Option<bool>::create(string name, string description)
+pOption Option<bool>::create(string name, string description, bool& value)
 {
-    return pOption(new Option<bool>(name, description));
+    return pOption(new Option<bool>(name, description, value));
 };
 string Option<bool>::help() const
 {
@@ -53,11 +53,6 @@ string OptionGroup::help()
         out << "  " << it->second->help() << "\n";
     }
     return out.str();
-};
-void OptionGroup::add_option(string name, string description)
-{
-    pOption op = Option<bool>::create(name, description);
-    options[name] = op;
 };
 
 vector<string> OptionGroup::parse(const vector<string>& args)

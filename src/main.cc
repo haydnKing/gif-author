@@ -8,9 +8,13 @@ int main (int argc, char *argv[])
     std::cout << "Hello, world" << std::endl;
     pOptionGroup og = OptionGroup::create("mainGroup");
 
-    og->add_option<int>("intoption", "an option that's an integer", 5);
-    og->add_option<float>("floatoption", "an option that's a float", 4.0);
-    og->add_option("boolopt", "an option that's a bool");
+    int intopt = 5;
+    float floatopt = 4.0;
+    bool boolopt = false;
+
+    og->add_option<int>("intopt", "an option that's an integer", intopt);
+    og->add_option<float>("floatopt", "an option that's a float", floatopt);
+    og->add_option<bool>("boolopt", "an option that's a bool", boolopt);
 
     std::cout << og->help() << std::endl;
     std::cout << "parsing..." << std::endl;
@@ -30,6 +34,11 @@ int main (int argc, char *argv[])
             std::cout << "Unknown argument: " << it << std::endl;
         }
     }
+
+    cout << "Parsed values: " << endl;
+    cout << "  intopt: " << intopt << endl;
+    cout << "  floatopt: " << floatopt << endl;
+    cout << "  boolopt: " << boolopt << endl;
 
     return 0;
 }
