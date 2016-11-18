@@ -105,21 +105,23 @@ class OptionGroup
     public:
         virtual ~OptionGroup();
 
-        static pOptionGroup create(string name);
+        static pOptionGroup create(string name, string description="");
 
         template <typename T> void add_option(string name, string description, T& value);
+        void add_option(pOption op);
 
-        template <typename T> T value(string name);
 
         string help();
+        string name() const {return my_name;};
+        string description() const {return my_description;};
 
         //parse the arguments, return vector of unused arguments
         vector<string> parse(const vector<string>& args, bool shortform=false);
 
     protected:
-        OptionGroup(string name);
+        OptionGroup(string name, string description);
 
-        string my_name;
+        string my_name, my_description;
         map<string, pOption> options;
 };
 template <typename T> void OptionGroup::add_option(string name, string description, T& value)
@@ -141,7 +143,7 @@ class FactoryOption : public OptionBase
 
         void add_group(shared_ptr<T> group);
 
-    private:
+    protected:
         FactoryOption(string name, string description, shared_ptr<T>& value);
 
         map<string, shared_ptr<T>> groups;
@@ -162,7 +164,7 @@ template <typename T> string FactoryOption<T>::help() const
     out << my_name << ": " << my_description << endl;
     for(auto it : groups)
     {
-        out << it->second->help() << endl;
+        out << it.second->help() << endl;
     }
     return out.str();
 };

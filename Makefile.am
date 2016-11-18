@@ -16,6 +16,9 @@ AM_CXXFLAGS = $(GTKMM_CFLAGS) $(CV2_CFLAGS) $(FFMPEG_CFLAGS) -D__STDC_CONSTANT_M
 #					 src/main.cc 
 
 gif_author_SOURCES = src/util/cline.cc \
+ 					 src/output/gif.cc \
+ 					 src/output/LZW.cc \
+ 					 src/encoder/colorquantizer.cc \
 					 src/main.cc 
 					 
 

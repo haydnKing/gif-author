@@ -34,16 +34,22 @@ void Option<bool>::parse(vector<string>::const_iterator& it)
 };
 
 
-OptionGroup::OptionGroup(string name) :
-    my_name(name)
+OptionGroup::OptionGroup(string name, string description) :
+    my_name(name),
+    my_description(description)
 {};
 
 OptionGroup::~OptionGroup()
 {};
 
-pOptionGroup OptionGroup::create(string name)
+pOptionGroup OptionGroup::create(string name, string description)
 {
-    return pOptionGroup(new OptionGroup(name));
+    return pOptionGroup(new OptionGroup(name, description));
+};
+        
+void OptionGroup::add_option(pOption op)
+{
+    options[op->name()] = op;
 };
 
 string OptionGroup::help()

@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "util/cline.h"
+#include "encoder/colorquantizer.h"
 
 int main (int argc, char *argv[])
 {
@@ -11,10 +12,12 @@ int main (int argc, char *argv[])
     int intopt = 5;
     float floatopt = 4.0;
     bool boolopt = false;
+    pColorQuantizer cq;
 
     og->add_option<int>("intopt", "an option that's an integer", intopt);
     og->add_option<float>("floatopt", "an option that's a float", floatopt);
     og->add_option<bool>("boolopt", "an option that's a bool", boolopt);
+    og->add_option(QuantizerFactory::create(cq));
 
     std::cout << og->help() << std::endl;
     std::cout << "parsing..." << std::endl;
