@@ -23,7 +23,6 @@ int main (int argc, char *argv[])
     for(int i = 1; i < argc; i++)
     {
         args.push_back(argv[i]);
-        std::cout << "argv[" << i << "] = " << argv[i] << std::endl;
     }
     std::vector<string> uk = og->parse(args);
 

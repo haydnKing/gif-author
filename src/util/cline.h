@@ -10,27 +10,27 @@
 
 using namespace std;
 
-class BaseOption
+class OptionBase
 {
     public:
-        virtual ~BaseOption();
+        virtual ~OptionBase();
 
-        virtual string help() const = 0;
         string name() const {return my_name;};
         string description() const {return my_description;};
 
+        virtual string help() const = 0;
         virtual void parse(vector<string>::const_iterator& it) = 0;
 
     protected:
-        BaseOption(string name, string description);
+        OptionBase(string name, string description);
 
         string my_name, my_description;
 };
 
-typedef shared_ptr<BaseOption> pOption;
+typedef shared_ptr<OptionBase> pOption;
 
 template <typename T>
-class Option : public BaseOption
+class Option : public OptionBase
 {
     public:
         virtual ~Option();
@@ -46,7 +46,7 @@ class Option : public BaseOption
         T* my_value;
 };
 template <typename T> Option<T>::Option(string name, string description, T& value) :
-    BaseOption(name, description),
+    OptionBase(name, description),
     my_value(&value)
 {};
 template <typename T> Option<T>::~Option()
@@ -63,16 +63,24 @@ template <typename T> string Option<T>::help() const
 };
 template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
 {
-    //attempt to consume the next option
+    int eq = it->find("=");
+    string rvalue;
+    if(eq == string::npos)
+    {
+        //attempt to consume the next option
+        it++;
+        rvalue = *it;
+    } else {
+        rvalue = it->substr(eq+1);
+    }
     it++;
-    istringstream in(*it);
+    istringstream in(rvalue);
     in >> *my_value;
     cout << "parsed " << my_name << " = " << *my_value << endl;
-    it++;
 };
 
 template <>
-class Option<bool> : public BaseOption
+class Option<bool> : public OptionBase
 {
     public:
         virtual ~Option();
@@ -106,7 +114,7 @@ class OptionGroup
         string help();
 
         //parse the arguments, return vector of unused arguments
-        vector<string> parse(const vector<string>& args);
+        vector<string> parse(const vector<string>& args, bool shortform=false);
 
     protected:
         OptionGroup(string name);
@@ -118,6 +126,68 @@ template <typename T> void OptionGroup::add_option(string name, string descripti
 {
     pOption op = Option<T>::create(name, description, value);
     options[name] = op;
+};
+
+template <typename T>
+class FactoryOption : public OptionBase
+{
+    public:
+        virtual ~FactoryOption() {};
+
+        static pOption create(string name, string description, shared_ptr<T>& value);
+
+        virtual string help() const;
+        virtual void parse(vector<string>::const_iterator& it);
+
+        void add_group(shared_ptr<T> group);
+
+    private:
+        FactoryOption(string name, string description, shared_ptr<T>& value);
+
+        map<string, shared_ptr<T>> groups;
+
+        shared_ptr<T>* value;
+};
+template <typename T> FactoryOption<T>::FactoryOption(string name, string description, shared_ptr<T>& value):
+    OptionBase(name, description),
+    value(&value)
+{};
+template <typename T> pOption FactoryOption<T>::create(string name, string description, shared_ptr<T>& value)
+{
+    return pOption(new FactoryOption<T>(name, description, value));
+};
+template <typename T> string FactoryOption<T>::help() const 
+{
+    ostringstream out;
+    out << my_name << ": " << my_description << endl;
+    for(auto it : groups)
+    {
+        out << it->second->help() << endl;
+    }
+    return out.str();
+};
+template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterator& it)
+{
+    it++;
+    stringstream in(*it);
+    it++;
+
+    //get tokens
+    vector<string> args;
+    string val;
+    //char delim = ':';
+    while(getline(in, val, ':'))
+    {
+        args.push_back(val);
+    }
+
+    shared_ptr<T> group = groups.at(args[0]);
+    args.erase(args.cbegin());
+    group->parse(args, true);
+};
+template <typename T> void FactoryOption<T>::add_group(shared_ptr<T> group)
+{
+    groups[group->name()] = group;
 };
 
 

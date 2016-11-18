@@ -1,15 +1,15 @@
 #include "cline.h"
 
-BaseOption::BaseOption(string name, string description) :
+OptionBase::OptionBase(string name, string description) :
     my_name(name),
     my_description(description)
 {};
 
-BaseOption::~BaseOption()
+OptionBase::~OptionBase()
 {};
 
 Option<bool>::Option(string name, string description, bool& value) :
-    BaseOption(name, description),
+    OptionBase(name, description),
     my_value(&value)
 {
     *my_value = false;
@@ -57,7 +57,7 @@ string OptionGroup::help()
     return out.str();
 };
 
-vector<string> OptionGroup::parse(const vector<string>& args)
+vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
 {
     vector<string> ret;
     vector<string>::const_iterator it = args.cbegin();
@@ -68,16 +68,28 @@ vector<string> OptionGroup::parse(const vector<string>& args)
     {
         cout << "parse: " << *it << endl;
         name = "";
-        if(it->compare(0, 2, "--") == 0)
+        if(shortform)
         {
-            name = it->substr(2);
-        } else if(it->compare(0, 1, "-") == 0) {
-            name = it->substr(1);
+            name = *it;
         } else {
-            cout << "  ignoring: " << *it << endl;
-            ret.push_back(*it);
-            it++;
-            continue;
+            if(it->compare(0, 2, "--") == 0)
+            {
+                name = it->substr(2);
+            } else if(it->compare(0, 1, "-") == 0) {
+                name = it->substr(1);
+            } else {
+                cout << "  ignoring: " << *it << endl;
+                ret.push_back(*it);
+                it++;
+                continue;
+            }
+        }
+        
+        //check "=" form
+        int eq = name.find("=");
+        if(eq != string::npos)
+        {
+            name = name.substr(0,eq);
         }
         
         cout << "--name = " << name << endl;
