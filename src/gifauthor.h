@@ -13,7 +13,7 @@ typedef std::shared_ptr<GIFAuthor> pGIFAuthor;
 /**
  * Central class
  */
-class GIFAuthor : public Gtk::Application
+class GIFAuthor
 {
     protected:
         GIFAuthor();
@@ -22,10 +22,18 @@ class GIFAuthor : public Gtk::Application
     
         static pGIFAuthor create();
 
-        virtual void on_open(const type_vec_files &files, const Glib::ustring &hint);
+        virtual void from_files(const std::vector<std::string>& files);
 
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};
+
+        void set_size(int width, int height) {out_width=width; out_height=height;};
+        void set_delay(int d) {delay = d;};
+        void set_outfile(const std::string& outfile) {out_file = outfile;};
+
+        void set_segmenter(pSegmenter s) {segmenter = s;};
+        void set_ditherer(pDitherer d) {ditherer = d;};
+        void set_colorquantizer(pColorQuantizer cq) {colorquantizer = cq;};
 
 
         /**
@@ -58,21 +66,17 @@ class GIFAuthor : public Gtk::Application
         void update_output();
 
     protected:
-        void register_command_line();
-        int on_handle_local_options(const Glib::RefPtr<Glib::VariantDict>& options);
         void from_images(std::vector<std::string> fnames);
-        bool parse_width_height(const Glib::ustring& name, const Glib::ustring& value, bool has_value);
-        bool parse_filename(const Glib::ustring& name, const Glib::ustring& value, bool has_value);
         
         int out_width, out_height, delay;
-        std::string out_file;
         
         std::vector<pVideoFrame> frames;
         GIF *out;
-        
-        SegmenterFactory segmenterFactory;
-        QuantizerFactory quantizerFactory;
-        DithererFactory dithererFactory;
+        std::string out_file;
+
+        pSegmenter segmenter;
+        pColorQuantizer colorquantizer;
+        pDitherer ditherer;
 };
 
 

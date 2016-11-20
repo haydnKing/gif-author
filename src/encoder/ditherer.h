@@ -5,11 +5,15 @@
 #include "../output/gif.h"
 #include "colorquantizer.h"
 #include "../util/bitset.h"
-#include "../util/process.h"
+#include "../util/cline.h"
 
 #include <string>
+#include <memory>
 
-class Ditherer : public Process
+class Ditherer;
+typedef std::shared_ptr<Ditherer> pDitherer;
+
+class Ditherer : public OptionGroup
 {
     public:
         Ditherer(std::string name, std::string description);
@@ -31,12 +35,13 @@ class Ditherer : public Process
 /**
  * A factory for Ditherers
  */
-class DithererFactory : public ProcessFactory<Ditherer>
+class DithererFactory : public FactoryOption<Ditherer>
 {
     public: 
-        DithererFactory();
-};
+        static pOption create(pDitherer& value);
 
-extern DithererFactory dithererFactory;
+    protected:
+        DithererFactory(pDitherer& value);
+};
 
 #endif

@@ -7,8 +7,9 @@
 
 #include <stdint.h>
 #include <vector>
+#include <memory>
 
-#include "../util/process.h"
+#include "../util/cline.h"
 
 #include "../video/videoframe.h"
 #include "../util/bitset.h"
@@ -17,7 +18,7 @@
  * A class to decide which pixels in each frame should be updated,
  * and what value they should be set to. Initialise via SegmenterFactory
  */
-class Segmenter : public Process
+class Segmenter : public OptionGroup
 {
     public:
         ~Segmenter() {};
@@ -35,20 +36,24 @@ class Segmenter : public Process
 
     protected:
         Segmenter(std::string name, std::string description) :
-            Process(name, description)
+            OptionGroup(name, description)
         {};
 };
+
+typedef std::shared_ptr<Segmenter> pSegmenter;
 
 /**
  * A factory for Segmenters
  */
-class SegmenterFactory : public ProcessFactory<Segmenter>
+class SegmenterFactory : public FactoryOption<Segmenter>
 {
     public:
-        SegmenterFactory();
+        static pOption create(pSegmenter& value);
+
+    protected:        
+        SegmenterFactory(pSegmenter& value);
 };
 
-extern SegmenterFactory segmenterFactory;
 
 #endif //GTKMM_IMAGESEGMENTER_H
 
