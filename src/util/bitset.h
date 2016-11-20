@@ -1,15 +1,14 @@
 #ifndef GIFAUTHOR_BITSET_H
 #define GIFAUTHOR_BITSET_H
 
-#include <glibmm/refptr.h>
-#include <glibmm/object.h>
 #include <cstring>
+#include <cmath>
 #include <memory>
 
 class Bitset;
 typedef std::shared_ptr<Bitset> pBitset;
 
-class Bitset : public Glib::Object
+class Bitset
 {
     public:
         ~Bitset();

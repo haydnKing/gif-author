@@ -1,7 +1,6 @@
-#ifndef GTKMM_GIFAUTHOR_H
-#define GTKMM_GIFAUTHOR_H
+#ifndef GIFAUTHOR_H
+#define GIFAUTHOR_H
 
-#include <gtkmm.h>
 #include <iostream>
 #include <memory>
 
