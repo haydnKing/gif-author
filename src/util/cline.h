@@ -7,8 +7,74 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <regex>
 
 using namespace std;
+
+class Size
+{
+    public:
+        Size(int w, int h);
+        virtual ~Size();
+
+        int width() const {return w;};
+        int height() const {return h;};
+
+        void width(int _w) {w = _w;};
+        void height(int _h) {h = _h;};
+
+    protected:
+        int w,h;
+};
+
+template <class CharT, class Traits>
+std::basic_ostream<CharT, Traits>& 
+    operator<<(std::basic_ostream<CharT, Traits>& os, 
+               const Size& size)
+{
+    if(size.width() < 0)
+        os << "_x";
+    else
+        os << size.width() << "x";
+    if(size.height() < 0)
+        os << "_";
+    else
+        os << size.height();
+    return os;
+};
+
+template <class CharT, class Traits>
+std::basic_istream<CharT, Traits>& 
+    operator>>(std::basic_istream<CharT, Traits>& is, 
+               Size& size)
+{
+    int w,h;
+    string s;
+    is >> s;
+
+    regex re("([0-9]+|_)x([0-9]+|_)");
+    smatch m;
+    if(!regex_match(s, m, re))
+    {
+        //bad stuff
+        return is;
+    }
+
+    if(m.str(1) != "_")
+    {
+        w = stoi(m.str(1));
+    } else {
+        w = -1;
+    }
+    if(m.str(2) != "_")
+    {
+        h = stoi(m.str(2));
+    } else {
+        h = -1;
+    }
+    size.width(w);
+    size.height(h);
+};
 
 class OptionBase
 {

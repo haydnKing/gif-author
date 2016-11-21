@@ -1,5 +1,12 @@
 #include "cline.h"
 
+Size::Size(int w, int h):
+    w(w),
+    h(h)
+{};
+
+Size::~Size() {};
+
 OptionBase::OptionBase(string name, string description) :
     my_name(name),
     my_description(description)
