@@ -57,6 +57,7 @@ std::basic_istream<CharT, Traits>&
     if(!regex_match(s, m, re))
     {
         //bad stuff
+        is.setstate(std::istream::failbit);
         return is;
     }
 
@@ -74,6 +75,7 @@ std::basic_istream<CharT, Traits>&
     }
     size.width(w);
     size.height(h);
+    return is;
 };
 
 class OptionBase
@@ -142,7 +144,15 @@ template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
     it++;
     istringstream in(rvalue);
     in >> *my_value;
-    cout << "parsed " << my_name << " = " << *my_value << endl;
+    bool fail = in.fail();
+    string rem;
+    getline(in, rem);
+    if(fail || !rem.empty())
+    {
+        ostringstream err;
+        err << "Invalid argument \""<< rvalue << "\" to \"" << my_name << "\"";
+        throw(std::invalid_argument(err.str()));
+    }
 };
 
 template <>
