@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "encoder/gifencoder.h"
+#include "util/cline.h"
 
 class GIFAuthor;
 typedef std::shared_ptr<GIFAuthor> pGIFAuthor;
@@ -15,67 +16,41 @@ typedef std::shared_ptr<GIFAuthor> pGIFAuthor;
 class GIFAuthor
 {
     protected:
-        GIFAuthor();
+        GIFAuthor(int argc, char* argv[]);
     public:
         virtual ~GIFAuthor();
     
-        static pGIFAuthor create();
+        static pGIFAuthor create(int argc, char* argv[]);
 
-        virtual void from_files(const std::vector<std::string>& files);
+        bool error() const {return is_error;};
+        operator bool() const {return error();};
+
+        /**
+         * generate the GIF
+         */
+        virtual pGIF generate();
 
         int get_output_width() const {return out_width;};
         int get_output_height() const {return out_height;};
 
-        void set_size(int width, int height) {out_width=width; out_height=height;};
-        void set_delay(int d) {delay = d;};
-        void set_outfile(const std::string& outfile) {out_file = outfile;};
-
-        void set_segmenter(pSegmenter s) {segmenter = s;};
-        void set_ditherer(pDitherer d) {ditherer = d;};
-        void set_colorquantizer(pColorQuantizer cq) {colorquantizer = cq;};
-
-
-        /**
-         * clear the frames
-         */
-        void clear_frames();
-        /**
-         * add a frame
-         */
-        void add_frame(pVideoFrame f);
-        /**
-         * get the list of frames
-         */
-        const std::vector<pVideoFrame> get_frames() const;
-        /**
-         * get the number of frames
-         */
-        int count_frames() const;
-
-
-        /**
-         * get the current output
-         * only valid after update_output
-         */
-        const GIF *get_output() const;
-
-        /**
-         * (re)calculate the output
-         */
-        void update_output();
-
     protected:
         void from_images(std::vector<std::string> fnames);
+
+        void load_files();
         
-        int out_width, out_height, delay;
+        int delay;
+        Crop crop_opts;
+        Scale scale_opts;
+        std::string out_file;
         
         std::vector<pVideoFrame> frames;
-        GIF *out;
-        std::string out_file;
+        std::vector<std::string> filenames;
 
         pSegmenter segmenter;
         pColorQuantizer colorquantizer;
         pDitherer ditherer;
+
+        bool is_error;
 };
 
 

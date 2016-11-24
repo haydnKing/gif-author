@@ -1,65 +1,20 @@
 #include "gifauthor.h"
 
-GIFAuthor::GIFAuthor() :
-    out(NULL),
-    out_width(-1),
-    out_height(-1),
+GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     delay(40),
     out_file("out.gif")
 {};
 
 GIFAuthor::~GIFAuthor() 
-{
-    delete out;
-};
+{};
 
-pGIFAuthor GIFAuthor::create() {
-    return pGIFAuthor(new GIFAuthor());
+pGIFAuthor GIFAuthor::create(int argc, char* argv[]) {
+    return pGIFAuthor(new GIFAuthor(argc, argv));
 }
 
-void GIFAuthor::clear_frames()
+pGIF GIFAuthor::generate()
 {
-    frames.clear();
-};
-
-void GIFAuthor::add_frame(pVideoFrame f)
-{
-    frames.push_back(f);
-};
-
-const std::vector<pVideoFrame> GIFAuthor::get_frames() const
-{
-    return frames;
-};
-
-int GIFAuthor::count_frames() const
-{
-    return frames.size();
-};
-
-const GIF *GIFAuthor::get_output() const
-{
-    return out;
-};
-
-void debug_ct(pGIFImage &img, const GIFColorTable *ct)
-{
-    for(int x = 0; x < img->get_width(); x++)
-    {
-        for(int y = 0; y < img->get_height(); y++)
-        {
-            if(x+img->get_width()*y >= ct->num_colors())
-                break;
-            img->set_value(x,y,x+img->get_width()*y);
-        }
-    }
-};
-
-void GIFAuthor::update_output()
-{
-    //delete the old;
-    delete out;
-    out = NULL;
+    pGIF out;
 
     if(frames.size()==0)
         return;
@@ -94,20 +49,16 @@ void GIFAuthor::update_output()
     out = encoder.get_output();
 };
 
-void GIFAuthor::from_files(const std::vector<std::string>& files)
+void GIFAuthor::load_files()
 {
+    frames.clear();
 
-    for(int i = 0; i < files.size(); i++)
+    for(int i = 0; i < fnames.size(); i++)
     {
-        pVideoFrame pv = VideoFrame::create_from_file(files[i], i*delay, i);
+        pVideoFrame pv = VideoFrame::create_from_file(fnames[i], i*delay, i);
 
         std::cout << "Load frame " << i << ": " << files[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
-        add_frame(pv);
+        frames.push_back(pv);
     }
 
-    update_output();
-
-    std::ofstream outstream(out_file);
-    std::cout << "Writing to " << out_file << std::endl;
-    get_output()->write(outstream);
 }
