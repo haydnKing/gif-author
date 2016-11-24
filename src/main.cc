@@ -15,6 +15,7 @@ int main (int argc, char *argv[])
     float floatopt = 4.0;
     bool boolopt = false;
     Size sizeopt(-1,-1);
+    Crop cropopt;
     pColorQuantizer cq;
     pDitherer dither;
     pSegmenter segmenter;
@@ -22,6 +23,7 @@ int main (int argc, char *argv[])
     og->add_option<int>("intopt", "an option that's an integer", intopt);
     og->add_option<float>("floatopt", "an option that's a float", floatopt);
     og->add_option<bool>("boolopt", "an option that's a bool", boolopt);
+    og->add_option<Crop>("crop", "cropping of the output image", cropopt);
     og->add_option<Size>("size", "size of the output image", sizeopt);
     og->add_option(QuantizerFactory::create(cq));
     og->add_option(DithererFactory::create(dither));
@@ -50,6 +52,7 @@ int main (int argc, char *argv[])
     cout << "  floatopt: " << floatopt << endl;
     cout << "  boolopt: " << boolopt << endl;
     cout << "  size = " << sizeopt << endl;
+    cout << "  crop = " << sizeopt << endl;
 
     return 0;
 }

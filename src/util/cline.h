@@ -78,6 +78,64 @@ std::basic_istream<CharT, Traits>&
     return is;
 };
 
+class Crop
+{
+    public:
+        Crop(int x=-1, int y=-1, int w=-1, int h=-1) :
+            x(x),
+            y(y),
+            w(w),
+            h(h)
+        {};
+        virtual ~Crop() {};
+
+        int xpos() const {return x;};
+        int ypos() const {return y;};
+        int width() const {return w;};
+        int height() const {return h;};
+
+        void xpos(int _x) {x = _x;};
+        void ypos(int _y) {y = _y;};
+        void width(int _w) {w = _w;};
+        void height(int _h) {h = _h;};
+
+    protected:
+        int x,y,w,h;
+};
+
+template <class CharT, class Traits>
+std::basic_istream<CharT, Traits>& 
+    operator>>(std::basic_istream<CharT, Traits>& is, 
+               Crop& c)
+{
+    string s;
+    is >> s;
+
+    regex re("([0-9]+),([0-9]+)+([0-9]+)x([0-9]+)");
+    smatch m;
+    if(!regex_match(s, m, re))
+    {
+        //bad stuff
+        is.setstate(std::istream::failbit);
+        return is;
+    }
+
+    c.xpos(stoi(m.str(1)));
+    c.ypos(stoi(m.str(2)));
+    c.width(stoi(m.str(3)));
+    c.height(stoi(m.str(4)));
+    return is;
+};
+
+template <class CharT, class Traits>
+std::basic_ostream<CharT, Traits>& 
+    operator<<(std::basic_ostream<CharT, Traits>& os, 
+               const Crop& c)
+{
+    os << c.xpos() << "," << c.ypos() << "+" << c.width() << "x" << c.height();
+    return os;
+};
+
 class OptionBase
 {
     public:
