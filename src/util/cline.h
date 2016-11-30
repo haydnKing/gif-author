@@ -17,6 +17,8 @@ class Size
         Size(int w=-1, int h=-1);
         virtual ~Size();
 
+        operator bool() const {return w>=0 || h>=0;};
+
         int width() const {return w;};
         int height() const {return h;};
 
@@ -94,7 +96,7 @@ class Crop
         int width() const {return w;};
         int height() const {return h;};
 
-        operator bool() const {return x<0 && y<0 && w<0 && h<0;};
+        operator bool() const {return !(x<0 && y<0 && w<0 && h<0);};
 
         void xpos(int _x) {x = _x;};
         void ypos(int _y) {y = _y;};

@@ -70,6 +70,7 @@ pGIF GIFAuthor::generate()
     for(auto fr : frames)
     {
         if(crop_opts) {
+            std::cout << "fr = fr->crop("<<crop_opts.xpos()<<", "<<crop_opts.ypos()<<", "<<crop_opts.width()<<", "<<crop_opts.height()<<");"<<std::endl;
             fr = fr->crop(crop_opts.xpos(), crop_opts.ypos(), crop_opts.width(), crop_opts.height());
         }
         //scale
