@@ -208,9 +208,10 @@ class MotionSegmenter : public Segmenter
 SegmenterFactory::SegmenterFactory(pSegmenter& value) : 
     FactoryOption("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream", value)
 {
-    add_group(DeltaSegmenter::create());
+    auto def = DeltaSegmenter::create();
+    add_group(def);
     add_group(NullSegmenter::create());
- //   register_type("MotionSegmenter", new MotionSegmenter());
+    value = def;
 };
 
 pOption SegmenterFactory::create(pSegmenter& value)

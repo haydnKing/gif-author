@@ -143,8 +143,11 @@ class NoDither : public Ditherer
 DithererFactory::DithererFactory(pDitherer& value) :
     FactoryOption("ditherer", "The ditherer takes a full colour image and a quantizer and produces a quantized image", value)
 {
-    add_group(FSDither::create());
+    auto def = FSDither::create();
+    add_group(def);
     add_group(NoDither::create());
+
+    value = def;
 };
         
 pOption DithererFactory::create(pDitherer& value)

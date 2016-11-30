@@ -281,7 +281,6 @@ class FactoryOption : public OptionBase
 
     protected:
         FactoryOption(string name, string description, shared_ptr<T>& value);
-
         map<string, shared_ptr<T>> groups;
 
         shared_ptr<T>* value;

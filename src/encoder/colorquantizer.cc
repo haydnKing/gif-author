@@ -427,7 +427,9 @@ void MMCQuantizer::vbox::split()
 QuantizerFactory::QuantizerFactory(pColorQuantizer& value) :
     FactoryOption("quantizer", "The quantizer takes the full colour spectrum of the image and chooses a palette of colours to represent it in the GIF", value)
 {
-    add_group(MMCQuantizer::create());
+    auto def = MMCQuantizer::create();
+    add_group(def);
+    value = def;
 };
 
 pOption QuantizerFactory::create(pColorQuantizer& value)
