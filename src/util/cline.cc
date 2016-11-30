@@ -35,7 +35,6 @@ string Option<bool>::help() const
 };
 void Option<bool>::parse(vector<string>::const_iterator& it)
 {
-    cout << my_name << " = true" << endl;
     *my_value = true;
     it++;
 };
@@ -79,7 +78,6 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
 
     while(it != args.end())
     {
-        cout << "parse: " << *it << endl;
         name = "";
         if(shortform)
         {
@@ -91,7 +89,6 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
             } else if(it->compare(0, 1, "-") == 0) {
                 name = it->substr(1);
             } else {
-                cout << "  ignoring: " << *it << endl;
                 ret.push_back(*it);
                 it++;
                 continue;
@@ -105,15 +102,12 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
             name = name.substr(0,eq);
         }
         
-        cout << "--name = " << name << endl;
         try
         {
             op = options.at(name);
-            cout << "  op->parse(\"" << name << "\")" << endl;
             op->parse(it);
         }
         catch (out_of_range) {
-            cout << "  unknown name \""<< name <<"\", ignoring: " << *it << endl;
             ret.push_back(*it);
             it++;
         }            

@@ -29,6 +29,7 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
         is_error = true;
     }
 
+    load_files();
 };
 
 GIFAuthor::~GIFAuthor() 
@@ -42,7 +43,7 @@ pGIF GIFAuthor::generate()
 {
     pGIF out;
 
-    if(frames.size()==0 && is_error)
+    if(frames.empty() || is_error)
         return NULL;
     
     //work out size
