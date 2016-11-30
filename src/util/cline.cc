@@ -15,6 +15,17 @@ OptionBase::OptionBase(string name, string description) :
 OptionBase::~OptionBase()
 {};
 
+template <> string Option<string>::help() const
+{
+    ostringstream out;
+    out << "--" << my_name;
+    if(my_value->empty()) {
+        out << "[=" << *my_value << "]";
+    }
+    out << ": " << my_description;
+    return out.str();
+};
+
 Option<bool>::Option(string name, string description, bool& value) :
     OptionBase(name, description),
     my_value(&value)

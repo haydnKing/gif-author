@@ -34,14 +34,7 @@ std::basic_ostream<CharT, Traits>&
     operator<<(std::basic_ostream<CharT, Traits>& os, 
                const Size& size)
 {
-    if(size.width() < 0)
-        os << "_x";
-    else
-        os << size.width() << "x";
-    if(size.height() < 0)
-        os << "_";
-    else
-        os << size.height();
+    os << size.width() << "x" << size.height();
     return os;
 };
 
@@ -188,9 +181,14 @@ template <typename T> pOption Option<T>::create(string name, string description,
 template <typename T> string Option<T>::help() const
 {
     ostringstream out;
-    out << "--" << my_name << "[=" << *my_value << "]: " << my_description;
+    out << "--" << my_name;
+    if((bool)*my_value) {
+        out << "[=" << *my_value << "]";
+    }
+    out << ": " << my_description;
     return out.str();
 };
+template <> string Option<string>::help() const;
 template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
 {
     int eq = it->find("=");
