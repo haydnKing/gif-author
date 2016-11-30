@@ -6,6 +6,9 @@
 
 #include "encoder/gifencoder.h"
 #include "util/cline.h"
+#include "encoder/colorquantizer.h"
+#include "encoder/ditherer.h"
+#include "encoder/segmenter.h"
 
 class GIFAuthor;
 typedef std::shared_ptr<GIFAuthor> pGIFAuthor;
@@ -30,9 +33,6 @@ class GIFAuthor
          */
         virtual pGIF generate();
 
-        int get_output_width() const {return out_width;};
-        int get_output_height() const {return out_height;};
-
     protected:
         void from_images(std::vector<std::string> fnames);
 
@@ -40,11 +40,11 @@ class GIFAuthor
         
         int delay;
         Crop crop_opts;
-        Scale scale_opts;
-        std::string out_file;
+        Size scale_opts;
+        std::string out_file_name;
         
         std::vector<pVideoFrame> frames;
-        std::vector<std::string> filenames;
+        std::vector<std::string> in_file_names;
 
         pSegmenter segmenter;
         pColorQuantizer colorquantizer;

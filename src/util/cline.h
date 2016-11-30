@@ -14,7 +14,7 @@ using namespace std;
 class Size
 {
     public:
-        Size(int w, int h);
+        Size(int w=-1, int h=-1);
         virtual ~Size();
 
         int width() const {return w;};
@@ -93,6 +93,8 @@ class Crop
         int ypos() const {return y;};
         int width() const {return w;};
         int height() const {return h;};
+
+        operator bool() const {return x<0 && y<0 && w<0 && h<0;};
 
         void xpos(int _x) {x = _x;};
         void ypos(int _y) {y = _y;};

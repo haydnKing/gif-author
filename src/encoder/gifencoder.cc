@@ -26,7 +26,7 @@ void GIFEncoder::push_frame(pVideoFrame fr)
     frames.push_back(fr);
 };
 
-GIF *GIFEncoder::get_output()
+pGIF GIFEncoder::get_output()
 {
     GIF *out = new GIF(canvas_width, canvas_height);
     pVideoFrame fr;
@@ -125,7 +125,7 @@ GIF *GIFEncoder::get_output()
 
     std::cout << "Length of returned GIF: " << out->size() << std::endl;
 
-    return out;
+    return pGIF(out);
 };
 
 void GIFEncoder::smooth_transparency(const std::vector<pVideoFrame> frames, 

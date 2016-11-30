@@ -214,4 +214,6 @@ class GIF : public std::list<pGIFImage>
 
 };
 
+typedef std::shared_ptr<GIF> pGIF;
+
 #endif
