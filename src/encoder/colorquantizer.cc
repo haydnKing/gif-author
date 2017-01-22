@@ -62,7 +62,7 @@ class MMCQuantizer : public ColorQuantizer
         static pColorQuantizer create();
 
         virtual void build_ct(bool transparency, int quantized_colors=256);
-        virtual const GIFColorTable *get_ct() const;
+        virtual pcGIFColorTable get_ct() const;
 
     protected:
         MMCQuantizer();
@@ -77,7 +77,7 @@ class MMCQuantizer : public ColorQuantizer
                 vbox *get_left() {return left;};
                 vbox *get_right() {return right;};
                 vbox *get_largest(float volume_coef, float count_coef); 
-                void add_to_ct(GIFColorTable *ct);
+                void add_to_ct(pGIFColorTable ct);
 
                 unsigned int get_volume() const;
                 int get_count() const;
@@ -100,8 +100,7 @@ class MMCQuantizer : public ColorQuantizer
 
         void do_MMC(float f, int num_colors);
 
-
-        GIFColorTable *ct;
+        pGIFColorTable ct;
 };
 
         
@@ -123,7 +122,7 @@ void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
         return;
 
     //first two colours are just lightest and darkest
-    ct = new GIFColorTable();
+    ct = GIFColorTable::create();
     uint8_t max_c[3] = {0,0,0},
             min_c[3] = {255,255,255};
     for(int i = 0; i < num_colors; i++)
@@ -166,7 +165,7 @@ void MMCQuantizer::do_MMC(float f, int colours_to_add)
     root.add_to_ct(ct);
 };
 
-const GIFColorTable *MMCQuantizer::get_ct() const
+pcGIFColorTable MMCQuantizer::get_ct() const
 {
     return ct;
 };
@@ -247,7 +246,7 @@ int MMCQuantizer::vbox::get_count() const
     return num_pixels;
 };
                 
-void MMCQuantizer::vbox::add_to_ct(GIFColorTable *ct)
+void MMCQuantizer::vbox::add_to_ct(pGIFColorTable ct)
 {
     if(is_leaf())
     {

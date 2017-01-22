@@ -22,7 +22,7 @@ class ColorQuantizer : public OptionGroup
         int get_num_colors() const {return num_colors;};
 
         virtual void build_ct(bool transparency, int quantized_colors=256) = 0;
-        virtual const GIFColorTable *get_ct() const = 0;
+        virtual pcGIFColorTable get_ct() const = 0;
 
     protected:
         uint8_t* colors;

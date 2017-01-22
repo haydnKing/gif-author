@@ -34,7 +34,7 @@ class GIFEncoder
 
         void push_frame(pVideoFrame fr);
 
-        GIF *get_output();
+        pGIF get_output();
 
         void set_sigma(float s) {sm_sigma = s;};
         void set_threshold(float t) {sm_thresh = t;};

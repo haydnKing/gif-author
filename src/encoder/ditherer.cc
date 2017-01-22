@@ -6,9 +6,9 @@ Ditherer::Ditherer(std::string name, std::string description) :
 
 pGIFImage Ditherer::dither_image(const pVideoFrame vf,
                                  const pBitset mask,
-                                 const GIFColorTable *ct) const {
+                                 pcGIFColorTable ct) const {
     //Create the output image
-    pGIFImage out(new GIFImage(0, 0, vf->get_width(), vf->get_height()));
+    pGIFImage out = GIFImage::create(0, 0, vf->get_width(), vf->get_height());
     out->set_local_colortable(ct);
 
     _dither_image(out, vf, mask, ct);
@@ -30,7 +30,7 @@ class FSDither : public Ditherer
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
-                           const GIFColorTable *ct) const {
+                           pcGIFColorTable ct) const {
             //store 2 rows of RGB errors, set to zero
             int32_t* errors = new int32_t[6*vf->get_width()];
             std::memset(errors, 0, 6*vf->get_width()*sizeof(int32_t));
@@ -117,7 +117,7 @@ class NoDither : public Ditherer
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
-                           const GIFColorTable *ct) const {
+                           pcGIFColorTable ct) const {
             int x,y,index;
             for(y = 0; y < vf->get_height(); y++)
             {

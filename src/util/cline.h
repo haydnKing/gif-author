@@ -14,7 +14,7 @@ using namespace std;
 class Size
 {
     public:
-        Size(int w, int h);
+        Size(int w=-1, int h=-1);
         virtual ~Size();
 
         int width() const {return w;};

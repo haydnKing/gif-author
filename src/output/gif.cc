@@ -13,6 +13,11 @@ GIFColorTable::~GIFColorTable()
 {
     delete [] data;
 };
+        
+pGIFColorTable GIFColorTable::create(int depth, bool sorted)
+{
+    return pGIFColorTable(new GIFColorTable(depth, sorted));
+};
 
 void GIFColorTable::add_color(const uint8_t *c)
 {
@@ -76,7 +81,7 @@ GIFImage::GIFImage(int _left,
                    int _width, 
                    int _height, 
                    int _delay_time, 
-                   const GIFColorTable* _ct) :
+                   pcGIFColorTable _ct) :
     left(_left),
     top(_top),
     width(_width),
@@ -93,10 +98,22 @@ GIFImage::GIFImage(int _left,
 
 GIFImage::~GIFImage(){
     delete [] data;
-    if(ct != NULL){
-        delete ct;
-    }
 };
+
+pGIFImage GIFImage::create(int left, 
+                           int top,
+                           int width, 
+                           int height, 
+                           int delay_time, 
+                           pcGIFColorTable ct)
+{
+    return pGIFImage(new GIFImage(left, 
+                                  top,
+                                  width, 
+                                  height, 
+                                  delay_time, 
+                                  ct));
+}
 
 void GIFImage::clear_to(uint8_t code){
     std::memset(data, code, width*height);
@@ -110,10 +127,10 @@ void GIFImage::set_value(int x, int y, uint8_t value) {
     data[x+y*width] = value;
 };
 
-void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
+void GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
 {
     //get the active colortable
-    const GIFColorTable* active_ct = ct;
+    pcGIFColorTable active_ct = ct;
     if(active_ct == NULL){
         active_ct = global_ct;
     }
@@ -182,9 +199,9 @@ void GIFImage::write(std::ostream& str, GIFColorTable* global_ct) const
     str.put(0);
 };
 
-void GIFImage::write_ppm(const char *fname, const GIFColorTable *global_ct) const
+void GIFImage::write_ppm(const char *fname, pcGIFColorTable global_ct) const
 {
-    const GIFColorTable *the_ct = ct;
+    pcGIFColorTable the_ct = ct;
     if(ct == NULL)
         the_ct = global_ct;
     if(the_ct == NULL)
@@ -202,7 +219,7 @@ void GIFImage::write_ppm(const char *fname, const GIFColorTable *global_ct) cons
 
 GIF::GIF(uint16_t _width, 
          uint16_t _height,
-         GIFColorTable* _global_color_table,
+         pGIFColorTable _global_color_table,
          uint16_t _loop_count,
          uint8_t _background_color_index,
          uint8_t _pixel_aspect_ratio):
@@ -214,10 +231,18 @@ GIF::GIF(uint16_t _width,
     par(_pixel_aspect_ratio)
 {};
 
-GIF::~GIF() {
-    if(global_ct){
-        delete global_ct;
-    }
+GIF::~GIF() {};
+
+pGIF GIF::create(uint16_t _width, 
+         uint16_t _height,
+         pGIFColorTable _global_color_table,
+         uint16_t _loop_count,
+         uint8_t _background_color_index,
+         uint8_t _pixel_aspect_ratio)
+{
+    return pGIF(new GIF(_width, _height, _global_color_table,
+                _loop_count, _background_color_index,
+                _pixel_aspect_ratio));
 };
 
 void GIF::write(std::ostream& out) const

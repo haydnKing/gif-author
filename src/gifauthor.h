@@ -30,9 +30,6 @@ class GIFAuthor
          */
         virtual pGIF generate();
 
-        int get_output_width() const {return out_width;};
-        int get_output_height() const {return out_height;};
-
     protected:
         void from_images(std::vector<std::string> fnames);
 
@@ -40,7 +37,7 @@ class GIFAuthor
         
         int delay;
         Crop crop_opts;
-        Scale scale_opts;
+        Size size_opts;
         std::string out_file;
         
         std::vector<pVideoFrame> frames;

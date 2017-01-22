@@ -17,31 +17,31 @@ pGIF GIFAuthor::generate()
     pGIF out;
 
     if(frames.size()==0)
-        return;
+        return out;
     
     //work out size
-    if(out_width < 0 && out_height < 0)
+    if(size_opts.width() < 0 && size_opts.height() < 0)
     {
-        out_width = frames[0]->get_width();
-        out_height = frames[0]->get_height();
+        size_opts.width(frames[0]->get_width());
+        size_opts.height(frames[0]->get_height());
     }
-    else if(out_height < 0)
+    else if(size_opts.height() < 0)
     {
-        float r = float(out_width) / float(frames[0]->get_width());
-        out_height = int(0.5+r*float(frames[0]->get_height()));
+        float r = float(size_opts.width()) / float(frames[0]->get_width());
+        size_opts.height(int(0.5+r*float(frames[0]->get_height())));
     }
-    else if(out_width < 0)
+    else if(size_opts.width() < 0)
     {
-        float r = float(out_height) / float(frames[0]->get_height());
-        out_width = int(0.5+r*float(frames[0]->get_width()));
+        float r = float(size_opts.height()) / float(frames[0]->get_height());
+        size_opts.width(int(0.5+r*float(frames[0]->get_width())));
     }
 
-    GIFEncoder encoder(out_width, out_height, segmenter, ditherer, colorquantizer);
+    GIFEncoder encoder(size_opts.width(), size_opts.height(), segmenter, ditherer, colorquantizer);
     int frame_no = 0;
     for(auto fr : frames)
     {
         //scale
-        fr = fr->scale_to(out_width, out_height);
+        fr = fr->scale_to(size_opts.width(), size_opts.height());
         
         encoder.push_frame(fr);
     }
@@ -53,11 +53,11 @@ void GIFAuthor::load_files()
 {
     frames.clear();
 
-    for(int i = 0; i < fnames.size(); i++)
+    for(int i = 0; i < filenames.size(); i++)
     {
-        pVideoFrame pv = VideoFrame::create_from_file(fnames[i], i*delay, i);
+        pVideoFrame pv = VideoFrame::create_from_file(filenames[i], i*delay, i);
 
-        std::cout << "Load frame " << i << ": " << files[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
+        std::cout << "Load frame " << i << ": " << filenames[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
         frames.push_back(pv);
     }
 
