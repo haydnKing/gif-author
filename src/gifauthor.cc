@@ -11,7 +11,7 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     og->add_option<int>("delay", "delay between frames, ms", delay);
     og->add_option<Crop>("crop", "cropping of the output image", crop_opts);
     og->add_option<Size>("size", "size of the output image", size_opts);
-    og->add_option<std::string>("out", "name of the output file");
+    og->add_option<std::string>("out", "name of the output file", out_file);
     og->add_option(QuantizerFactory::create(colorquantizer));
     og->add_option(DithererFactory::create(ditherer));
     og->add_option(SegmenterFactory::create(segmenter));
