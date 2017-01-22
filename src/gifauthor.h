@@ -33,6 +33,7 @@ class GIFAuthor
 
     protected:
         void write_help() const;
+        void print_overview() const;
         void from_images(std::vector<std::string> fnames);
 
         void load_files();

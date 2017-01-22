@@ -145,6 +145,7 @@ DithererFactory::DithererFactory(pDitherer& value) :
 {
     add_group(FSDither::create());
     add_group(NoDither::create());
+    set_default("FS");
 };
         
 pOption DithererFactory::create(pDitherer& value)

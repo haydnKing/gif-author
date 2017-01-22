@@ -277,6 +277,8 @@ class FactoryOption : public OptionBase
 
         void add_group(shared_ptr<T> group);
 
+        void set_default(string name);
+
     protected:
         FactoryOption(string name, string description, shared_ptr<T>& value);
 
@@ -318,12 +320,17 @@ template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterato
     }
 
     shared_ptr<T> group = groups.at(args[0]);
+    *value = group;
     args.erase(args.cbegin());
     group->parse(args, true);
 };
 template <typename T> void FactoryOption<T>::add_group(shared_ptr<T> group)
 {
     groups[group->name()] = group;
+};
+template <typename T> void FactoryOption<T>::set_default(string name)
+{
+    *value = groups.at(name);
 };
 
 

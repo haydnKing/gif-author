@@ -427,6 +427,7 @@ QuantizerFactory::QuantizerFactory(pColorQuantizer& value) :
     FactoryOption("quantizer", "The quantizer takes the full colour spectrum of the image and chooses a palette of colours to represent it in the GIF", value)
 {
     add_group(MMCQuantizer::create());
+    set_default("MMC");
 };
 
 pOption QuantizerFactory::create(pColorQuantizer& value)

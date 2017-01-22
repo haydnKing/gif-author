@@ -16,6 +16,8 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     og->add_option(DithererFactory::create(ditherer));
     og->add_option(SegmenterFactory::create(segmenter));
 
+    std::cout << "\n\tsegmenter = " << segmenter << "\n" << std::endl;
+
     std::vector<string> args;
     for(int i = 1; i < argc; i++)
     {
@@ -39,6 +41,18 @@ void GIFAuthor::write_help() const
         << og->help() << std::endl;
 };
 
+void GIFAuthor::print_overview() const 
+{
+    std::cout << "gif-author settings:\n"
+        << "\t" << filenames.size() << " frames with " << delay << "ms delay\n"
+        << "\tframe size is " << size_opts << "\n"
+        << "\tcropping: " << crop_opts << "\n"
+        << "\tsegmenter: " << segmenter->name() << "\n"
+        << "\tcolorquantizer: " << colorquantizer->name() << "\n"
+        << "\tditherer: " << ditherer->name() << std::endl;
+    
+};
+
 pGIF GIFAuthor::run()
 {
     pGIF out;
@@ -51,6 +65,8 @@ pGIF GIFAuthor::run()
         std::cout << "No files given, add --help for help" << std::endl;
         return out;
     }
+
+    print_overview();
 
     load_files();
 

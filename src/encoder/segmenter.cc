@@ -20,6 +20,8 @@ class DeltaSegmenter : public Segmenter
 
         void segment(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits);
+
+        void name() const;
     protected:
         DeltaSegmenter() :
             Segmenter("DeltaSegmenter", "Update pixels when the next pixel changes by greater than delta"),
@@ -211,6 +213,7 @@ SegmenterFactory::SegmenterFactory(pSegmenter& value) :
     add_group(DeltaSegmenter::create());
     add_group(NullSegmenter::create());
  //   register_type("MotionSegmenter", new MotionSegmenter());
+    set_default("DeltaSegmenter");
 };
 
 pOption SegmenterFactory::create(pSegmenter& value)
