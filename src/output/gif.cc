@@ -245,6 +245,12 @@ pGIF GIF::create(uint16_t _width,
                 _pixel_aspect_ratio));
 };
 
+void GIF::save(const std::string fname) const
+{
+    std::ofstream of(fname);
+    write(of);
+};
+
 void GIF::write(std::ostream& out) const
 {
     //header

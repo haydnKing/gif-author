@@ -5,7 +5,7 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     out_file("out.gif"),
     help_opt(false)
 {
-    og = OptionGroup::create("mainGroup");
+    og = OptionGroup::create("gif-author");
 
     og->add_option<bool>("help", "show help and exit", help_opt);
     og->add_option<int>("delay", "delay between frames, ms", delay);
@@ -32,11 +32,23 @@ pGIFAuthor GIFAuthor::create(int argc, char* argv[]) {
     return pGIFAuthor(new GIFAuthor(argc, argv));
 }
 
+void GIFAuthor::write_help() const 
+{
+    std::cout << "usage: gif-author [OPTIONS] image1 image2 ...\n"
+        << "\tconvert a series of images into a GIF\n" 
+        << og->help() << std::endl;
+};
+
 pGIF GIFAuthor::run()
 {
     pGIF out;
     if(help_opt) {
-        std::cout << og->help();
+        write_help();
+        return out;
+    }
+
+    if(filenames.size() == 0) {
+        std::cout << "No files given, add --help for help" << std::endl;
         return out;
     }
 

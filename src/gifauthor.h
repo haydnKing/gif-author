@@ -29,8 +29,10 @@ class GIFAuthor
          * generate the GIF
          */
         virtual pGIF run();
+    
 
     protected:
+        void write_help() const;
         void from_images(std::vector<std::string> fnames);
 
         void load_files();
