@@ -1,151 +1,124 @@
 #include "cline.h"
 
-/*
- * Option
- */
-
-
-Option::Option(std::string name, std::string description, std::string typestr) : 
-    name(name),
-    description(description),
-    typestr(typestr)
+Size::Size(int w, int h):
+    w(w),
+    h(h)
 {};
 
-const std::string& Option::get_name() const {return name;};
-const std::string& Option::get_description() const {return description;};
+Size::~Size() {};
 
-bool Option::get_bool() const {throw_error("bool");};
-int Option::get_int() const {throw_error("bool");};
-float Option::get_float() const {throw_error("float");};
-std::string Option::get_str() const {throw_error("str");};
+OptionBase::OptionBase(string name, string description) :
+    my_name(name),
+    my_description(description)
+{};
+
+OptionBase::~OptionBase()
+{};
+
+Option<bool>::Option(string name, string description, bool& value) :
+    OptionBase(name, description),
+    my_value(&value)
+{
+    *my_value = false;
+};
+Option<bool>::~Option()
+{};
+pOption Option<bool>::create(string name, string description, bool& value)
+{
+    return pOption(new Option<bool>(name, description, value));
+};
+string Option<bool>::help() const
+{
+    ostringstream out;
+    out << "--" << my_name << ": " << my_description;
+    return out.str();
+};
+void Option<bool>::parse(vector<string>::const_iterator& it)
+{
+    cout << my_name << " = true" << endl;
+    *my_value = true;
+    it++;
+};
+
+
+OptionGroup::OptionGroup(string name, string description) :
+    my_name(name),
+    my_description(description)
+{};
+
+OptionGroup::~OptionGroup()
+{};
+
+pOptionGroup OptionGroup::create(string name, string description)
+{
+    return pOptionGroup(new OptionGroup(name, description));
+};
         
-std::string Option::get_help_string() const
+void OptionGroup::add_option(pOption op)
 {
-    std::stringstream ss;
-    ss << name << "=" << to_str() << ": " << description;
-    return ss.str();
-}
-
-void Option::throw_error(std::string attempted_type) const
-{
-    std::stringstream ss;
-    ss << "Option " << name << " is of type " << typestr << " not " << attempted_type;
-    throw std::runtime_error(ss.str());
-}
-
-/*
- * IntOption
- */
-IntOption::IntOption(std::string name, std::string description, int default_value) :
-    Option(name, description, "integer"),
-    bounded(false),
-    value(default_value)
-{};
-
-IntOption::IntOption(std::string name, std::string description, int default_value, int min_value, int max_value) :
-    Option(name, description, true, "integer"),
-    value(default_value),
-    bounded(true),
-    min_value(min_value),
-    max_value(max_value)
-{};
-
-int IntOption::get_int() const {return value;};
-
-bool IntOption::from_str(std::string rvalue)
-{
-    int v = std::stoi(rvalue);
-    if(bounded && (v < min_value || v > max_value))
-    {
-        return false;
-    }
-    value = v;
-    return true;
+    options[op->name()] = op;
 };
 
-std::string IntOption::to_str() const
+string OptionGroup::help()
 {
-    std::stringstream ss;
-    ss << value;
-    return ss.str();
-}
-
-/*
- * PositiveIntOption
- */
-PositiveIntOption::PositiveIntOption(std::string name, std::string description, int default_value) :
-    IntOption(name, description, default_value, 0, std::numeric_limits<int>::max())
-{};
-PositiveIntOption::PositiveIntOption(std::string name, std::string description, int default_value, int max_value) :
-    IntOption(name, description, default_value, 0, max_value)
-{};
-
-/*
- * FloatOption
- */
-FloatOption::FloatOption(std::string name, std::string description, float default_value) : 
-    Option(name, description, "float")
-    bounded(false),
-    value(default_value)
-{};
-FloatOption::FloatOption(std::string name, std::string description, float default_value, float min_value, float max_value) :
-    Option(name, description, "float"),
-    bounded(true),
-    value(default_value),
-    min_value(min_value),
-    max_value(max_value)
-{};
-
-float FloatOption::get_float() const {return value;};
-
-bool FloatOption::from_str(std::string rvalue)
-{
-    float v = std::stof(rvalue);
-    if(bounded && (v < min_value || v > max_value))
+    ostringstream out;
+    out << my_name << " options:\n";
+    for(auto it = options.begin(); it != options.end(); ++it)
     {
-        return false;
+        out << "  " << it->second->help() << "\n";
     }
-    value = v;
-    return true;
+    return out.str();
 };
 
-std::string FloatOption::to_str() const
+vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
 {
-    std::stringstream ss;
-    ss << value;
-    return ss.str();
-}
+    vector<string> ret;
+    vector<string>::const_iterator it = args.cbegin();
+    string name;
+    pOption op;
 
-/*
- * PositiveFloatOption
- */
-PositiveFloatOption::PositiveFloatOption(std::string name, std::string description, float default_value) : 
-    FloatOption(name, description, default_value, 0, std::numeric_limits<float>::max())
-{};
-PositiveFloatOption::PositiveFloatOption(std::string name, std::string description, float default_value, float max_value) : 
-    FloatOption(name, description, default_value, 0, max_value)
-{};
+    while(it != args.end())
+    {
+        cout << "parse: " << *it << endl;
+        name = "";
+        if(shortform)
+        {
+            name = *it;
+        } else {
+            if(it->compare(0, 2, "--") == 0)
+            {
+                name = it->substr(2);
+            } else if(it->compare(0, 1, "-") == 0) {
+                name = it->substr(1);
+            } else {
+                cout << "  ignoring: " << *it << endl;
+                ret.push_back(*it);
+                it++;
+                continue;
+            }
+        }
+        
+        //check "=" form
+        int eq = name.find("=");
+        if(eq != string::npos)
+        {
+            name = name.substr(0,eq);
+        }
+        
+        cout << "--name = " << name << endl;
+        try
+        {
+            op = options.at(name);
+            cout << "  op->parse(\"" << name << "\")" << endl;
+            op->parse(it);
+        }
+        catch (out_of_range) {
+            cout << "  unknown name \""<< name <<"\", ignoring: " << *it << endl;
+            ret.push_back(*it);
+            it++;
+        }            
+    }
 
-/*
- * StringOption
- */
-StringOption::StringOption(std::string name, std::string description, std::string default_value):
-    Option(name, description, "string"),
-    value(default_value)
-{};
-
-std::string StringOption::get_str() const {return value;};
-
-bool StringOption::from_str(std::string rvalue)
-{
-    value = rvalue;
-    return true;
-}
-
-std::string StringOption::to_str() const
-{
-    return value;
-}
-
-
+    return ret;
+};
 

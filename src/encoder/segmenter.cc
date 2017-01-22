@@ -12,31 +12,38 @@
 class DeltaSegmenter : public Segmenter
 {
     public:
-        DeltaSegmenter() :
-            Segmenter("DeltaSegmenter", "Update pixels when the next pixel changes by greater than delta")
-        {
-            add_setting(new PositiveFloatSetting("delta", 
-                "Don't update pixels that change by less than this value", 
-                4.0));
-            add_setting(new PositiveFloatSetting("sigma", 
-                        "Amount to spacially blur by when calculating deltas", 
-                        2.0));
-            add_setting(new PositiveFloatSetting("sigmaT", 
-                        "Amount to temporally blur by when calculating deltas", 
-                        1.0));
-        };
         ~DeltaSegmenter() {};
+
+        static pSegmenter create() {
+            return pSegmenter(new DeltaSegmenter());
+        };
 
         void segment(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits);
+    protected:
+        DeltaSegmenter() :
+            Segmenter("DeltaSegmenter", "Update pixels when the next pixel changes by greater than delta"),
+            delta(4.0),
+            sigma(2.0),
+            sigmaT(1.0)
+        {
+            add_option("delta", 
+                "Don't update pixels that change by less than this value", 
+                delta);
+            add_option("sigma", 
+                      "Amount to spacially blur by when calculating deltas", 
+                      sigma);
+            add_option("sigmaT", 
+                        "Amount to temporally blur by when calculating deltas", 
+                        sigmaT);
+        };
+
+        float delta, sigma, sigmaT;
 };
 
 void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames, 
                                      std::vector<pBitset>& out_bits)
 {
-    float delta = get_setting("delta")->get_float();
-    float sigma = get_setting("sigma")->get_float();
-    float sigmaT= get_setting("sigmaT")->get_float();
 
     int x,y,z,start;
     float r,g,b,dr,dg,db;
@@ -97,10 +104,11 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
 class NullSegmenter : public Segmenter
 {
     public:
-        NullSegmenter() :
-            Segmenter("NullSegmenter", "Update every pixel in every frame")
-        {};
         ~NullSegmenter() {};
+
+        static pSegmenter create() {
+            return pSegmenter(new NullSegmenter());
+        };
 
         void segment(const std::vector<pVideoFrame> frames, 
                      std::vector<pBitset>& out_bits)
@@ -110,6 +118,10 @@ class NullSegmenter : public Segmenter
                 out_bits.push_back(Bitset::create(fr->get_width(), fr->get_height(), true));
             }
         };
+    protected:
+        NullSegmenter() :
+            Segmenter("NullSegmenter", "Update every pixel in every frame")
+        {};
 };
 
 
@@ -193,12 +205,16 @@ class MotionSegmenter : public Segmenter
         };
 };
 */
-SegmenterFactory::SegmenterFactory() : 
-    ProcessFactory("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream")
+SegmenterFactory::SegmenterFactory(pSegmenter& value) : 
+    FactoryOption("segmenter", "The segmenter decides which pixels in successive frames should be updated and which should be set to transparency. Setting more of the image to transparency improves the compressibility of the stream", value)
 {
-    register_type("SimpleDelta", new DeltaSegmenter());
-    register_type("NullSegmenter", new NullSegmenter());
+    add_group(DeltaSegmenter::create());
+    add_group(NullSegmenter::create());
  //   register_type("MotionSegmenter", new MotionSegmenter());
 };
 
-SegmenterFactory segmenterFactory;
+pOption SegmenterFactory::create(pSegmenter& value)
+{
+    return pOption(new SegmenterFactory(value));
+};
+

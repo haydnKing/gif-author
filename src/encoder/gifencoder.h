@@ -26,7 +26,10 @@ class GIFEncoder
 {
     public:
         GIFEncoder(int canvas_width,
-                   int canvas_height);
+                   int canvas_height,
+                   pSegmenter segmenter,
+                   pDitherer ditherer,
+                   pColorQuantizer colorquantizer);
         ~GIFEncoder();
 
         void push_frame(pVideoFrame fr);
@@ -36,10 +39,16 @@ class GIFEncoder
         void set_sigma(float s) {sm_sigma = s;};
         void set_threshold(float t) {sm_thresh = t;};
 
+        void set_segmenter(pSegmenter s) {segmenter = s;};
+        void set_ditherer(pDitherer d) {ditherer = d;};
+        void set_colorquantizer(pColorQuantizer cq) {colorquantizer = cq;};
 
     protected:
         int canvas_width, canvas_height;
         float sm_sigma, sm_thresh;
+        pSegmenter segmenter;
+        pColorQuantizer colorquantizer;
+        pDitherer ditherer;
         //general settings
         
         std::vector<pVideoFrame> frames;

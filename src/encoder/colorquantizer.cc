@@ -5,7 +5,7 @@
  * *************************************************************/
 
 ColorQuantizer::ColorQuantizer(std::string name, std::string description) :
-    Process(name, description),
+    OptionGroup(name, description),
     colors(NULL),
     max_colors(0),
     num_colors(0)
@@ -57,13 +57,15 @@ void ColorQuantizer::add_colors(const uint8_t* color, int count)
 class MMCQuantizer : public ColorQuantizer
 {
     public:
-        MMCQuantizer();
         virtual ~MMCQuantizer();
+        
+        static pColorQuantizer create();
 
         virtual void build_ct(bool transparency, int quantized_colors=256);
         virtual const GIFColorTable *get_ct() const;
 
     protected:
+        MMCQuantizer();
 
         class vbox
         {
@@ -106,6 +108,11 @@ class MMCQuantizer : public ColorQuantizer
 MMCQuantizer::MMCQuantizer() :
     ColorQuantizer("MMC", "A Modified Median Cut quantizer")
 {};
+        
+pColorQuantizer MMCQuantizer::create()
+{
+    return pColorQuantizer(new MMCQuantizer());
+};
 
 MMCQuantizer::~MMCQuantizer()
 {};
@@ -417,11 +424,13 @@ void MMCQuantizer::vbox::split()
  * Factory
  */
 
-QuantizerFactory::QuantizerFactory() :
-    ProcessFactory("quantizer", "The quantizer takes the full colour spectrum of the image and chooses a palette of colours to represent it in the GIF")
+QuantizerFactory::QuantizerFactory(pColorQuantizer& value) :
+    FactoryOption("quantizer", "The quantizer takes the full colour spectrum of the image and chooses a palette of colours to represent it in the GIF", value)
 {
-    register_type("MMC", new MMCQuantizer());
+    add_group(MMCQuantizer::create());
 };
 
-QuantizerFactory quantizerFactory;
-
+pOption QuantizerFactory::create(pColorQuantizer& value)
+{
+    return pOption(new QuantizerFactory(value));
+};

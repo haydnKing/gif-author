@@ -6,9 +6,15 @@ bool px_equal(uint8_t *lhs, uint8_t *rhs)
     return (lhs[0]==rhs[0] && lhs[1]==rhs[1] && lhs[2] == rhs[2]);
 };
 
-GIFEncoder::GIFEncoder(int cw, int ch):
+GIFEncoder::GIFEncoder(int cw, int ch,
+                   pSegmenter segmenter,
+                   pDitherer ditherer,
+                   pColorQuantizer colorquantizer):
     canvas_width(cw),
     canvas_height(ch),
+    segmenter(segmenter),
+    ditherer(ditherer),
+    colorquantizer(colorquantizer),
     sm_sigma(2.),
     sm_thresh(0.5)
 {};
@@ -32,8 +38,7 @@ GIF *GIFEncoder::get_output()
 
     std::vector<pBitset> masks;
     std::vector<pVideoFrame> sframes;
-    Segmenter *sm = segmenterFactory.get_selected();
-    sm->segment(frames,  masks);
+    segmenter->segment(frames,  masks);
     smooth_transparency(frames, sframes, masks);
 
     std::stringstream ss;
@@ -45,8 +50,6 @@ GIF *GIFEncoder::get_output()
     std::cout << "sframes: " << sframes.size() << std::endl;
     std::cout << "masks: " << masks.size() << std::endl;
 
-    Ditherer *ditherer = dithererFactory.get_selected();
-
     for(int i = 0; i < sframes.size(); i++)
     {
         std::cout << "Frame " << i << " of " << frames.size() << std::endl;
@@ -54,8 +57,7 @@ GIF *GIFEncoder::get_output()
         fr_mask = masks[i];
 
         //get the quantizer
-        ColorQuantizer *cq = quantizerFactory.get_selected();
-        cq->set_max_colors(fr->get_height() * fr->get_width());
+        colorquantizer->set_max_colors(fr->get_height() * fr->get_width());
         
         if(fr_mask)
         {
@@ -63,20 +65,20 @@ GIF *GIFEncoder::get_output()
                 for(x = 0; x < fr->get_width(); x++)
                     if(fr_mask->get(x,y)) 
                     {
-                        cq->add_color(fr->get_pixel(x,y));
+                        colorquantizer->add_color(fr->get_pixel(x,y));
                     }
         }
         else
         {
             for(y = 0; y < fr->get_height(); y++)
                 for(x = 0; x < fr->get_width(); x++)
-                    cq->add_color(fr->get_pixel(x,y));
+                    colorquantizer->add_color(fr->get_pixel(x,y));
         }
 
-        if(cq->get_num_colors() > 0)
+        if(colorquantizer->get_num_colors() > 0)
         {
             //currently just using 256 colours for everything
-            cq->build_ct((bool)fr_mask, 255);
+            colorquantizer->build_ct((bool)fr_mask, 255);
 
             //autocrop
             pGIFImage img;
@@ -89,13 +91,13 @@ GIF *GIFEncoder::get_output()
                 std::cout << "img[" << i <<"] = "<<left<<","<<top<<"+"<<width<<"x"<<height << std::endl;
                 fr_mask = Bitset::crop(fr_mask, left, top, width, height);
                 fr = fr->crop(left, top, width, height);
-                img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
+                img = ditherer->dither_image(fr, fr_mask, colorquantizer->get_ct());
                 img->set_left(left);
                 img->set_top(top);
             }
             else {
                 //Dither the image
-                img = ditherer->dither_image(fr, fr_mask, cq->get_ct());
+                img = ditherer->dither_image(fr, fr_mask, colorquantizer->get_ct());
             }
             img->set_disposal_method(DISPOSAL_METHOD_NONE);
             //debug_ct(img, cq->get_ct());

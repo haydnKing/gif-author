@@ -5,9 +5,12 @@
 #include <string>
 #include "../output/gif.h"
 
-#include "../util/process.h"
+#include "../util/cline.h"
 
-class ColorQuantizer : public Process
+class ColorQuantizer;
+typedef shared_ptr<ColorQuantizer> pColorQuantizer;
+
+class ColorQuantizer : public OptionGroup
 {
     public:
         ColorQuantizer(std::string name, std::string description);
@@ -29,15 +32,13 @@ class ColorQuantizer : public Process
 /**
  * A factory for ColorQuantizers
  */
-class QuantizerFactory : public ProcessFactory<ColorQuantizer>
+class QuantizerFactory : public FactoryOption<ColorQuantizer>
 {
     public: 
-        QuantizerFactory();
-};
+        static pOption create(pColorQuantizer& value);
 
-/**
- * The quantizerFactory
- */
-extern QuantizerFactory quantizerFactory;
+    protected:
+        QuantizerFactory(pColorQuantizer& value);
+};
 
 #endif

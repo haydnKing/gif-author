@@ -1,7 +1,7 @@
 #include "ditherer.h"
 
 Ditherer::Ditherer(std::string name, std::string description) :
-    Process(name, description)
+    OptionGroup(name, description)
 {};
 
 pGIFImage Ditherer::dither_image(const pVideoFrame vf,
@@ -19,11 +19,14 @@ pGIFImage Ditherer::dither_image(const pVideoFrame vf,
 class FSDither : public Ditherer
 {
     public:
-        FSDither() :
-            Ditherer("FloydSteinberg", "Classical FloydSteinberg dithering")
-        {};
+        static pDitherer create() {
+            return pDitherer(new FSDither());
+        };
 
     protected:
+        FSDither() :
+            Ditherer("FS", "Classical FloydSteinberg dithering")
+        {};
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
@@ -103,11 +106,14 @@ class FSDither : public Ditherer
 class NoDither : public Ditherer
 {
     public:
+        static pDitherer create() {
+            return pDitherer(new NoDither());
+        };
+
+    protected:
         NoDither() :
             Ditherer("none", "Don't dither, just choose the closest colour")
         {};
-
-    protected:
         void _dither_image(pGIFImage out,
                            const pVideoFrame vf,
                            const pBitset mask,
@@ -134,12 +140,16 @@ class NoDither : public Ditherer
 
 
 
-DithererFactory::DithererFactory() :
-    ProcessFactory("ditherer", "The ditherer takes a full colour image and a quantizer and produces a quantized image")
+DithererFactory::DithererFactory(pDitherer& value) :
+    FactoryOption("ditherer", "The ditherer takes a full colour image and a quantizer and produces a quantized image", value)
 {
-    register_type("fs", new FSDither());
-    register_type("none", new NoDither());
+    add_group(FSDither::create());
+    add_group(NoDither::create());
+};
+        
+pOption DithererFactory::create(pDitherer& value)
+{
+    return pOption(new DithererFactory(value));
 };
 
-DithererFactory dithererFactory;
 

@@ -2,9 +2,6 @@
 #define GTKMM_GIFAUTHOR_VIDEOFRAME_H
 
 #include <stdint.h>
-#include <glibmm/main.h>
-#include <glibmm/object.h>
-#include <gdkmm/pixbuf.h>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
