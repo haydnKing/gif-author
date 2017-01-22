@@ -2,8 +2,28 @@
 
 GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     delay(40),
-    out_file("out.gif")
-{};
+    out_file("out.gif"),
+    help_opt(false)
+{
+    og = OptionGroup::create("mainGroup");
+
+    og->add_option<bool>("help", "show help and exit", help_opt);
+    og->add_option<int>("delay", "delay between frames, ms", delay);
+    og->add_option<Crop>("crop", "cropping of the output image", crop_opts);
+    og->add_option<Size>("size", "size of the output image", size_opts);
+    og->add_option<std::string>("out", "name of the output file");
+    og->add_option(QuantizerFactory::create(colorquantizer));
+    og->add_option(DithererFactory::create(ditherer));
+    og->add_option(SegmenterFactory::create(segmenter));
+
+    std::vector<string> args;
+    for(int i = 1; i < argc; i++)
+    {
+        args.push_back(argv[i]);
+    }
+    filenames = og->parse(args);
+
+};
 
 GIFAuthor::~GIFAuthor() 
 {};
@@ -12,9 +32,15 @@ pGIFAuthor GIFAuthor::create(int argc, char* argv[]) {
     return pGIFAuthor(new GIFAuthor(argc, argv));
 }
 
-pGIF GIFAuthor::generate()
+pGIF GIFAuthor::run()
 {
     pGIF out;
+    if(help_opt) {
+        std::cout << og->help();
+        return out;
+    }
+
+    load_files();
 
     if(frames.size()==0)
         return out;
@@ -47,6 +73,9 @@ pGIF GIFAuthor::generate()
     }
     
     out = encoder.get_output();
+
+    out->save(out_file);
+    return out;
 };
 
 void GIFAuthor::load_files()

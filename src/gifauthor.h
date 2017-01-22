@@ -28,7 +28,7 @@ class GIFAuthor
         /**
          * generate the GIF
          */
-        virtual pGIF generate();
+        virtual pGIF run();
 
     protected:
         void from_images(std::vector<std::string> fnames);
@@ -39,6 +39,7 @@ class GIFAuthor
         Crop crop_opts;
         Size size_opts;
         std::string out_file;
+        bool help_opt;
         
         std::vector<pVideoFrame> frames;
         std::vector<std::string> filenames;
@@ -48,6 +49,8 @@ class GIFAuthor
         pDitherer ditherer;
 
         bool is_error;
+
+        pOptionGroup og;
 };
 
 

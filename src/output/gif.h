@@ -219,8 +219,9 @@ class GIF : public std::list<pGIFImage>
         pGIFColorTable get_global_colortable() {return global_ct;};
         pcGIFColorTable get_global_colortable() const {return global_ct;};
 
-
         void write(std::ostream& out) const;
+
+        void save(const std::string filename) const;
 
     protected:
         GIF(uint16_t _width, 
