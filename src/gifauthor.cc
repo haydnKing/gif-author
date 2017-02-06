@@ -65,8 +65,6 @@ pGIF GIFAuthor::run()
         return out;
     }
 
-    print_overview();
-
     load_files();
 
     if(frames.size()==0)
@@ -88,6 +86,8 @@ pGIF GIFAuthor::run()
         float r = float(size_opts.height()) / float(frames[0]->get_height());
         size_opts.width(int(0.5+r*float(frames[0]->get_width())));
     }
+    
+    print_overview();
 
     GIFEncoder encoder(size_opts.width(), size_opts.height(), segmenter, ditherer, colorquantizer);
     int frame_no = 0;
