@@ -22,14 +22,14 @@ class Ditherer : public OptionGroup
 
         pGIFImage dither_image(const pVideoFrame vf,
                                const pBitset mask,
-                               const GIFColorTable *ct) const;
+                               pcGIFColorTable ct) const;
 
     protected:
 
         virtual void _dither_image(pGIFImage out,
                                    const pVideoFrame vf,
                                    const pBitset mask,
-                                   const GIFColorTable *ct) const = 0;
+                                   pcGIFColorTable ct) const = 0;
 };
 
 /**

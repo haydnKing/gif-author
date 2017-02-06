@@ -28,7 +28,7 @@ void GIFEncoder::push_frame(pVideoFrame fr)
 
 pGIF GIFEncoder::get_output()
 {
-    GIF *out = new GIF(canvas_width, canvas_height);
+    pGIF out = GIF::create(canvas_width, canvas_height);
     pVideoFrame fr;
     pBitset fr_mask;
     std::vector<pVideoFrame>::iterator it;
@@ -216,12 +216,8 @@ void GIFEncoder::dbg_thresholding(int len, uint8_t *px, float *fpx, const char *
 pGIFImage GIFEncoder::create_gif_image(int left, int top, int width, int height) const
 {
     //Create the output image
-    GIFImage *ret = new GIFImage(left,
-                                 top, 
-                                 width, 
-                                 height);
-
-    return pGIFImage(ret);
+    pGIFImage ret = GIFImage::create(left,top,width,height);
+    return ret;
 };
  
 

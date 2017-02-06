@@ -2,17 +2,16 @@
 
 GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     delay(40),
-    is_error(false),
-    out_file_name("out.gif")
+    out_file("out.gif"),
+    help_opt(false)
 {
-    pOptionGroup og = OptionGroup::create("mainGroup");
-    bool help = false;
-    
-    og->add_option<bool>("help", "Display help options and exit", help);
-    og->add_option<int>("delay", "delay between frames in ms", delay);
-    og->add_option<string>("out", "name of the output file", out_file_name);
+    og = OptionGroup::create("gif-author");
+
+    og->add_option<bool>("help", "show help and exit", help_opt);
+    og->add_option<int>("delay", "delay between frames, ms", delay);
     og->add_option<Crop>("crop", "cropping of the output image", crop_opts);
-    og->add_option<Size>("size", "size of the output image", scale_opts);
+    og->add_option<Size>("size", "size of the output image", size_opts);
+    og->add_option<std::string>("out", "name of the output file", out_file);
     og->add_option(QuantizerFactory::create(colorquantizer));
     og->add_option(DithererFactory::create(ditherer));
     og->add_option(SegmenterFactory::create(segmenter));
@@ -22,6 +21,7 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     {
         args.push_back(argv[i]);
     }
+
     in_file_names = og->parse(args);
 
     if(help) {
@@ -39,33 +39,63 @@ pGIFAuthor GIFAuthor::create(int argc, char* argv[]) {
     return pGIFAuthor(new GIFAuthor(argc, argv));
 }
 
-pGIF GIFAuthor::generate()
+void GIFAuthor::write_help() const 
+{
+    std::cout << "usage: gif-author [OPTIONS] image1 image2 ...\n"
+        << "\tconvert a series of images into a GIF\n" 
+        << og->help() << std::endl;
+};
+
+void GIFAuthor::print_overview() const 
+{
+    std::cout << "gif-author settings:\n"
+        << "\t" << filenames.size() << " frames with " << delay << "ms delay\n"
+        << "\tframe size is " << size_opts << "\n"
+        << "\tcropping: " << crop_opts << "\n"
+        << "\tsegmenter: " << segmenter->name() << "\n"
+        << "\tcolorquantizer: " << colorquantizer->name() << "\n"
+        << "\tditherer: " << ditherer->name() << std::endl;
+    
+};
+
+pGIF GIFAuthor::run()
 {
     pGIF out;
+    if(help_opt) {
+        write_help();
+        return out;
+    }
 
-    if(frames.empty() || is_error)
-        return NULL;
+    if(filenames.size() == 0) {
+        std::cout << "No files given, add --help for help" << std::endl;
+        return out;
+    }
+
+    print_overview();
+
+    load_files();
+
+    if(frames.size()==0)
+        return out;
     
     //work out size
-    int out_width = scale_opts.width();
-    int out_height= scale_opts.height();
-    if(out_width < 0 && out_height < 0)
+    if(size_opts.width() < 0 && size_opts.height() < 0)
     {
-        out_width = frames[0]->get_width();
-        out_height = frames[0]->get_height();
+        size_opts.width(frames[0]->get_width());
+        size_opts.height(frames[0]->get_height());
     }
-    else if(out_height < 0)
+    else if(size_opts.height() < 0)
     {
-        float r = float(out_width) / float(frames[0]->get_width());
-        out_height = int(0.5+r*float(frames[0]->get_height()));
+        float r = float(size_opts.width()) / float(frames[0]->get_width());
+        size_opts.height(int(0.5+r*float(frames[0]->get_height())));
     }
-    else if(out_width < 0)
+    else if(size_opts.width() < 0)
     {
-        float r = float(out_height) / float(frames[0]->get_height());
-        out_width = int(0.5+r*float(frames[0]->get_width()));
+        float r = float(size_opts.height()) / float(frames[0]->get_height());
+        size_opts.width(int(0.5+r*float(frames[0]->get_width())));
     }
 
-    GIFEncoder encoder(out_width, out_height, segmenter, ditherer, colorquantizer);
+    GIFEncoder encoder(size_opts.width(), size_opts.height(), segmenter, ditherer, colorquantizer);
     int frame_no = 0;
     for(auto fr : frames)
     {
@@ -74,16 +104,14 @@ pGIF GIFAuthor::generate()
             fr = fr->crop(crop_opts.xpos(), crop_opts.ypos(), crop_opts.width(), crop_opts.height());
         }
         //scale
-        fr = fr->scale_to(out_width, out_height);
+        fr = fr->scale_to(size_opts.width(), size_opts.height());
         
         encoder.push_frame(fr);
     }
     
     out = encoder.get_output();
 
-    std::ofstream os(out_file_name);
-    out->write(os);
-
+    out->save(out_file);
     return out;
 };
 
@@ -91,11 +119,11 @@ void GIFAuthor::load_files()
 {
     frames.clear();
 
-    for(int i = 0; i < in_file_names.size(); i++)
+    for(int i = 0; i < filenames.size(); i++)
     {
-        pVideoFrame pv = VideoFrame::create_from_file(in_file_names[i], i*delay, i);
+        pVideoFrame pv = VideoFrame::create_from_file(filenames[i], i*delay, i);
 
-        std::cout << "Load frame " << i << ": " << in_file_names[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
+        std::cout << "Load frame " << i << ": " << filenames[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
         frames.push_back(pv);
     }
 

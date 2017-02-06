@@ -14,6 +14,9 @@
 
 #include <iostream>
 
+class GIFColorTable;
+typedef std::shared_ptr<GIFColorTable> pGIFColorTable;
+typedef std::shared_ptr<const GIFColorTable> pcGIFColorTable;
 /**
  * Store a GIF Color Table
  *
@@ -22,12 +25,12 @@
 class GIFColorTable
 {
     public:
+        ~GIFColorTable();
         /**
          * \param _depth number of bits per color channel
          * \param _sorted is the color table ordered according to priority
          */
-        GIFColorTable(int depth = 8, bool sorted = false);
-        ~GIFColorTable();
+        static pGIFColorTable create(int depth = 8, bool sorted = false);
 
         /**
          * \returns the number of bits per image channel
@@ -109,6 +112,9 @@ class GIFColorTable
          */
         void write_ppm(const char *fname) const;
 
+    protected:
+        GIFColorTable(int depth = 8, bool sorted = false);
+
     private:
         int depth, size, colors, transparent_index;
         bool sorted;
@@ -122,19 +128,21 @@ enum DisposalMethod {
     DISPOSAL_METHOD_RESTORE_BACKGROUND = 2,
     DISPOSAL_METHOD_RESTORE_PREVIOUS = 3};
 
+class GIFImage;
+typedef std::shared_ptr<GIFImage> pGIFImage;
 /**
  * Store an individual GIF Image
  */
 class GIFImage
 {
     public:
-        GIFImage(int left, 
-                 int top,
-                 int width, 
-                 int height, 
-                 int delay_time=0, 
-                 const GIFColorTable* ct=NULL);
         ~GIFImage();
+        static pGIFImage create(int left, 
+                                int top,
+                                int width, 
+                                int height, 
+                                int delay_time=0, 
+                                pcGIFColorTable ct=NULL);
 
         // accessors
 
@@ -149,16 +157,16 @@ class GIFImage
 
         bool is_interlaced() const {return flag_interlaced;};
         bool has_local_colortable() const {return ct!=NULL;};
-        void set_local_colortable(const GIFColorTable* _ct) {ct = _ct;};
-        const GIFColorTable* get_local_colortable() const {return ct;};
+        void set_local_colortable(pcGIFColorTable _ct) {ct = _ct;};
+        pcGIFColorTable get_local_colortable() const {return ct;};
         bool is_user_input() const {return flag_user_input;};
 
         DisposalMethod get_disposal_method() const {return disposal_method;};
         void set_disposal_method(DisposalMethod dm) {disposal_method = dm;};
 
         // methods        
-        void write(std::ostream& str, GIFColorTable* global_ct) const;
-        void write_ppm(const char *fname, const GIFColorTable *global_ct=NULL) const;
+        void write(std::ostream& str, pGIFColorTable global_ct) const;
+        void write_ppm(const char *fname, pcGIFColorTable global_ct=NULL) const;
 
         uint8_t* get_data() {return data;};
         const uint8_t* get_data() const {return data;};
@@ -168,29 +176,39 @@ class GIFImage
 
         void clear_to(uint8_t code);
 
+    protected:
+        GIFImage(int left, 
+                 int top,
+                 int width, 
+                 int height, 
+                 int delay_time=0, 
+                 pcGIFColorTable ct=NULL);
+
     private:
         uint16_t left, top, width, height, delay_time;
         bool flag_interlaced, flag_user_input;
         DisposalMethod disposal_method;
-        const GIFColorTable* ct;
+        pcGIFColorTable ct;
         uint8_t* data;
 };
 
-typedef std::shared_ptr<GIFImage> pGIFImage;
 
+class GIF;
+typedef std::shared_ptr<GIF> pGIF;
 /**
  * Store an entire GIF
  */
 class GIF : public std::list<pGIFImage>
 {
     public:
-        GIF(uint16_t _width, 
+        virtual ~GIF();
+        
+        static pGIF create(uint16_t _width, 
             uint16_t _height,
-            GIFColorTable* _global_color_table=NULL,
+            pGIFColorTable _global_color_table=NULL,
             uint16_t _loop_count=0,
             uint8_t _background_color_index=0,
             uint8_t _pixel_aspect_ratio=0);
-        virtual ~GIF();
 
         //accessors
         int get_width() const {return width;};
@@ -198,22 +216,29 @@ class GIF : public std::list<pGIFImage>
         int get_par() const {return par;};
         uint16_t get_loop_count() const {return loop_count;};
         uint8_t get_bg_color_index() const {return bg_color_index;};
-        GIFColorTable* get_global_colortable() {return global_ct;};
-        const GIFColorTable* get_global_colortable() const {return global_ct;};
-
+        pGIFColorTable get_global_colortable() {return global_ct;};
+        pcGIFColorTable get_global_colortable() const {return global_ct;};
 
         void write(std::ostream& out) const;
+
+        void save(const std::string filename) const;
+
+    protected:
+        GIF(uint16_t _width, 
+            uint16_t _height,
+            pGIFColorTable _global_color_table=NULL,
+            uint16_t _loop_count=0,
+            uint8_t _background_color_index=0,
+            uint8_t _pixel_aspect_ratio=0);
 
     private:
         uint16_t width, height;
         uint8_t bg_color_index, par;
         uint16_t loop_count;
-        GIFColorTable* global_ct;
+        pGIFColorTable global_ct;
 
         void write_animation_hdr(std::ostream& out) const;
 
 };
-
-typedef std::shared_ptr<GIF> pGIF;
 
 #endif
