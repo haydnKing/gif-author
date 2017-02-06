@@ -94,7 +94,6 @@ pGIF GIFAuthor::run()
     for(auto fr : frames)
     {
         if(crop_opts) {
-            std::cout << "fr = fr->crop("<<crop_opts.xpos()<<", "<<crop_opts.ypos()<<", "<<crop_opts.width()<<", "<<crop_opts.height()<<");"<<std::endl;
             fr = fr->crop(crop_opts.xpos(), crop_opts.ypos(), crop_opts.width(), crop_opts.height());
         }
         //scale
@@ -117,7 +116,6 @@ void GIFAuthor::load_files()
     {
         pVideoFrame pv = VideoFrame::create_from_file(filenames[i], i*delay, i);
 
-        std::cout << "Load frame " << i << ": " << filenames[i] << " -> (" << pv->get_width() << "x" << pv->get_height() << ")" << std::endl;
         frames.push_back(pv);
     }
 

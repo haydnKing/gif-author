@@ -45,14 +45,8 @@ pGIF GIFEncoder::get_output()
     //VideoFrame::write_ppm(frames, "dbg/s_input");
     //VideoFrame::write_ppm(sframes, "dbg/s_output");
 
-    std::cout << "Background detection done" << std::endl;
-    std::cout << "frames: " << frames.size() << std::endl;
-    std::cout << "sframes: " << sframes.size() << std::endl;
-    std::cout << "masks: " << masks.size() << std::endl;
-
     for(int i = 0; i < sframes.size(); i++)
     {
-        std::cout << "Frame " << i << " of " << frames.size() << std::endl;
         fr = sframes[i];
         fr_mask = masks[i];
 
@@ -88,7 +82,6 @@ pGIF GIFEncoder::get_output()
                     width  = fr_mask->get_right() - left,
                     top    = fr_mask->get_top(),
                     height = fr_mask->get_bottom() - top;
-                std::cout << "img[" << i <<"] = "<<left<<","<<top<<"+"<<width<<"x"<<height << std::endl;
                 fr_mask = Bitset::crop(fr_mask, left, top, width, height);
                 fr = fr->crop(left, top, width, height);
                 img = ditherer->dither_image(fr, fr_mask, colorquantizer->get_ct());
@@ -101,9 +94,9 @@ pGIF GIFEncoder::get_output()
             }
             img->set_disposal_method(DISPOSAL_METHOD_NONE);
             //debug_ct(img, cq->get_ct());
-            ss.str("");
-            ss << "dbg/quantized" << std::setw(5) << std::setfill('0') << i << ".ppm";
-            img->write_ppm(ss.str().c_str());
+            //ss.str("");
+            //ss << "dbg/quantized" << std::setw(5) << std::setfill('0') << i << ".ppm";
+            //img->write_ppm(ss.str().c_str());
             //ss.str("");
             //ss << "dbg/colortable" << i << ".ppm";
             //cq->get_ct()->write_ppm(ss.str().c_str());
@@ -116,14 +109,11 @@ pGIF GIFEncoder::get_output()
             }
             last_timestamp = frames[i]->get_timestamp();
             
-            std::cout << "push_back() i = " << i << " transparency : " << (bool)fr_mask << std::endl;
             out->push_back(img);
         }
     }
     //set delay for last frame
     if(sframes.size() > 0) out->back()->set_delay_time(delay);
-
-    std::cout << "Length of returned GIF: " << out->size() << std::endl;
 
     return pGIF(out);
 };
