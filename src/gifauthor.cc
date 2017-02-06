@@ -22,14 +22,8 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
         args.push_back(argv[i]);
     }
 
-    in_file_names = og->parse(args);
+    filenames = og->parse(args);
 
-    if(help) {
-        std::cout << og->help() << std::endl;
-        is_error = true;
-    }
-
-    load_files();
 };
 
 GIFAuthor::~GIFAuthor() 

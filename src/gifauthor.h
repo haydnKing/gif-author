@@ -47,7 +47,7 @@ class GIFAuthor
         bool help_opt;
         
         std::vector<pVideoFrame> frames;
-        std::vector<std::string> in_file_names;
+        std::vector<std::string> filenames;
 
         pSegmenter segmenter;
         pColorQuantizer colorquantizer;
