@@ -26,20 +26,20 @@ public:
     /*
      * Encode and write the data to the stream
      */
-    void write(const uint8_t* data, uint32_t length);
+    int write(const uint8_t* data, uint32_t length);
 
-    void write_debug(const uint8_t* data, uint32_t length);
+    int write_debug(const uint8_t* data, uint32_t length);
 
     /*
      * Flush buffer and write the end bit
      */
-    void flush();
+    int flush();
 
 protected:
     //LZW dictionary
     LZWNode* dict; 
 
-    void clear_dictionary();
+    int clear_dictionary();
 
     //partial byte and index
     uint8_t byte_index, byte, *chunk;
@@ -48,10 +48,10 @@ protected:
     int min_code_size, code_size;
     uint32_t clear_code, stop_code, max_code;
 
-    void write_code(uint32_t code, int length);
-    void write_bit(bool bit);
-    void flush_byte();
-    void flush_chunk();
+    int write_code(uint32_t code, int length);
+    int write_bit(bool bit);
+    int flush_byte();
+    int flush_chunk();
 
     std::ostream& out;
 

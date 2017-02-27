@@ -6,6 +6,7 @@
 
 #include "encoder/gifencoder.h"
 #include "util/cline.h"
+#include "util/out.h"
 #include "encoder/colorquantizer.h"
 #include "encoder/ditherer.h"
 #include "encoder/segmenter.h"

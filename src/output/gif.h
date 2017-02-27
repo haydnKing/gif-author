@@ -105,7 +105,7 @@ class GIFColorTable
         /**
          * write the color table to the stringstream
          */
-        void write(std::ostream& str) const;
+        int write(std::ostream& str) const;
 
         /**
          * write to a ppm for debugging
@@ -165,7 +165,7 @@ class GIFImage
         void set_disposal_method(DisposalMethod dm) {disposal_method = dm;};
 
         // methods        
-        void write(std::ostream& str, pGIFColorTable global_ct) const;
+        int write(std::ostream& str, pGIFColorTable global_ct) const;
         void write_ppm(const char *fname, pcGIFColorTable global_ct=NULL) const;
 
         uint8_t* get_data() {return data;};
@@ -219,9 +219,9 @@ class GIF : public std::list<pGIFImage>
         pGIFColorTable get_global_colortable() {return global_ct;};
         pcGIFColorTable get_global_colortable() const {return global_ct;};
 
-        void write(std::ostream& out) const;
+        int write(std::ostream& out) const;
 
-        void save(const std::string filename) const;
+        int save(const std::string filename) const;
 
     protected:
         GIF(uint16_t _width, 
@@ -237,7 +237,7 @@ class GIF : public std::list<pGIFImage>
         uint16_t loop_count;
         pGIFColorTable global_ct;
 
-        void write_animation_hdr(std::ostream& out) const;
+        int write_animation_hdr(std::ostream& out) const;
 
 };
 

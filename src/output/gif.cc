@@ -35,10 +35,11 @@ uint8_t GIFColorTable::log_colors() const
         return uint8_t(std::ceil(std::log(colors)/std::log(2)));
 };
 
-void GIFColorTable::write(std::ostream& str) const 
+int GIFColorTable::write(std::ostream& str) const 
 {
     int full_colors = std::pow(2, log_colors());
     str.write(reinterpret_cast<const char*>(data), 3*full_colors);
+    return 3*full_colors;
 };
         
 void GIFColorTable::write_ppm(const char *fname) const
@@ -127,8 +128,9 @@ void GIFImage::set_value(int x, int y, uint8_t value) {
     data[x+y*width] = value;
 };
 
-void GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
+int GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
 {
+    int len = 20;
     //get the active colortable
     pcGIFColorTable active_ct = ct;
     if(active_ct == NULL){
@@ -173,6 +175,7 @@ void GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
     str.put(height & 0xff);
     str.put((height >> 8) & 0xff);
 
+
     uint8_t ct_size= 0;
     if(ct){
         ct_size = ct->log_colors() - 1;
@@ -185,18 +188,20 @@ void GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
 
     //local color table
     if(ct){
-        ct->write(str);
+        len += ct->write(str);
     }
 
     //minimum code size
     str.put(active_ct->log_colors());
     //Image Data
     LZW writer(str, active_ct->log_colors());
-    writer.write(data, width*height);
-    writer.flush();
+    len += writer.write(data, width*height);
+    len += writer.flush();
 
     //End image block
     str.put(0);
+
+    return len;
 };
 
 void GIFImage::write_ppm(const char *fname, pcGIFColorTable global_ct) const
@@ -245,14 +250,16 @@ pGIF GIF::create(uint16_t _width,
                 _pixel_aspect_ratio));
 };
 
-void GIF::save(const std::string fname) const
+int GIF::save(const std::string fname) const
 {
     std::ofstream of(fname);
-    write(of);
+    int len = write(of);
+    return len;
 };
 
-void GIF::write(std::ostream& out) const
+int GIF::write(std::ostream& out) const
 {
+    int len = 14;
     //header
     out.write("GIF89a", 6);
 
@@ -275,7 +282,7 @@ void GIF::write(std::ostream& out) const
     out.put(par);
 
     if(global_ct){
-        global_ct->write(out);
+        len += global_ct->write(out);
     }
 
     //NETSCAPE Animation Extension
@@ -285,20 +292,21 @@ void GIF::write(std::ostream& out) const
             have_anim = true;
     };
     if(have_anim){
-        write_animation_hdr(out);
+        len += write_animation_hdr(out);
     }
 
     //write images
     for(const_iterator i = begin(); i != end(); i++){
-        (*i)->write(out, global_ct);
+        len += (*i)->write(out, global_ct);
     };
 
     //Trailer
     out.put(0x3B);
 
+    return len;
 }
 
-void GIF::write_animation_hdr(std::ostream& out) const{
+int GIF::write_animation_hdr(std::ostream& out) const{
     //Extension Label
     out.put(0x21);
     //Application Extension Label
@@ -316,4 +324,5 @@ void GIF::write_animation_hdr(std::ostream& out) const{
     out.put((loop_count >> 8) & 0xff);
     //terminator
     out.put(0x00);
+    return 19;
 };

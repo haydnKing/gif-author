@@ -104,7 +104,8 @@ pGIF GIFAuthor::run()
     
     out = encoder.get_output();
 
-    out->save(out_file);
+    int len = out->save(out_file);
+    cout << "Written " << humanize(len) << " bytes to file" << std::endl;
     return out;
 };
 
