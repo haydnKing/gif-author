@@ -22,6 +22,10 @@ class MotionDetector
 
     private:
         MotionDetector(const vector<cv::Mat3b> &loop);
+
+        void do_motion_detection(const vector<cv::Mat3b> &loop);
+
+        vector<cv::Mat_<cv::Point2f>> flow;
 };
 
 #endif
