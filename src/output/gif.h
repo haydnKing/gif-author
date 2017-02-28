@@ -2,12 +2,15 @@
 #define GIF_AUTHOR_GIF_H
 
 #include "LZW.h"
+#include "../util/out.h"
 
 #include <cmath>
 #include <cstring>
+#include <string>
 #include <list>
 #include <stdint.h>
 #include <ostream>
+#include <sstream>
 #include <fstream>
 #include <memory>
 #include <limits>
@@ -165,7 +168,7 @@ class GIFImage
         void set_disposal_method(DisposalMethod dm) {disposal_method = dm;};
 
         // methods        
-        int write(std::ostream& str, pGIFColorTable global_ct) const;
+        int write(std::ostream& str, pGIFColorTable global_ct);
         void write_ppm(const char *fname, pcGIFColorTable global_ct=NULL) const;
 
         uint8_t* get_data() {return data;};
@@ -175,6 +178,8 @@ class GIFImage
         void set_value(int x, int y, uint8_t value);
 
         void clear_to(uint8_t code);
+
+        std::string as_string() const;
 
     protected:
         GIFImage(int left, 
@@ -186,6 +191,7 @@ class GIFImage
 
     private:
         uint16_t left, top, width, height, delay_time;
+        int bytes;
         bool flag_interlaced, flag_user_input;
         DisposalMethod disposal_method;
         pcGIFColorTable ct;
@@ -222,6 +228,8 @@ class GIF : public std::list<pGIFImage>
         int write(std::ostream& out) const;
 
         int save(const std::string filename) const;
+
+        std::string as_string() const;
 
     protected:
         GIF(uint16_t _width, 

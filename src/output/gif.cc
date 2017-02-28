@@ -88,6 +88,7 @@ GIFImage::GIFImage(int _left,
     width(_width),
     height(_height),
     ct(_ct),
+    bytes(-1),
     delay_time(_delay_time),
     flag_interlaced(false),
     disposal_method(DISPOSAL_METHOD_NOT_SPECIFIED),
@@ -128,7 +129,7 @@ void GIFImage::set_value(int x, int y, uint8_t value) {
     data[x+y*width] = value;
 };
 
-int GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
+int GIFImage::write(std::ostream& str, pGIFColorTable global_ct)
 {
     int len = 20;
     //get the active colortable
@@ -201,6 +202,7 @@ int GIFImage::write(std::ostream& str, pGIFColorTable global_ct) const
     //End image block
     str.put(0);
 
+    bytes = len;
     return len;
 };
 
@@ -220,6 +222,14 @@ void GIFImage::write_ppm(const char *fname, pcGIFColorTable global_ct) const
             o.write((const char*)the_ct->get_index(get_value(x,y)), 3);
         }
     }
+};
+
+std::string GIFImage::as_string() const {
+    std::stringstream ss;
+    ss << left << "," << top << "+" << width << "x" << height;
+    if(bytes > 0)
+        ss << " (" << humanize(bytes) << ")";
+    return ss.str();
 };
 
 GIF::GIF(uint16_t _width, 
@@ -325,4 +335,16 @@ int GIF::write_animation_hdr(std::ostream& out) const{
     //terminator
     out.put(0x00);
     return 19;
+};
+
+std::string GIF::as_string() const {
+    std::stringstream ss;
+    ss << "GIF " << width << "x" << height << " " << size() << "frames";
+
+    int i = 0;
+    for(auto im : *this){
+        ss << "\n\t" << ++i << " " << im->as_string();
+    }
+
+    return ss.str();
 };
