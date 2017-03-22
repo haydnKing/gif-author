@@ -1,6 +1,8 @@
 bin_PROGRAMS = gif-author
 
-AM_CXXFLAGS = $(CV2_CFLAGS) $(FFMPEG_CFLAGS) -D__STDC_CONSTANT_MACROS -std=c++11
+ACLOCAL_AMFLAGS = -I m4
+
+AM_CXXFLAGS = $(CV2_CFLAGS) $(FFMPEG_CFLAGS) $(BOOST_CPPFLAGS) -D__STDC_CONSTANT_MACROS -std=c++11
 
 gif_author_SOURCES = src/util/cline.cc \
  					 src/util/out.cc \
@@ -17,4 +19,5 @@ gif_author_SOURCES = src/util/cline.cc \
 					 src/main.cc 
 					 
 
-gif_author_LDADD = $(CV2_LIBS) $(FFMPEG_LIBS)
+gif_author_LDFLAGS = $(BOOST_PROGRAM_OPTIONS_LDFLAGS)
+gif_author_LDADD = $(CV2_LIBS) $(FFMPEG_LIBS) $(BOOST_PROGRAM_OPTIONS_LIBS)

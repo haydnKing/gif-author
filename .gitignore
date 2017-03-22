@@ -4,8 +4,9 @@
 /autom4te.cache/
 /config.*
 /configure
-/m4/
 /stamp-h?
+/m4/*
+!/m4/boost.m4
 .deps/
 .dirstamp
 depcomp
