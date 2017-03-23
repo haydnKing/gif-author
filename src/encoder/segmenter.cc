@@ -24,7 +24,7 @@ class DeltaSegmenter : public Segmenter
         void name() const;
     protected:
         DeltaSegmenter() :
-            Segmenter("DeltaSegmenter", "Update pixels when the next pixel changes by greater than delta"),
+            Segmenter("delta", "Update pixels when only the next pixel changes by greater than delta"),
             delta(4.0),
             sigma(2.0),
             sigmaT(1.0)
@@ -122,7 +122,7 @@ class NullSegmenter : public Segmenter
         };
     protected:
         NullSegmenter() :
-            Segmenter("NullSegmenter", "Update every pixel in every frame")
+            Segmenter("null", "Update every pixel in every frame")
         {};
 };
 
