@@ -334,10 +334,11 @@ template <typename T> vector<string> FactoryOption<T>::format_description(int wi
     }
     for(auto it : groups)
     {
-        d = word_wrap(it.second->description(), (width-longest_name-1));
+        d = word_wrap(it.second->description(), (width-longest_name-3));
         d = indent(longest_name+3, d);
         name = it.second->name();
-        d[0] = "\"" + name + "\"" + d[0].substr(name.size());
+        d[0] = "\"" + name + "\"" + d[0].substr(name.size()+2);
+        d = indent(2, d);
         r.insert(r.end(), d.begin(), d.end());
     }
 
