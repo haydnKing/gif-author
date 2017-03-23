@@ -13,7 +13,7 @@ vector<string> indent(int spaces, const vector<string>& vs)
     }
     return r;
 };
-void word_wrap(const string line, int col_width, vector<string>& out)
+void word_wrap(const string& line, int col_width, vector<string>& out)
 {
     string outline;
     int line_start=0, line_width=0, last_space=0;
@@ -46,10 +46,10 @@ void word_wrap(const string line, int col_width, vector<string>& out)
     }
 
 };
-vector<string> word_wrap(const vector<string>& vs, int len)
+vector<string> word_wrap(const string& s, int len)
 {
     vector<string> out;
-    word_wrap(vs, len, out);
+    word_wrap(s, len, out);
     return out;
 };
 
@@ -126,7 +126,7 @@ void OptionGroup::add_option(pOption op)
 
 vector<string> OptionGroup::format_help(int width)
 {
-    vector<string> r, desc;
+    vector<string> r, d;
     string title;
     int longest_title = 0;
     //r.push_back(my_name);
@@ -140,8 +140,11 @@ vector<string> OptionGroup::format_help(int width)
     }
     for(auto it: options)
     {
-        desc = it.second->desription(width-longest_title-1);
-        
+        d = it.second->format_description(width-longest_title-1);
+        d = indent(longest_title + 1, d);
+        title = it.second->title();
+        d[0] = title + d[0].substr(title.size());
+        r.insert(r.end(), d.begin(), d.end());
     }
     return r;
 };

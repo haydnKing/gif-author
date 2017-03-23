@@ -13,8 +13,8 @@
 using namespace std;
 
 vector<string> indent(int spaces, const vector<string>& vs);
-vector<string> word_wrap(const vector<string>& vs, int len);
-void word_wrap(const vector<string>& vs, int len, vector<string>& out);
+vector<string> word_wrap(const string& s, int len);
+void word_wrap(const string& s, int len, vector<string>& out);
 
 class Size
 {
@@ -276,7 +276,7 @@ std::basic_ostream<CharT, Traits>&
     operator<<(std::basic_ostream<CharT, Traits>& os, 
                const pOptionGroup& og)
 {
-    for(auto it : word_wrap(og->help(), 80))
+    for(auto it : og->format_help(80))
         os << it << endl;
     return os;
 };
@@ -316,13 +316,17 @@ template <typename T> string FactoryOption<T>::title() const
     ostringstream out;
     out << "--" << my_name;
     if((bool)*value)    
-        out << "[=" << value->name() << "]";
+        out << "[=" << (*value)->name() << "]";
     return out.str();
 };
 template <typename T> vector<string> FactoryOption<T>::format_description(int width) const 
 {
-    vector<string> r;
+    vector<string> r, d;
     int longest_name=0;
+    string name;
+    d = word_wrap(description(), width);
+    r.insert(r.end(), d.begin(), d.end());
+    r.push_back("Valid options:");
     for(auto it : groups)
     {
         if(it.second->name().size() > longest_name)
@@ -330,10 +334,11 @@ template <typename T> vector<string> FactoryOption<T>::format_description(int wi
     }
     for(auto it : groups)
     {
-        vector<string> d = word_wrap(it.second->description(), (width-longest_name-1));
-        d = indent(longest_name+1, d);
-        d[0] = it.second->name() + d[0].substr(longest_name);
-        r.insert(r.begin(), d.begin(), d.end());
+        d = word_wrap(it.second->description(), (width-longest_name-1));
+        d = indent(longest_name+3, d);
+        name = it.second->name();
+        d[0] = "\"" + name + "\"" + d[0].substr(name.size());
+        r.insert(r.end(), d.begin(), d.end());
     }
 
     return r;
