@@ -2,6 +2,10 @@
 
 vector<string> indent(int spaces, const vector<string>& vs)
 {
+    string pre;
+    pre.reserve(spaces);
+    for(int i = 0; i < spaces; i++)
+        pre.push_back(' ');
     vector<string> r;
     for(auto it : vs)
     {
@@ -9,54 +13,43 @@ vector<string> indent(int spaces, const vector<string>& vs)
     }
     return r;
 };
-vector<string> word_wrap(const vector<string>& vs, int col_width)
+void word_wrap(const string line, int col_width, vector<string>& out)
+{
+    string outline;
+    int line_start=0, line_width=0, last_space=0;
+
+    //trivial
+    if(line.size() <= col_width)
+    {
+        out.push_back(line);
+        return;
+    }
+
+    while(line_start < line.size())
+    {
+        outline = line.substr(line_start, col_width);
+        if(outline.size() < col_width)
+        {
+            out.push_back(outline);
+            break;
+        }
+        last_space = outline.find_last_of(" ");
+        if(last_space == string::npos)
+        {
+            *outline.end() = '-';
+            line_start += col_width-1;
+        } else {
+            outline = outline.substr(0, last_space);
+            line_start += last_space + 1;
+        }
+        out.push_back(outline);
+    }
+
+};
+vector<string> word_wrap(const vector<string>& vs, int len)
 {
     vector<string> out;
-    string outline;
-    int line_start, line_width, indent, last_space;
-
-    for(auto line : vs)
-    {
-        if(line.size() <= col_width)
-        {
-            out << line << endl;
-            continue;
-        }
-        //find the indent
-        for(indent = 0; indent < line.size(); indent++)
-        {
-            if(!(line[indent] == ' ' || line[indent] == '\t'))
-                break;
-        }
-        //first wrapped line starts at indent
-        line_start = indent;
-        //beware long indents
-        if(indent >= col_width)
-            indent = 0;
-
-        while(line_start < line.size())
-        {
-            outline = line.substr(line_start, col_width-indent);
-            if(indent+outline.size() >= col_width)
-            {
-                last_space = outline.find_last_of(" ");
-                //if we need to line break
-                if(last_space == string::npos)
-                {
-                    outline = outline.substr(0, col_width-indent-1);
-                    outline.append("-");
-                } else
-                {
-                    outline = outline.substr(0, last_space);
-                    //don't include the space on the next line
-                    line_start += 1;
-                }
-            }
-            out.push_back(line.substr(0, indent) + outline);
-            line_start += outline.size();
-        }
-
-    }
+    word_wrap(vs, len, out);
     return out;
 };
 
@@ -75,11 +68,9 @@ OptionBase::OptionBase(string name, string description) :
 OptionBase::~OptionBase()
 {};
         
-vector<string> OptionBase::description(int width) const 
+vector<string> OptionBase::format_description(int width) const 
 {
-    vector<string> r;
-    r.push_back(my_description);
-    return word_wrap(r, width);
+    return word_wrap(my_description, width);
 };
 
 template <> string Option<string>::title() const

@@ -14,6 +14,7 @@ using namespace std;
 
 vector<string> indent(int spaces, const vector<string>& vs);
 vector<string> word_wrap(const vector<string>& vs, int len);
+void word_wrap(const vector<string>& vs, int len, vector<string>& out);
 
 class Size
 {
@@ -143,9 +144,10 @@ class OptionBase
         virtual ~OptionBase();
 
         string name() const {return my_name;};
+        string description() const {return my_description;};
 
         virtual string title() const = 0;
-        virtual vector<string> description(int width) const;
+        virtual vector<string> format_description(int width) const;
         virtual void parse(vector<string>::const_iterator& it) = 0;
 
     protected:
@@ -288,7 +290,7 @@ class FactoryOption : public OptionBase
         static pOption create(string name, string description, shared_ptr<T>& value);
 
         virtual string title() const;
-        virtual vector<string> description(int width) const;
+        virtual vector<string> format_description(int width) const;
         virtual void parse(vector<string>::const_iterator& it);
 
         void add_group(shared_ptr<T> group);
@@ -317,17 +319,23 @@ template <typename T> string FactoryOption<T>::title() const
         out << "[=" << value->name() << "]";
     return out.str();
 };
-template <typename T> vector<string> FactoryOption<T>::description(int width) const 
+template <typename T> vector<string> FactoryOption<T>::format_description(int width) const 
 {
     vector<string> r;
-    ostringstream out;
-    r.push_back(my_description);
+    int longest_name=0;
     for(auto it : groups)
     {
-        vector<string> gh = indent(2, 
-                it.second->format_help(width-2));
-        r.insert(r.end(), gh.cbegin(), gh.cend());
+        if(it.second->name().size() > longest_name)
+            longest_name = it.second->name().size();
     }
+    for(auto it : groups)
+    {
+        vector<string> d = word_wrap(it.second->description(), (width-longest_name-1));
+        d = indent(longest_name+1, d);
+        d[0] = it.second->name() + d[0].substr(longest_name);
+        r.insert(r.begin(), d.begin(), d.end());
+    }
+
     return r;
 };
 template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterator& it)
