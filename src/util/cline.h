@@ -302,10 +302,12 @@ class FactoryOption : public OptionBase
         map<string, shared_ptr<T>> groups;
 
         shared_ptr<T>* value;
+        bool help;
 };
 template <typename T> FactoryOption<T>::FactoryOption(string name, string description, shared_ptr<T>& value):
     OptionBase(name, description),
-    value(&value)
+    value(&value),
+    help(false)
 {};
 template <typename T> pOption FactoryOption<T>::create(string name, string description, shared_ptr<T>& value)
 {
@@ -363,9 +365,18 @@ template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterato
     *value = group;
     args.erase(args.cbegin());
     group->parse(args, true);
+    if(help)
+    {
+        vector<string> o = group->format_help(80);
+        for(auto it : o)
+        {
+            cout << it << endl;
+        }
+    }
 };
 template <typename T> void FactoryOption<T>::add_group(shared_ptr<T> group)
 {
+    group->add_option("help", "show help", help);
     groups[group->name()] = group;
 };
 template <typename T> void FactoryOption<T>::set_default(string name)
