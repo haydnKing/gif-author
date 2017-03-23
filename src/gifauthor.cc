@@ -37,7 +37,7 @@ void GIFAuthor::write_help() const
 {
     std::cout << "usage: gif-author [OPTIONS] image1 image2 ...\n"
         << "\tconvert a series of images into a GIF\n" 
-        << og->help() << std::endl;
+        << og << std::endl;
 };
 
 void GIFAuthor::print_overview() const 

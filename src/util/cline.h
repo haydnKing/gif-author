@@ -2,6 +2,7 @@
 #define GIFAUTHOR_PROCESS_H
 
 #include <string>
+#include <vector>
 #include <sstream>
 #include <map>
 #include <limits>
@@ -10,6 +11,9 @@
 #include <regex>
 
 using namespace std;
+
+vector<string> indent(const string& pre, const vector<string>& vs);
+string word_wrap(const vector<string>& vs, int len);
 
 class Size
 {
@@ -141,7 +145,7 @@ class OptionBase
         string name() const {return my_name;};
         string description() const {return my_description;};
 
-        virtual string help() const = 0;
+        virtual vector<string> help() const = 0;
         virtual void parse(vector<string>::const_iterator& it) = 0;
 
     protected:
@@ -160,7 +164,7 @@ class Option : public OptionBase
         
         static pOption create(string name, string description, T& value);
 
-        virtual string help() const;
+        virtual vector<string> help() const;
         virtual void parse(vector<string>::const_iterator& it);
 
     protected:
@@ -178,17 +182,22 @@ template <typename T> pOption Option<T>::create(string name, string description,
 {
     return pOption(new Option<T>(name, description, value));
 };
-template <typename T> string Option<T>::help() const
+template <typename T> vector<string> Option<T>::help() const
 {
+    vector<string> r;
     ostringstream out;
     out << "--" << my_name;
     if((bool)*my_value) {
         out << "[=" << *my_value << "]";
     }
-    out << ": " << my_description;
-    return out.str();
+    r.push_back(out.str());
+    out.str("");
+    out.clear();
+    out << "  " << my_description;
+    r.push_back(out.str());
+    return r;
 };
-template <> string Option<string>::help() const;
+template <> vector<string> Option<string>::help() const;
 template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
 {
     int eq = it->find("=");
@@ -223,7 +232,7 @@ class Option<bool> : public OptionBase
         
         static pOption create(string name, string description, bool& value);
 
-        virtual string help() const;
+        virtual vector<string> help() const;
         
         virtual void parse(vector<string>::const_iterator& it);
 
@@ -247,7 +256,8 @@ class OptionGroup
         void add_option(pOption op);
 
 
-        string help();
+        vector<string> help();
+
         string name() const {return my_name;};
         string description() const {return my_description;};
 
@@ -265,6 +275,13 @@ template <typename T> void OptionGroup::add_option(string name, string descripti
     pOption op = Option<T>::create(name, description, value);
     options[name] = op;
 };
+template <class CharT, class Traits>
+std::basic_ostream<CharT, Traits>& 
+    operator<<(std::basic_ostream<CharT, Traits>& os, 
+               const pOptionGroup& og)
+{
+    return os << word_wrap(og->help(), 80);
+};
 
 template <typename T>
 class FactoryOption : public OptionBase
@@ -274,7 +291,7 @@ class FactoryOption : public OptionBase
 
         static pOption create(string name, string description, shared_ptr<T>& value);
 
-        virtual string help() const;
+        virtual vector<string> help() const;
         virtual void parse(vector<string>::const_iterator& it);
 
         void add_group(shared_ptr<T> group);
@@ -295,15 +312,22 @@ template <typename T> pOption FactoryOption<T>::create(string name, string descr
 {
     return pOption(new FactoryOption<T>(name, description, value));
 };
-template <typename T> string FactoryOption<T>::help() const 
+template <typename T> vector<string> FactoryOption<T>::help() const 
 {
+    vector<string> r;
     ostringstream out;
-    out << my_name << ": " << my_description << endl;
+    out << "--" << my_name;
+    r.push_back(out.str());
+    out.str("");
+    out.clear();
+    out << "  " << my_description;
+    r.push_back(out.str());
     for(auto it : groups)
     {
-        out << it.second->help() << endl;
+        vector<string> gh = indent("  ", it.second->help());
+        r.insert(r.end(), gh.cbegin(), gh.cend());
     }
-    return out.str();
+    return r;
 };
 template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterator& it)
 {

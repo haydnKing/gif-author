@@ -1,5 +1,65 @@
 #include "cline.h"
 
+vector<string> indent(const string& pre, const vector<string>& vs)
+{
+    vector<string> r;
+    for(auto it : vs)
+    {
+        r.push_back(pre + it);
+    }
+    return r;
+};
+string word_wrap(const vector<string>& vs, int col_width)
+{
+    ostringstream out;
+    string outline;
+    int line_start, line_width, indent, last_space;
+
+    for(auto line : vs)
+    {
+        if(line.size() <= col_width)
+        {
+            out << line << endl;
+            continue;
+        }
+        //find the indent
+        for(indent = 0; indent < line.size(); indent++)
+        {
+            if(!(line[indent] == ' ' || line[indent] == '\t'))
+                break;
+        }
+        //first wrapped line starts at indent
+        line_start = indent;
+        //beware long indents
+        if(indent >= col_width)
+            indent = 0;
+
+        while(line_start < line.size())
+        {
+            outline = line.substr(line_start, col_width-indent);
+            if(indent+outline.size() >= col_width)
+            {
+                last_space = outline.find_last_of(" ");
+                //if we need to line break
+                if(last_space == string::npos)
+                {
+                    outline = outline.substr(0, col_width-indent-1);
+                    outline.append("-");
+                } else
+                {
+                    outline = outline.substr(0, last_space);
+                    //don't include the space on the next line
+                    line_start += 1;
+                }
+            }
+            out << line.substr(0, indent) << outline << std::endl;
+            line_start += outline.size();
+        }
+
+    }
+    return out.str();
+};
+
 Size::Size(int w, int h):
     w(w),
     h(h)
@@ -15,15 +75,17 @@ OptionBase::OptionBase(string name, string description) :
 OptionBase::~OptionBase()
 {};
 
-template <> string Option<string>::help() const
+template <> vector<string> Option<string>::help() const
 {
+    vector<string> r;
     ostringstream out;
     out << "--" << my_name;
     if(my_value->empty()) {
         out << "[=" << *my_value << "]";
     }
-    out << ": " << my_description;
-    return out.str();
+    r.push_back(out.str()); 
+    r.push_back("  " + my_description);
+    return r;
 };
 
 Option<bool>::Option(string name, string description, bool& value) :
@@ -38,11 +100,12 @@ pOption Option<bool>::create(string name, string description, bool& value)
 {
     return pOption(new Option<bool>(name, description, value));
 };
-string Option<bool>::help() const
+vector<string> Option<bool>::help() const
 {
-    ostringstream out;
-    out << "--" << my_name << ": " << my_description;
-    return out.str();
+    vector<string> r;
+    r.push_back("--" + my_name);
+    r.push_back("  " + my_description);
+    return r;
 };
 void Option<bool>::parse(vector<string>::const_iterator& it)
 {
@@ -69,15 +132,18 @@ void OptionGroup::add_option(pOption op)
     options[op->name()] = op;
 };
 
-string OptionGroup::help()
+vector<string> OptionGroup::help()
 {
-    ostringstream out;
-    out << my_name << " options:\n";
+    vector<string> r;
+    r.push_back(my_name);
+    r.push_back("  " + my_description);
+    r.push_back("  options:");
     for(auto it = options.begin(); it != options.end(); ++it)
     {
-        out << "  " << it->second->help() << "\n";
+        vector<string> h = indent("    ", it->second->help());
+        r.insert(r.end(), h.begin(), h.end());
     }
-    return out.str();
+    return r;
 };
 
 vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
