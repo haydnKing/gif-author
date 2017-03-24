@@ -126,6 +126,8 @@ pOptionGroup OptionGroup::create(string name, string description)
         
 void OptionGroup::add_option(pOption op)
 {
+    if(op->short_name() != '\0')
+        short_names[op->short_name()] = op->name();
     options[op->name()] = op;
 };
 
@@ -155,30 +157,29 @@ vector<string> OptionGroup::format_help(int width, const string& mark)
     return r;
 };
 
-vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
+vector<string> OptionGroup::parse(const vector<string>& args)
 {
     vector<string> ret;
     vector<string>::const_iterator it = args.cbegin();
     string name;
     pOption op;
+    bool shortform;
 
     while(it != args.end())
     {
         name = "";
-        if(shortform)
+        shortform = false;
+
+        if(it->compare(0, 2, "--") == 0)
         {
-            name = *it;
+            name = it->substr(2);
+        } else if(it->compare(0, 1, "-") == 0) {
+            name = it->substr(1);
+            shortform=true;
         } else {
-            if(it->compare(0, 2, "--") == 0)
-            {
-                name = it->substr(2);
-            } else if(it->compare(0, 1, "-") == 0) {
-                name = it->substr(1);
-            } else {
-                ret.push_back(*it);
-                it++;
-                continue;
-            }
+            ret.push_back(*it);
+            it++;
+            continue;
         }
         
         //check "=" form
@@ -187,6 +188,20 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
         {
             name = name.substr(0,eq);
         }
+
+        if(shortform)
+        {
+            if(name.size() > 1)
+                throw UnknownArgument("-"+name);
+            try
+            {
+                name = short_names.at(name[0]);
+            }
+            catch (out_of_range)
+            {
+                throw UnknownArgument(name);
+            }
+        }
         
         try
         {
@@ -194,7 +209,6 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
         }
         catch (out_of_range) {
             throw UnknownArgument(name);
-            it++;
         }            
         op->parse(it);
     }

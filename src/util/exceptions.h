@@ -57,5 +57,19 @@ class BadOption: public CLineError
         BadOption(const string& arg, const string& opt);
 };
 
+/**
+ * Don't continue
+ */
+class StopCommand: public CLineError
+{
+    public:
+        StopCommand() {}
+        virtual const char* what() const throw()
+        {
+            return NULL;
+        };
+
+};
+
 
 #endif //GIFAUTHOR_EXCEPTIONS_H

@@ -262,18 +262,19 @@ class OptionGroup
         string description() const {return my_description;};
 
         //parse the arguments, return vector of unused arguments
-        vector<string> parse(const vector<string>& args, bool shortform=false);
+        vector<string> parse(const vector<string>& args);
 
     protected:
         OptionGroup(string name, string description);
 
         string my_name, my_description;
         map<string, pOption> options;
+        map<char, string> short_names;
 };
 template <typename T> void OptionGroup::add_option(string name, string description, T& value, char short_name)
 {
     pOption op = Option<T>::create(name, description, value, short_name);
-    options[name] = op;
+    add_option(op);
 };
 template <class CharT, class Traits>
 std::basic_ostream<CharT, Traits>& 
@@ -366,27 +367,28 @@ template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterato
     //get tokens
     while(getline(in, val, ':'))
     {
-        args.push_back(val);
+        args.push_back("--"+val);
     }
 
     try
     {
-        group = groups.at(args[0]);
+        group = groups.at(args[0].substr(2));
     } catch (out_of_range)
     {
         throw BadOption(my_name, args[0]);
     }
     *value = group;
     args.erase(args.cbegin());
-    group->parse(args, true);
+    group->parse(args);
     if(help)
     {
-        vector<string> o = word_wrap("Specific help for "+my_name+" \""+args[0]+"\"", 80);
+        vector<string> o = word_wrap("Specific help for "+my_name+" \""+group->name()+"\"", 80);
         for(auto it : o)
             cout << it << endl;
         o = group->format_help(80, ":");
         for(auto it : o)
             cout << it << endl;
+        throw StopCommand();
     }
 };
 template <typename T> void FactoryOption<T>::add_group(shared_ptr<T> group)

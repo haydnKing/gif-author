@@ -29,7 +29,8 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     catch(const std::exception& ce)
     {
         const char* what = ce.what();
-        cout << "Error: " << what << endl;
+        if(what != 0)
+            cout << "Error: " << what << endl;
         is_error = true;
     }
 
