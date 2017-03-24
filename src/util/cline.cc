@@ -188,7 +188,7 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
             op->parse(it);
         }
         catch (out_of_range) {
-            ret.push_back(*it);
+            throw UnknownArgument(name);
             it++;
         }            
     }

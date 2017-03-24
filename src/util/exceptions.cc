@@ -1,22 +1,21 @@
 #include "exceptions.h"
 
+ostringstream CLineError::oss;
+
 CLineError::CLineError():
-    runtime_error("")
+    runtime_error("Failed to parse command line")
 {};
 
-const char* CLineError::what() const noexcept
+const char* CLineError::what() const throw()
 {
-    return "Failed to parse command line";
+    return str.c_str();
 };
 
 
-UnknownArgument::UnknownArgument(const string& arg):
-    arg(arg)
-{};
-
-const char* UnknownArgument::what() const noexcept
+UnknownArgument::UnknownArgument(const string& arg)
 {
     oss.str("");
     oss << "Unknown command line argument \"" << arg << "\"";
-    return oss.str().c_str();
+    str = oss.str();
 };
+

@@ -6,19 +6,21 @@
 #include <sstream>
 #include <typeinfo>
 
+#include <iostream>
+
 using namespace std;
 
 class CLineError: public std::runtime_error
 {
     public:
         CLineError();
-        virtual const char* what() const noexcept;
+        virtual const char* what() const throw();
 
     protected:
         static ostringstream oss;
+        string str;
 };
 
-ostringstream CLineError::oss;
 
 /**
  * When the incorrect type is given for an argument
@@ -27,20 +29,14 @@ template <class T>
 class ParseError: public CLineError
 {
     public:
-        ParseError(const string& arg, const string& src, const T& target):
-            arg(arg),
-            src(src)
-        {};
-        virtual const char* what() const noexcept
+        ParseError(const string& arg, const string& src, const T& target)
         {
             oss.str("");
             oss << "While parsing "<< arg 
                 << ", couldn't interperet \"" << src << "\" as " 
                 << typeid(T).name();
-            return oss.str().c_str();
+            str = oss.str();
         };
-    private:
-        string arg, src;
 };
 
 /**
@@ -50,9 +46,6 @@ class UnknownArgument: public CLineError
 {
     public:
         UnknownArgument(const string& arg);
-        virtual const char* what() const noexcept;
-    private:
-        string arg;
 };
 
 

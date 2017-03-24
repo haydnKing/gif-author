@@ -10,6 +10,8 @@
 #include <memory>
 #include <regex>
 
+#include "exceptions.h"
+
 using namespace std;
 
 vector<string> indent(int spaces, const vector<string>& vs);
@@ -214,9 +216,7 @@ template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
     getline(in, rem);
     if(fail || !rem.empty())
     {
-        ostringstream err;
-        err << "Invalid argument \""<< rvalue << "\" to \"" << my_name << "\"";
-        throw(std::invalid_argument(err.str()));
+        throw ParseError<T>(my_name, rvalue, *my_value);
     }
 };
 

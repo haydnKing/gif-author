@@ -22,7 +22,16 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
         args.push_back(argv[i]);
     }
 
-    filenames = og->parse(args);
+    try
+    {
+        filenames = og->parse(args);
+    }
+    catch(const std::exception& ce)
+    {
+        const char* what = ce.what();
+        cout << "Error: " << what << endl;
+        is_error = true;
+    }
 
 };
 
@@ -57,6 +66,9 @@ pGIF GIFAuthor::run()
     pGIF out;
     if(help_opt) {
         write_help();
+        return out;
+    }
+    if(error()) {
         return out;
     }
 
