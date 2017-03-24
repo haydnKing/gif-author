@@ -60,9 +60,10 @@ Size::Size(int w, int h):
 
 Size::~Size() {};
 
-OptionBase::OptionBase(string name, string description) :
+OptionBase::OptionBase(string name, string description, char short_name) :
     my_name(name),
-    my_description(description)
+    my_description(description),
+    my_short(short_name)
 {};
 
 OptionBase::~OptionBase()
@@ -73,31 +74,35 @@ vector<string> OptionBase::format_description(int width) const
     return word_wrap(my_description, width);
 };
 
-template <> string Option<string>::title() const
+template <> string Option<string>::title(const string& mark, const string& shortmark) const
 {
     ostringstream out;
-    out << my_name;
+    if(short_name() != '\0')
+        out << shortmark << short_name() << ", ";
+    out << mark << my_name;
     if(!my_value->empty()) {
         out << "[=" << *my_value << "]";
     }
     return out.str();
 };
 
-Option<bool>::Option(string name, string description, bool& value) :
-    OptionBase(name, description),
+Option<bool>::Option(string name, string description, bool& value, char short_name) :
+    OptionBase(name, description, short_name),
     my_value(&value)
 {
     *my_value = false;
 };
 Option<bool>::~Option()
 {};
-pOption Option<bool>::create(string name, string description, bool& value)
+pOption Option<bool>::create(string name, string description, bool& value, char short_name)
 {
-    return pOption(new Option<bool>(name, description, value));
+    return pOption(new Option<bool>(name, description, value, short_name));
 };
-string Option<bool>::title() const
+string Option<bool>::title(const string& mark, const string& shortmark) const
 {
-    return my_name;
+    if(short_name() != '\0')
+        return shortmark + short_name() + ", " + mark + my_name;
+    return mark + my_name;
 };
 void Option<bool>::parse(vector<string>::const_iterator& it)
 {
@@ -134,15 +139,15 @@ vector<string> OptionGroup::format_help(int width, const string& mark)
     //r.push_back("  options:");
     for(auto it: options)
     {
-        title = it.second->title();
+        title = it.second->title(mark);
         if(title.size() > longest_title)
             longest_title = title.size();
     }
     for(auto it: options)
     {
         d = it.second->format_description(width-longest_title-1);
-        d = indent(mark.size() + longest_title + 1, d);
-        title = mark + it.second->title();
+        d = indent(longest_title + 1, d);
+        title = it.second->title(mark);
         d[0].replace(0, title.size(), title);
         r.insert(r.end(), d.begin(), d.end());
     }

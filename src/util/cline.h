@@ -146,15 +146,17 @@ class OptionBase
         virtual ~OptionBase();
 
         string name() const {return my_name;};
+        char short_name() const {return my_short;};
         string description() const {return my_description;};
 
-        virtual string title() const = 0;
+        virtual string title(const string& mark="--", const string& shortmark="-") const = 0;
         virtual vector<string> format_description(int width) const;
         virtual void parse(vector<string>::const_iterator& it) = 0;
 
     protected:
-        OptionBase(string name, string description);
+        OptionBase(string name, string description, char short_name='\0');
 
+        char my_short;
         string my_name, my_description;
 };
 
@@ -166,36 +168,38 @@ class Option : public OptionBase
     public:
         virtual ~Option();
         
-        static pOption create(string name, string description, T& value);
+        static pOption create(string name, string description, T& value, char short_name='\0');
 
-        virtual string title() const;
+        virtual string title(const string& mark="--", const string& shortmark="-") const;
         virtual void parse(vector<string>::const_iterator& it);
 
     protected:
-        Option(string name, string description, T& value);
+        Option(string name, string description, T& value, char short_name='\0');
 
         T* my_value;
 };
-template <typename T> Option<T>::Option(string name, string description, T& value) :
-    OptionBase(name, description),
+template <typename T> Option<T>::Option(string name, string description, T& value, char short_name) :
+    OptionBase(name, description, short_name),
     my_value(&value)
 {};
 template <typename T> Option<T>::~Option()
 {};
-template <typename T> pOption Option<T>::create(string name, string description, T& value)
+template <typename T> pOption Option<T>::create(string name, string description, T& value, char short_name)
 {
-    return pOption(new Option<T>(name, description, value));
+    return pOption(new Option<T>(name, description, value, short_name));
 };
-template <typename T> string Option<T>::title() const
+template <typename T> string Option<T>::title(const string& mark, const string& shortmark) const
 {
     ostringstream out;
-    out << my_name;
+    if(short_name() != '\0')
+        out << shortmark << short_name() << ", ";
+    out << mark << my_name;
     if((bool)*my_value) {
         out << "[=" << *my_value << "]";
     }
     return out.str();
 };
-template <> string Option<string>::title() const;
+template <> string Option<string>::title(const string& mark, const string& shortmark) const;
 template <typename T> void Option<T>::parse(vector<string>::const_iterator& it)
 {
     int eq = it->find("=");
@@ -226,14 +230,14 @@ class Option<bool> : public OptionBase
     public:
         virtual ~Option();
         
-        static pOption create(string name, string description, bool& value);
+        static pOption create(string name, string description, bool& value, char short_name='\0');
 
-        virtual string title() const;
+        virtual string title(const string& mark="--", const string& shortmark="-") const;
         
         virtual void parse(vector<string>::const_iterator& it);
 
     protected:
-        Option(string name, string description, bool& value);
+        Option(string name, string description, bool& value, char short_name='\0');
 
         bool* my_value;
 };
@@ -248,7 +252,7 @@ class OptionGroup
 
         static pOptionGroup create(string name, string description="");
 
-        template <typename T> void add_option(string name, string description, T& value);
+        template <typename T> void add_option(string name, string description, T& value, char short_name='\0');
         void add_option(pOption op);
 
 
@@ -266,9 +270,9 @@ class OptionGroup
         string my_name, my_description;
         map<string, pOption> options;
 };
-template <typename T> void OptionGroup::add_option(string name, string description, T& value)
+template <typename T> void OptionGroup::add_option(string name, string description, T& value, char short_name)
 {
-    pOption op = Option<T>::create(name, description, value);
+    pOption op = Option<T>::create(name, description, value, short_name);
     options[name] = op;
 };
 template <class CharT, class Traits>
@@ -287,9 +291,9 @@ class FactoryOption : public OptionBase
     public:
         virtual ~FactoryOption() {};
 
-        static pOption create(string name, string description, shared_ptr<T>& value);
+        static pOption create(string name, string description, shared_ptr<T>& value, char short_name='\0');
 
-        virtual string title() const;
+        virtual string title(const string& mark="--", const string& shortmark="-") const;
         virtual vector<string> format_description(int width) const;
         virtual void parse(vector<string>::const_iterator& it);
 
@@ -309,14 +313,16 @@ template <typename T> FactoryOption<T>::FactoryOption(string name, string descri
     value(&value),
     help(false)
 {};
-template <typename T> pOption FactoryOption<T>::create(string name, string description, shared_ptr<T>& value)
+template <typename T> pOption FactoryOption<T>::create(string name, string description, shared_ptr<T>& value, char short_name)
 {
-    return pOption(new FactoryOption<T>(name, description, value));
+    return pOption(new FactoryOption<T>(name, description, value, short_name));
 };
-template <typename T> string FactoryOption<T>::title() const 
+template <typename T> string FactoryOption<T>::title(const string& mark, const string& shortmark) const 
 {
     ostringstream out;
-    out << my_name;
+    if(short_name() != '\0')
+        out << shortmark << short_name() << ", ";
+    out << mark << my_name;
     if((bool)*value)    
         out << "[=" << (*value)->name() << "]";
     return out.str();
