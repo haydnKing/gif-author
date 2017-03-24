@@ -270,6 +270,7 @@ class OptionGroup
         string my_name, my_description;
         map<string, pOption> options;
         map<char, string> short_names;
+        vector<string> option_names;
 };
 template <typename T> void OptionGroup::add_option(string name, string description, T& value, char short_name)
 {

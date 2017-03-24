@@ -129,6 +129,7 @@ void OptionGroup::add_option(pOption op)
     if(op->short_name() != '\0')
         short_names[op->short_name()] = op->name();
     options[op->name()] = op;
+    option_names.push_back(op->name());
 };
 
 vector<string> OptionGroup::format_help(int width, const string& mark)
@@ -145,11 +146,12 @@ vector<string> OptionGroup::format_help(int width, const string& mark)
         if(title.size() > longest_title)
             longest_title = title.size();
     }
-    for(auto it: options)
+    for(auto name: option_names)
     {
-        d = it.second->format_description(width-longest_title-1);
+        pOption op = options.at(name);
+        d = op->format_description(width-longest_title-1);
         d = indent(longest_title + 1, d);
-        title = it.second->title(mark);
+        title = op->title(mark);
         d[0].replace(0, title.size(), title);
         r.insert(r.end(), d.begin(), d.end());
     }
