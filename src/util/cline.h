@@ -189,7 +189,7 @@ template <typename T> pOption Option<T>::create(string name, string description,
 template <typename T> string Option<T>::title() const
 {
     ostringstream out;
-    out << "--" << my_name;
+    out << my_name;
     if((bool)*my_value) {
         out << "[=" << *my_value << "]";
     }
@@ -252,7 +252,7 @@ class OptionGroup
         void add_option(pOption op);
 
 
-        vector<string> format_help(int width);
+        vector<string> format_help(int width, const string& mark="--");
 
         string name() const {return my_name;};
         string description() const {return my_description;};
@@ -316,7 +316,7 @@ template <typename T> pOption FactoryOption<T>::create(string name, string descr
 template <typename T> string FactoryOption<T>::title() const 
 {
     ostringstream out;
-    out << "--" << my_name;
+    out << my_name;
     if((bool)*value)    
         out << "[=" << (*value)->name() << "]";
     return out.str();
@@ -378,14 +378,14 @@ template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterato
         vector<string> o = word_wrap("Specific help for "+my_name+" \""+args[0]+"\"", 80);
         for(auto it : o)
             cout << it << endl;
-        o = group->format_help(80);
+        o = group->format_help(80, ":");
         for(auto it : o)
             cout << it << endl;
     }
 };
 template <typename T> void FactoryOption<T>::add_group(shared_ptr<T> group)
 {
-    group->add_option("help", "show help", help);
+    group->add_option("help", "Show this help", help);
     groups[group->name()] = group;
 };
 template <typename T> void FactoryOption<T>::set_default(string name)

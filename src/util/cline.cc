@@ -76,7 +76,7 @@ vector<string> OptionBase::format_description(int width) const
 template <> string Option<string>::title() const
 {
     ostringstream out;
-    out << "--" << my_name;
+    out << my_name;
     if(!my_value->empty()) {
         out << "[=" << *my_value << "]";
     }
@@ -97,7 +97,7 @@ pOption Option<bool>::create(string name, string description, bool& value)
 };
 string Option<bool>::title() const
 {
-    return "--" + my_name;
+    return my_name;
 };
 void Option<bool>::parse(vector<string>::const_iterator& it)
 {
@@ -124,7 +124,7 @@ void OptionGroup::add_option(pOption op)
     options[op->name()] = op;
 };
 
-vector<string> OptionGroup::format_help(int width)
+vector<string> OptionGroup::format_help(int width, const string& mark)
 {
     vector<string> r, d;
     string title;
@@ -141,11 +141,12 @@ vector<string> OptionGroup::format_help(int width)
     for(auto it: options)
     {
         d = it.second->format_description(width-longest_title-1);
-        d = indent(longest_title + 1, d);
-        title = it.second->title();
-        d[0] = title + d[0].substr(title.size());
+        d = indent(mark.size() + longest_title + 1, d);
+        title = mark + it.second->title();
+        d[0].replace(0, title.size(), title);
         r.insert(r.end(), d.begin(), d.end());
     }
+    r = indent(2, r);
     return r;
 };
 

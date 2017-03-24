@@ -44,8 +44,9 @@ pGIFAuthor GIFAuthor::create(int argc, char* argv[]) {
 
 void GIFAuthor::write_help() const 
 {
-    std::cout << "usage: gif-author [OPTIONS] image1 image2 ...\n"
-        << "\tconvert a series of images into a GIF\n" 
+    std::cout << "gif-author converts a series of images into a GIF\n\n" 
+        << "USAGE: gif-author [OPTIONS] image1 image2 ...\n\n"
+        << "Options:\n" 
         << og << std::endl;
 };
 
