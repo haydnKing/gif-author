@@ -185,12 +185,12 @@ vector<string> OptionGroup::parse(const vector<string>& args, bool shortform)
         try
         {
             op = options.at(name);
-            op->parse(it);
         }
         catch (out_of_range) {
             throw UnknownArgument(name);
             it++;
         }            
+        op->parse(it);
     }
 
     return ret;

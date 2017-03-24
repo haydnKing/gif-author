@@ -48,5 +48,14 @@ class UnknownArgument: public CLineError
         UnknownArgument(const string& arg);
 };
 
+/**
+ * Invalid factory option
+ */
+class BadOption: public CLineError
+{
+    public:
+        BadOption(const string& arg, const string& opt);
+};
+
 
 #endif //GIFAUTHOR_EXCEPTIONS_H

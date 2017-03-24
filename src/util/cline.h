@@ -348,20 +348,27 @@ template <typename T> vector<string> FactoryOption<T>::format_description(int wi
 };
 template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterator& it)
 {
+    vector<string> args;
+    string val;
+    shared_ptr<T> group;
+
     it++;
     stringstream in(*it);
     it++;
 
     //get tokens
-    vector<string> args;
-    string val;
-    //char delim = ':';
     while(getline(in, val, ':'))
     {
         args.push_back(val);
     }
 
-    shared_ptr<T> group = groups.at(args[0]);
+    try
+    {
+        group = groups.at(args[0]);
+    } catch (out_of_range)
+    {
+        throw BadOption(my_name, args[0]);
+    }
     *value = group;
     args.erase(args.cbegin());
     group->parse(args, true);

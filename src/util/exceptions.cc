@@ -19,3 +19,9 @@ UnknownArgument::UnknownArgument(const string& arg)
     str = oss.str();
 };
 
+BadOption::BadOption(const string& arg, const string& opt)
+{
+    oss.str("");
+    oss << "Unknown command line option \"" << opt << "\" for --" << arg;
+    str = oss.str();
+};
