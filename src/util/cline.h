@@ -328,7 +328,8 @@ template <typename T> vector<string> FactoryOption<T>::format_description(int wi
     string name;
     d = word_wrap(description(), width);
     r.insert(r.end(), d.begin(), d.end());
-    r.push_back("Valid options:");
+    d = word_wrap("Use <option>:help for specific help. Valid options:", width);
+    r.insert(r.end(), d.begin(), d.end());
     for(auto it : groups)
     {
         if(it.second->name().size() > longest_name)
@@ -374,11 +375,12 @@ template <typename T> void FactoryOption<T>::parse(vector<string>::const_iterato
     group->parse(args, true);
     if(help)
     {
-        vector<string> o = group->format_help(80);
+        vector<string> o = word_wrap("Specific help for "+my_name+" \""+args[0]+"\"", 80);
         for(auto it : o)
-        {
             cout << it << endl;
-        }
+        o = group->format_help(80);
+        for(auto it : o)
+            cout << it << endl;
     }
 };
 template <typename T> void FactoryOption<T>::add_group(shared_ptr<T> group)
