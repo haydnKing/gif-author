@@ -139,7 +139,7 @@ void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
     //rest of the colours are allocated using MMC
     if(transparent) {
         do_MMC(0.5, quantized_colors - 3);
-        ct->set_transparent_index(255);
+        ct->set_transparent_index(quantized_colors-1);
     } else {
         do_MMC(0.5, quantized_colors - 2);
     }
