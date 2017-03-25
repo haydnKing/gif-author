@@ -7,11 +7,11 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
 {
     og = OptionGroup::create("gif-author");
 
-    og->add_option<bool>("help", "show help and exit", help_opt, 'h');
-    og->add_option<int>("delay", "delay between frames, ms", delay, 'd');
-    og->add_option<Crop>("crop", "cropping of the output image", crop_opts, 'c');
-    og->add_option<Size>("size", "size of the output image", size_opts, 's');
-    og->add_option<std::string>("out", "name of the output file", out_file, 'o');
+    og->add_option<bool>("help", "Show help and exit", help_opt, 'h');
+    og->add_option<int>("delay", "Delay between frames, ms", delay, 'd');
+    og->add_option<Size>("size", "Size of the output image, <w>x<h>. If either width w or height h is \'_\', the value is calculated keeping aspect ratio constant", size_opts, 's');
+    og->add_option<Crop>("crop", "Cropping of the output image to the rectangle given by <x>,<y>+<w>x<h>", crop_opts, 'c');
+    og->add_option<std::string>("out", "Name of the output file", out_file, 'o');
     og->add_option(QuantizerFactory::create(colorquantizer));
     og->add_option(DithererFactory::create(ditherer));
     og->add_option(SegmenterFactory::create(segmenter));
