@@ -98,7 +98,7 @@ class GIFColorTable
         /**
          * set the transparent index
          */
-        void set_transparent_index(int idx) {transparent_index = idx;};
+        void set_transparent();
 
         /**
          * /returns the size of the saved color table in bytes

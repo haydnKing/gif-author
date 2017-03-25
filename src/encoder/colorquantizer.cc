@@ -118,6 +118,7 @@ MMCQuantizer::~MMCQuantizer()
 
 void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
 {
+    std::cout << "MMCQuantizer::build_ct(transparent=" << transparent << ", cols=" << quantized_colors << ")"<<endl;
     if(num_colors < 2)
         return;
 
@@ -139,7 +140,7 @@ void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
     //rest of the colours are allocated using MMC
     if(transparent) {
         do_MMC(0.5, quantized_colors - 3);
-        ct->set_transparent_index(quantized_colors-1);
+        ct->set_transparent();
     } else {
         do_MMC(0.5, quantized_colors - 2);
     }
@@ -148,6 +149,7 @@ void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
 
 void MMCQuantizer::do_MMC(float f, int colours_to_add)
 {
+    std::cout << "  do_MMC(f=" << f << ", colours_to_add=" << colours_to_add << ")" << std::endl; 
     vbox root(colors, num_colors);
     vbox* box;
 

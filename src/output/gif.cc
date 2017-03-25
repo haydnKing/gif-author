@@ -7,6 +7,7 @@ GIFColorTable::GIFColorTable(int depth, bool sorted) :
     colors(0)
 {
     data = new uint8_t[256*3];
+    std::memset(data, 0, 256*3);
 };
 
 GIFColorTable::~GIFColorTable()
@@ -21,10 +22,22 @@ pGIFColorTable GIFColorTable::create(int depth, bool sorted)
 
 void GIFColorTable::add_color(const uint8_t *c)
 {
+    std::cout << "    GIFColorTable::add_color([" << (int)c[0] 
+        << "," << int(c[1]) << "," << int(c[2]) << "]) colors = " << colors << std::endl;
     data[3*colors    ] = c[0];
     data[3*colors + 1] = c[1];
     data[3*colors + 2] = c[2];
     colors++;
+};
+
+void GIFColorTable::set_transparent()
+{
+    std::cout << "  GIFColorTable::set_transparent()" << std::endl;
+    if(is_transparent())
+        return;
+    transparent_index = colors;
+    uint8_t c[3] = {0,0,0};
+    add_color(c);
 };
 
 uint8_t GIFColorTable::log_colors() const 
