@@ -2,6 +2,7 @@
 
 GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     delay(40),
+    colors(256),
     out_file("out.gif"),
     help_opt(false)
 {
@@ -10,7 +11,8 @@ GIFAuthor::GIFAuthor(int argc, char* argv[]) :
     og->add_option<bool>("help", "Show help and exit", help_opt, 'h');
     og->add_option<int>("delay", "Delay between frames, ms", delay, 'd');
     og->add_option<Size>("size", "Size of the output image, <w>x<h>. If either width w or height h is \'_\', the value is calculated keeping aspect ratio constant", size_opts, 's');
-    og->add_option<Crop>("crop", "Cropping of the output image to the rectangle given by <x>,<y>+<w>x<h>", crop_opts, 'c');
+    og->add_option("colors", "Limit the number of colours per image in the resulting GIF. 256 is the maximum", colors, 'c');
+    og->add_option<Crop>("crop", "Cropping of the output image to the rectangle given by <x>,<y>+<w>x<h>", crop_opts);
     og->add_option<std::string>("out", "Name of the output file", out_file, 'o');
     og->add_option(QuantizerFactory::create(colorquantizer));
     og->add_option(DithererFactory::create(ditherer));
@@ -57,6 +59,7 @@ void GIFAuthor::print_overview() const
         << "\t" << filenames.size() << " frames with " << delay << "ms delay\n"
         << "\tframe size is " << size_opts << "\n"
         << "\tcropping: " << crop_opts << "\n"
+        << "\tcolors: " << colors << "\n"
         << "\tsegmenter: " << segmenter->name() << "\n"
         << "\tcolorquantizer: " << colorquantizer->name() << "\n"
         << "\tditherer: " << ditherer->name() << std::endl;
@@ -100,10 +103,15 @@ pGIF GIFAuthor::run()
         float r = float(size_opts.height()) / float(frames[0]->get_height());
         size_opts.width(int(0.5+r*float(frames[0]->get_width())));
     }
-    
+
     print_overview();
 
-    GIFEncoder encoder(size_opts.width(), size_opts.height(), segmenter, ditherer, colorquantizer);
+    GIFEncoder encoder(size_opts.width(), 
+                       size_opts.height(), 
+                       segmenter, 
+                       ditherer, 
+                       colorquantizer, 
+                       colors);
     int frame_no = 0;
     for(auto fr : frames)
     {

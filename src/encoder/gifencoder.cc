@@ -7,16 +7,18 @@ bool px_equal(uint8_t *lhs, uint8_t *rhs)
 };
 
 GIFEncoder::GIFEncoder(int cw, int ch,
-                   pSegmenter segmenter,
-                   pDitherer ditherer,
-                   pColorQuantizer colorquantizer):
+                       pSegmenter segmenter,
+                       pDitherer ditherer,
+                       pColorQuantizer colorquantizer,
+                       int max_colors):
     canvas_width(cw),
     canvas_height(ch),
     segmenter(segmenter),
     ditherer(ditherer),
     colorquantizer(colorquantizer),
     sm_sigma(2.),
-    sm_thresh(0.5)
+    sm_thresh(0.5),
+    max_colors(max_colors)
 {};
 
 GIFEncoder::~GIFEncoder() {};
@@ -71,8 +73,7 @@ pGIF GIFEncoder::get_output()
 
         if(colorquantizer->get_num_colors() > 0)
         {
-            //currently just using 256 colours for everything
-            colorquantizer->build_ct((bool)fr_mask, 255);
+            colorquantizer->build_ct((bool)fr_mask, max_colors);
 
             //autocrop
             pGIFImage img;

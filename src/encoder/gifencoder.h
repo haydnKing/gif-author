@@ -29,7 +29,8 @@ class GIFEncoder
                    int canvas_height,
                    pSegmenter segmenter,
                    pDitherer ditherer,
-                   pColorQuantizer colorquantizer);
+                   pColorQuantizer colorquantizer,
+                   int max_colors=256);
         ~GIFEncoder();
 
         void push_frame(pVideoFrame fr);
@@ -44,7 +45,7 @@ class GIFEncoder
         void set_colorquantizer(pColorQuantizer cq) {colorquantizer = cq;};
 
     protected:
-        int canvas_width, canvas_height;
+        int canvas_width, canvas_height, max_colors;
         float sm_sigma, sm_thresh;
         pSegmenter segmenter;
         pColorQuantizer colorquantizer;

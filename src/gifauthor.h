@@ -42,7 +42,7 @@ class GIFAuthor
 
         void load_files();
         
-        int delay;
+        int delay, colors;
         Crop crop_opts;
         Size size_opts;
         std::string out_file;
