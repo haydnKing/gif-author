@@ -10,8 +10,7 @@ gif_author_SOURCES = src/util/cline.cc \
  					 src/encoder/colorquantizer.cc \
  					 src/encoder/ditherer.cc \
  					 src/util/bitset.cc \
- 					 src/video/videofile.cc \
- 					 src/video/videoframe.cc \
+ 					 src/video/imagesequence.cc \
 					 src/encoder/segmenter.cc \
  					 src/encoder/gifencoder.cc \
  					 src/gifauthor.cc \
