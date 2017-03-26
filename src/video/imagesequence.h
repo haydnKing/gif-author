@@ -1,114 +1,54 @@
-#ifndef GTKMM_GIFAUTHOR_VIDEOFRAME_H
-#define GTKMM_GIFAUTHOR_VIDEOFRAME_H
+#ifndef GTKMM_GIFAUTHOR_IMAGESEQUENCE_H
+#define GTKMM_GIFAUTHOR_IMAGESEQUENCE_H
 
-#include <stdint.h>
-#include <sstream>
-#include <fstream>
-#include <iomanip>
 #include <memory>
-
+#include <vector>
 #include <opencv2/opencv.hpp>
-
 #include <iostream>
+#include <string>
 
+class Frame;
+typedef std::shared_ptr<Frame> pFrame;
 
-//forward declaration
-class VideoFrame;
-typedef std::shared_ptr<VideoFrame> pVideoFrame;
-
-/**
- * Hold a frame of video, a wrapper for cv::Mat
- */
-class VideoFrame 
+class Frame : public cv::Mat
 {
     public:
-        virtual ~VideoFrame();
-        /*
-         * Create an empty Frame
-         */
-        static pVideoFrame create();
+        virtual ~Frame() {};
 
-        /**
-         * Initiate to a copy of the given mat
-         */
-        static pVideoFrame create_from_mat(const cv::Mat& mat, int64_t delay=0);
-        static pVideoFrame create_from_file(const std::string& fname, int64_t delay=0);
-        static pVideoFrame create(int width, int height, uint8_t initial=0, int64_t delay=0);
+        static pFrame from_file(const std::string& filename, int delay=0);
 
-        /**
-         * create a copy of the data
-         */
-        pVideoFrame copy() const;
-
-        /**
-         * Extract the underlying cv::Mat
-         */
-        cv::Mat get_mat();
-
-        /**
-         * Extract the underlying cv::Mat
-         */
-        const cv::Mat& get_mat() const;
-
-        /*
-         * frame height
-         */
-        int get_height() const;
-        /*
-         * frame width
-         */
-        int get_width() const;
-
-        /*
-         * how long to display the frame in ms
-         */
-        int64_t get_delay() const;
-
-        bool is_ok() const;
-
-        /*
-         * Write a debug PPM image to file
-         */
-        void write_ppm(const char *fname) const;
-
-        /*
-         * Write a series of debug PPM images to file
-         */
-        static void write_ppm(const std::vector<pVideoFrame> frames, const char *head);
-
-
-        // ############################################## Operations
-
-        /**
-         * Return a crop of the VideoFrame 
-         * @param left 
-         * @param right
-         * @param width pass -1 to preserve image
-         * @param height pass -1 to preserve image
-         * @returns the new frame, a subset of the current frame, or NULL if 
-         *          parameters were out of bounds
-         */
-        pVideoFrame crop(int left, int top, int width, int height);
-
-        /**
-         * Return a scaled version of the VideoFrame
-         * @param width target width
-         * @param height target height
-         * @returns the new frame
-         */
-        pVideoFrame scale_to(int width, int height) const;
-
-        pVideoFrame blur(float sigma) const;
-
-        static std::vector<pVideoFrame> blur(const std::vector<pVideoFrame> &rhs, float sigma);
-
-    protected:
-        VideoFrame();
+        int get_delay() const;
+        void set_delay(int d);
 
     private:
-        cv::Mat image;
-        int64_t delay;
+        Frame(const std::string& filename, int delay);
+
+    protected:
+        int delay;
 };
 
 
-#endif // GTKMM_GIFAUTHOR_VIDEOFRAME_H
+class ImageSequence;
+typedef std::shared_ptr<ImageSequence> pImageSequence;
+
+
+class ImageSequence : public std::vector<pFrame>
+{
+    public:
+        virtual ~ImageSequence() {};
+
+        /**
+         * Initiate the image sequence from files
+         */
+        static pImageSequence from_filenames(const std::vector<std::string>& fnames, int delay);
+        static pImageSequence from_filenames(const std::vector<std::string>& fnames, const vector<int>& delay);
+        static pImageSequence from_frames(const std::vector<pFrame>& frames);
+        
+    private:
+        ImageSequence(const std::vector<pFrame>& frames);
+        ImageSequence(){};
+};
+
+
+
+#endif // GTKMM_GIFAUTHOR_IMAGESEQUENCE_H
