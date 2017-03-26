@@ -26,31 +26,31 @@ void Frame::set_delay(int d)
     delay = d;
 };
 
-ImageSequence::ImageSequence(const std::vector<pFrame>& frames)
+Sequence::Sequence(const std::vector<pFrame>& frames)
     std::vector<pFrame>(frames)
 {};
 
-pImageSequence ImageSequence::from_filenames(const std::vector<std::string>& fnames, int delay)
+pSequence Sequence::from_filenames(const std::vector<std::string>& fnames, int delay)
 {
-    pIS = pImageSequence(new ImageSequence());
+    pS = pSequence(new Sequence());
     for(auto f: fnames)
     {
-        pIS->push_back(Frame::from_file(f, delay));
+        pS->push_back(Frame::from_file(f, delay));
     }
-    return pIS;
+    return pS;
 };
 
-pImageSequence ImageSequence::from_filenames(const std::vector<std::string>& fnames, const vector<int>& delays)
+pSequence Sequence::from_filenames(const std::vector<std::string>& fnames, const vector<int>& delays)
 {
-    pIS = pImageSequence(new ImageSequence());
+    pS = pSequence(new Sequence());
     for(int i = 0; i < fnames.size(); i++)
     {
-        pIS->push_back(Frame::from_file(fnames[i], delays[i]));
+        pS->push_back(Frame::from_file(fnames[i], delays[i]));
     }
-    return pIS;
+    return pS;
 };
 
-pImageSequence ImageSequence::from_frames(const std::vector<pFrame>& frames)
+pSequence Sequence::from_frames(const std::vector<pFrame>& frames)
 {
-    return pImageSequence(new ImageSequence(frames));
+    return pSequence(new Sequence(frames));
 }

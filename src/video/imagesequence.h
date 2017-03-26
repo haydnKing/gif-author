@@ -28,25 +28,25 @@ class Frame : public cv::Mat
 };
 
 
-class ImageSequence;
-typedef std::shared_ptr<ImageSequence> pImageSequence;
+class Sequence;
+typedef std::shared_ptr<Sequence> pSequence;
 
 
-class ImageSequence : public std::vector<pFrame>
+class Sequence : public std::vector<pFrame>
 {
     public:
-        virtual ~ImageSequence() {};
+        virtual ~Sequence() {};
 
         /**
          * Initiate the image sequence from files
          */
-        static pImageSequence from_filenames(const std::vector<std::string>& fnames, int delay);
-        static pImageSequence from_filenames(const std::vector<std::string>& fnames, const vector<int>& delay);
-        static pImageSequence from_frames(const std::vector<pFrame>& frames);
+        static pSequence from_filenames(const std::vector<std::string>& fnames, int delay);
+        static pSequence from_filenames(const std::vector<std::string>& fnames, const vector<int>& delay);
+        static pSequence from_frames(const std::vector<pFrame>& frames);
         
     private:
-        ImageSequence(const std::vector<pFrame>& frames);
-        ImageSequence(){};
+        Sequence(const std::vector<pFrame>& frames);
+        Sequence(){};
 };
 
 
