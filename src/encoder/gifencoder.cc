@@ -80,9 +80,9 @@ pGIF GIFEncoder::get_output()
             if(fr_mask)
             {
                 int left   = fr_mask->get_left(),
-                    width  = fr_mask->get_right() - left,
+                    width  = fr_mask->get_right() - left +1,
                     top    = fr_mask->get_top(),
-                    height = fr_mask->get_bottom() - top;
+                    height = fr_mask->get_bottom() - top+1;
                 fr_mask = Bitset::crop(fr_mask, left, top, width, height);
                 fr = fr->crop(left, top, width, height);
                 img = ditherer->dither_image(fr, fr_mask, colorquantizer->get_ct());
