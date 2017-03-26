@@ -48,7 +48,7 @@ void Frame::set_delay(int d)
 pFrame Frame::resize(int width, int height, int interpolation) const
 {
     pFrame out = Frame::create(width, height, get_delay());
-    cv::resize(mat(), out->mat(), out->size(), 0, 0, interpolation);
+    cv::resize(mat(), out->mat(), out->mat().size(), 0, 0, interpolation);
     return out;
 }
 
@@ -63,20 +63,20 @@ Sequence::Sequence(const std::vector<pFrame>& frames):
 
 pSequence Sequence::create_from_filenames(const std::vector<std::string>& fnames, int delay)
 {
-    pS = pSequence(new Sequence());
+    pSequence pS = Sequence::create();
     for(auto f: fnames)
     {
-        pS->push_back(Frame::from_file(f, delay));
+        pS->push_back(Frame::create_from_file(f, delay));
     }
     return pS;
 };
 
 pSequence Sequence::create_from_filenames(const std::vector<std::string>& fnames, const vector<int>& delays)
 {
-    pS = pSequence(new Sequence());
+    pSequence pS = Sequence::create();
     for(int i = 0; i < fnames.size(); i++)
     {
-        pS->push_back(Frame::from_file(fnames[i], delays[i]));
+        pS->push_back(Frame::create_from_file(fnames[i], delays[i]));
     }
     return pS;
 };
