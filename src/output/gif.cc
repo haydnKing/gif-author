@@ -22,8 +22,6 @@ pGIFColorTable GIFColorTable::create(int depth, bool sorted)
 
 void GIFColorTable::add_color(const uint8_t *c)
 {
-    std::cout << "    GIFColorTable::add_color([" << (int)c[0] 
-        << "," << int(c[1]) << "," << int(c[2]) << "]) colors = " << colors << std::endl;
     data[3*colors    ] = c[0];
     data[3*colors + 1] = c[1];
     data[3*colors + 2] = c[2];
@@ -32,7 +30,6 @@ void GIFColorTable::add_color(const uint8_t *c)
 
 void GIFColorTable::set_transparent()
 {
-    std::cout << "  GIFColorTable::set_transparent()" << std::endl;
     if(is_transparent())
         return;
     transparent_index = colors;
