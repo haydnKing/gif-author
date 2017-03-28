@@ -43,6 +43,7 @@ class Frame
         Frame(const cv::Mat& mat, int delay);
 
     protected:
+
         int the_delay;
         cv::Mat my_mat;
 };
@@ -86,6 +87,8 @@ class Sequence : public std::vector<pFrame>
         pSequence time_blur(float sigma) const;
         
     private:
+        static float *get_kernel(float sigma, int kernel_center);
+        
         Sequence(const std::vector<pFrame>& frames);
         Sequence(){};
 };

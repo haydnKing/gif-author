@@ -1,7 +1,7 @@
 #include "imagesequence.h"
 
 Frame::Frame(const std::string& filename, int delay):
-    delay(delay)
+    the_delay(delay)
 {
     cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_COLOR);
     if(!image.data) {
@@ -12,12 +12,12 @@ Frame::Frame(const std::string& filename, int delay):
         
 Frame::Frame(int width, int height, int delay):
     my_mat(height, width, CV_8UC4),
-    delay(delay)
+    the_delay(delay)
 {};
 
 Frame::Frame(const cv::Mat& mat, int delay):
     my_mat(mat),
-    delay(delay)
+    the_delay(delay)
 {};
 
 pFrame Frame::create_from_file(const std::string& filename, int delay)
@@ -140,3 +140,23 @@ pSequence Sequence::blur(float sigma) const
     return r;
 };
 
+pSequence Sequence::time_blur(float sigma) const
+{
+    pSequence r = Sequence::create();
+    //create an array of higher bit-depth copies
+    //for each position
+    //  calculate normalised kernel
+    //  sum output
+    //  convert output back to standard bit-depth & store
+    //return stored images
+    return r;
+};
+
+float *Sequence::get_kernel(float sigma, int kernel_center)
+{
+    float *kernel = new float[kernel_center*2+1];
+    for(int k = 0; k < kernel_center*2+1; k++)
+        kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
+
+    return kernel;
+};
