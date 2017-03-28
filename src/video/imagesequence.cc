@@ -35,26 +35,45 @@ pFrame Frame::create(const cv::Mat& mat, int delay)
     return pFrame(new Frame(mat, delay));
 };
 
-int Frame::get_delay() const
+int Frame::delay() const
 {
-    return delay;
+    return the_delay;
 };
 
-void Frame::set_delay(int d)
+void Frame::delay(int d)
 {
-    delay = d;
+    the_delay = d;
+};
+
+int Frame::width() const
+{
+    return mat().cols;
+};
+
+int Frame::height() const
+{
+    return mat().rows;
 };
         
 pFrame Frame::resize(int width, int height, int interpolation) const
 {
-    pFrame out = Frame::create(width, height, get_delay());
+    pFrame out = Frame::create(width, height, delay());
     cv::resize(mat(), out->mat(), out->mat().size(), 0, 0, interpolation);
     return out;
 }
 
 pFrame Frame::crop(int x, int y, int width, int height) const
 {
-    return Frame::create(mat()(cv::Rect(x,y,width,height)), get_delay());
+    return Frame::create(mat()(cv::Rect(x,y,width,height)), delay());
+};
+
+pFrame Frame::blur(float sigma) const
+{
+    pFrame out = Frame::create(width(), height(), delay());
+    int ks = int(3.0*sigma+1.0);
+    if(ks % 2 == 0) ks++;
+    cv::GaussianBlur(mat(), out->mat(), cv::Size(ks,ks), sigma);
+    return out;
 };
 
 Sequence::Sequence(const std::vector<pFrame>& frames):
@@ -107,6 +126,16 @@ pSequence Sequence::crop(int x, int y, int width, int height) const
     for(auto it = begin(); it < end(); it++)
     {
         r->push_back((*it)->crop(x, y, width, height));
+    }
+    return r;
+};
+
+pSequence Sequence::blur(float sigma) const
+{
+    pSequence r = Sequence::create();
+    for(auto it : *this)
+    {
+        r->push_back(it->blur(sigma));
     }
     return r;
 };

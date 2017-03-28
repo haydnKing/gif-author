@@ -19,13 +19,17 @@ class Frame
         static pFrame create(const cv::Mat& mat, int delay=0);
         static pFrame create_from_file(const std::string& filename, int delay=0);
 
-        int get_delay() const;
-        void set_delay(int d);
+        int delay() const;
+        void delay(int d);
+
+        int width() const;
+        int height() const;
 
         const cv::Mat mat() const {return my_mat;}; 
 
         pFrame resize(int width, int height, int interpolation=cv::INTER_AREA) const;
         pFrame crop(int x, int y, int width, int height) const;
+        pFrame blur(float sigma) const;
 
         const uint8_t* at(int x, int y) const;
         uint8_t* at(int x, int y);
@@ -39,7 +43,7 @@ class Frame
         Frame(const cv::Mat& mat, int delay);
 
     protected:
-        int delay;
+        int the_delay;
         cv::Mat my_mat;
 };
 
