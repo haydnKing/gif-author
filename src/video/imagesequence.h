@@ -27,6 +27,12 @@ class Frame
         pFrame resize(int width, int height, int interpolation=cv::INTER_AREA) const;
         pFrame crop(int x, int y, int width, int height) const;
 
+        const uint8_t* at(int x, int y) const;
+        uint8_t* at(int x, int y);
+
+        void set(int x, int y, const uint8_t* rhs);
+        void set(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
     private:
         Frame(const std::string& filename, int delay);
         Frame(int width, int height, int delay);
@@ -64,6 +70,16 @@ class Sequence : public std::vector<pFrame>
          * batch crop
          */
         pSequence crop(int x, int y, int width, int height) const;
+
+        /*
+         * batch blur
+         */
+        pSequence blur(float sigma) const;
+
+        /*
+         * batch time_blur
+         */
+        pSequence time_blur(float sigma) const;
         
     private:
         Sequence(const std::vector<pFrame>& frames);
