@@ -56,6 +56,9 @@ class Sequence : public std::vector<pFrame>
         static pSequence create_from_frames(const std::vector<pFrame>& frames);
         static pSequence create();
 
+        int width() const;
+        int height() const;
+
         /*
          * batch resize
          */

@@ -83,6 +83,18 @@ pSequence Sequence::create()
 {
     return pSequence(new Sequence());
 };
+
+int Sequence::width() const
+{
+    if(size() < 1) return -1;
+    return at(0)->cols;
+}
+
+int Sequence::height() const
+{
+    if(size() < 1) return -1;
+    return at(0)->rows;
+}
         
 pSequence Sequence::resize(int width, int height, int interpolation) const
 {

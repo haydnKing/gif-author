@@ -1,7 +1,7 @@
 #ifndef GTKMM_GIFAUTHOR_DITHERER_H
 #define GTKMM_GIFAUTHOR_DITHERER_H
 
-#include "../video/videoframe.h"
+#include "../video/imagesequence.h"
 #include "../output/gif.h"
 #include "colorquantizer.h"
 #include "../util/bitset.h"
@@ -20,15 +20,13 @@ class Ditherer : public OptionGroup
         virtual ~Ditherer() {};
 
 
-        pGIFImage dither_image(const pVideoFrame vf,
-                               const pBitset mask,
+        pGIFImage dither_image(const pFrame s,
                                pcGIFColorTable ct) const;
 
     protected:
 
         virtual void _dither_image(pGIFImage out,
-                                   const pVideoFrame vf,
-                                   const pBitset mask,
+                                   const pFrame s,
                                    pcGIFColorTable ct) const = 0;
 };
 

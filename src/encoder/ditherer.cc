@@ -4,14 +4,13 @@ Ditherer::Ditherer(std::string name, std::string description) :
     OptionGroup(name, description)
 {};
 
-pGIFImage Ditherer::dither_image(const pVideoFrame vf,
-                                 const pBitset mask,
+pGIFImage Ditherer::dither_image(const pFrame f,
                                  pcGIFColorTable ct) const {
     //Create the output image
-    pGIFImage out = GIFImage::create(0, 0, vf->get_width(), vf->get_height());
+    pGIFImage out = GIFImage::create(0, 0, f->cols, f->rows);
     out->set_local_colortable(ct);
 
-    _dither_image(out, vf, mask, ct);
+    _dither_image(out, f, ct);
 
     return out;
 };
@@ -28,33 +27,35 @@ class FSDither : public Ditherer
             Ditherer("FS", "Classical FloydSteinberg dithering")
         {};
         void _dither_image(pGIFImage out,
-                           const pVideoFrame vf,
-                           const pBitset mask,
+                           const pFrame f,
                            pcGIFColorTable ct) const {
             //store 2 rows of RGB errors, set to zero
-            int32_t* errors = new int32_t[6*vf->get_width()];
-            std::memset(errors, 0, 6*vf->get_width()*sizeof(int32_t));
+            int32_t* errors = new int32_t[6*f->cols];
+            std::memset(errors, 0, 6*f->cols*sizeof(int32_t));
             //pointers to the errors that can be swapped around
             int32_t *this_row = errors, 
-                    *next_row = errors + 3*vf->get_width(), 
+                    *next_row = errors + 3*f->cols, 
                     *swap;
             uint8_t pixel[3], * color;
             int32_t error[3];
 
             int x, y, index, i;
 
-            for(y = 0; y < vf->get_height(); y++)
+            uint8_t *row;
+
+            for(y = 0; y < f->rows; y++)
             {
-                for(x = 0; x < vf->get_width(); x++)
+                row = f->ptr(y);
+                for(x = 0; x < f->cols; x++)
                 {
                     //transparency
-                    if(mask && !mask->get(x,y))
+                    if(row[4*x+3]==0)
                     {
                         out->set_value(x,y,ct->get_transparent_index());
                         continue;
                     }
                     //get the pixel
-                    std::memcpy(pixel, vf->get_pixel(x,y), 3*sizeof(uint8_t));
+                    std::memcpy(pixel, row+4*x, 3*sizeof(uint8_t));
                     //add the errors, being wary of overflow
                     for(i = 0; i < 3; i++)
                     {
@@ -72,19 +73,19 @@ class FSDither : public Ditherer
 
                     
                     //propagate the errors
-                    if(x+1 < vf->get_width())
+                    if(x+1 < f->cols)
                     {
                         for(i=0;i<3;i++)
                             this_row[3*x+3+i] += (7 * error[i]) / 16;
                     }
-                    if(y+1 < vf->get_height())
+                    if(y+1 < f->rows)
                     {
                         if(x > 0)
                             for(i=0;i<3;i++)
                                 next_row[3*x-3+i] += (3 * error[i]) / 16;
                         for(i=0;i<3;i++)
                             next_row[3*x+i] += (5 * error[i]) / 16;
-                        if(x+1 < vf->get_width())
+                        if(x+1 < f->cols)
                             for(i=0;i<3;i++)
                                 next_row[3*x+3+i] += error[i] / 16;
                     }
@@ -93,7 +94,7 @@ class FSDither : public Ditherer
                 swap = this_row;
                 this_row = next_row;
                 next_row = swap;
-                memset(next_row, 0, 3*vf->get_width()*sizeof(int32_t));
+                memset(next_row, 0, 3*f->cols*sizeof(int32_t));
             }
 
             //the best way to cover up mistakes ;)
@@ -115,21 +116,22 @@ class NoDither : public Ditherer
             Ditherer("none", "Don't dither, just choose the closest colour")
         {};
         void _dither_image(pGIFImage out,
-                           const pVideoFrame vf,
-                           const pBitset mask,
+                           const pFrame f,
                            pcGIFColorTable ct) const {
             int x,y,index;
-            for(y = 0; y < vf->get_height(); y++)
+            uint8_t *row;
+            for(y = 0; y < f->rows; y++)
             {
-                for(x = 0; x < vf->get_width(); x++)
+                row = f->ptr(y);
+                for(x = 0; x < f->cols; x++)
                 {
                     //transparency
-                    if(mask && !mask->get(x,y))
+                    if(row[4*x+3]==0)
                     {
                         out->set_value(x,y,ct->get_transparent_index());
                         continue;
                     }
-                    index = ct->get_closest(vf->get_pixel(x,y));
+                    index = ct->get_closest(row+4*x);
                     out->set_value(x, y, index);
                 }
             }
