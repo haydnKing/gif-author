@@ -7,16 +7,16 @@ Frame::Frame(const std::string& filename, int delay):
     if(!image.data) {
         throw "No image data loaded from \"" + filename + "\"";
     }
-    cv::cvtColor(image, my_mat, CV_BGR2RGBA);
+    cv::cvtColor(image, *this, CV_BGR2RGBA);
 };
         
-Frame::Frame(int width, int height, int delay):
-    my_mat(height, width, CV_8UC4),
+Frame::Frame(int width, int height, int delay, int depth):
+    cv::Mat(height, width, depth),
     the_delay(delay)
 {};
 
 Frame::Frame(const cv::Mat& mat, int delay):
-    my_mat(mat),
+    cv::Mat(mat),
     the_delay(delay)
 {};
 
@@ -25,14 +25,19 @@ pFrame Frame::create_from_file(const std::string& filename, int delay)
     return pFrame(new Frame(filename, delay));
 };
 
-pFrame Frame::create(int width, int height, int delay)
+pFrame Frame::create(int width, int height, int delay, int depth)
 {
-    return pFrame(new Frame(width, height, delay));
+    return pFrame(new Frame(width, height, delay, depth));
 };
 
 pFrame Frame::create(const cv::Mat& mat, int delay)
 {
     return pFrame(new Frame(mat, delay));
+};
+
+pFrame Frame::create(const pFrame& rhs, const cv::Rect& roi)
+{
+    return pFrame(new Frame((*rhs)(roi), rhs->delay()));
 };
 
 int Frame::delay() const
@@ -44,38 +49,7 @@ void Frame::delay(int d)
 {
     the_delay = d;
 };
-
-int Frame::width() const
-{
-    return mat().cols;
-};
-
-int Frame::height() const
-{
-    return mat().rows;
-};
-        
-pFrame Frame::resize(int width, int height, int interpolation) const
-{
-    pFrame out = Frame::create(width, height, delay());
-    cv::resize(mat(), out->mat(), out->mat().size(), 0, 0, interpolation);
-    return out;
-}
-
-pFrame Frame::crop(int x, int y, int width, int height) const
-{
-    return Frame::create(mat()(cv::Rect(x,y,width,height)), delay());
-};
-
-pFrame Frame::blur(float sigma) const
-{
-    pFrame out = Frame::create(width(), height(), delay());
-    int ks = int(3.0*sigma+1.0);
-    if(ks % 2 == 0) ks++;
-    cv::GaussianBlur(mat(), out->mat(), cv::Size(ks,ks), sigma);
-    return out;
-};
-
+   
 Sequence::Sequence(const std::vector<pFrame>& frames):
     std::vector<pFrame>(frames)
 {};
@@ -110,12 +84,16 @@ pSequence Sequence::create()
     return pSequence(new Sequence());
 };
         
-pSequence Sequence::resize(int width, int height) const
+pSequence Sequence::resize(int width, int height, int interpolation) const
 {
     pSequence r = Sequence::create();
-    for(auto it = begin(); it < end(); it++)
+    cv::Size s(width, height);
+    pFrame out;
+    for(auto it : *this)
     {
-        r->push_back((*it)->resize(width, height));
+        out = Frame::create(width, height, it->delay());
+        cv::resize(*it, *out, s, 0, 0, interpolation);
+        r->push_back(out);
     }
     return r;
 };
@@ -123,9 +101,10 @@ pSequence Sequence::resize(int width, int height) const
 pSequence Sequence::crop(int x, int y, int width, int height) const
 {
     pSequence r = Sequence::create();
-    for(auto it = begin(); it < end(); it++)
+    cv::Rect roi(x,y,width,height);
+    for(auto it : *this)
     {
-        r->push_back((*it)->crop(x, y, width, height));
+        r->push_back(Frame::create(it, roi));
     }
     return r;
 };
@@ -133,9 +112,13 @@ pSequence Sequence::crop(int x, int y, int width, int height) const
 pSequence Sequence::blur(float sigma) const
 {
     pSequence r = Sequence::create();
+    cv::Size ksize(2*int(1.5*sigma+0.5)+1, 2*int(1.5*sigma+0.5)+1);
+    pFrame out;
     for(auto it : *this)
     {
-        r->push_back(it->blur(sigma));
+        out = Frame::create(it->cols, it->rows, it->depth());
+        cv::GaussianBlur(*it, *out, ksize, sigma);
+        r->push_back(out);
     }
     return r;
 };
@@ -143,11 +126,45 @@ pSequence Sequence::blur(float sigma) const
 pSequence Sequence::time_blur(float sigma) const
 {
     pSequence r = Sequence::create();
+    int kc = int(1.5*sigma+0.5);
+    float *K = get_kernel(sigma, kc);
+    pFrame out, sum;
+
     //create an array of higher bit-depth copies
+    vector<pFrame> images;
+    for(auto it : *this)
+    {
+        out = Frame::create(it->cols, it->rows, CV_16UC4);
+        it->convertTo(*out, CV_16U, 256.);
+    }
+
     //for each position
-    //  calculate normalised kernel
-    //  sum output
-    //  convert output back to standard bit-depth & store
+    sum = Frame::create(images[0]->cols, images[0]->rows, CV_16UC4);
+    out = Frame::create(images[0]->cols, images[0]->rows);
+    for(int f = 0; f < images.size(); f++)
+    {
+        sum->setTo(cv::Scalar(0,0,0,255));
+        //  sum output
+        for(int k = 1-kc; k < kc+2; k++)
+        {
+            int s = f+k;
+            if(s < 0)
+            {
+                s = -s;
+                if(s > images.size()) s = images.size()-1;
+            } else if(s >= images.size())
+            {
+                s = 2*images.size() - (s+1);
+                if(s < 0) s = 0;
+            }
+            cv::addWeighted(*sum, 1.0, *images[s], K[k+kc-1], 0, *sum);
+        }
+        //  convert output back to standard bit-depth & store
+
+        sum->convertTo(*out, CV_8U, 1./256.);
+        r->push_back(out);
+    }
+    delete [] K;
     //return stored images
     return r;
 };
@@ -155,8 +172,14 @@ pSequence Sequence::time_blur(float sigma) const
 float *Sequence::get_kernel(float sigma, int kernel_center)
 {
     float *kernel = new float[kernel_center*2+1];
+    float n = 0;
     for(int k = 0; k < kernel_center*2+1; k++)
+    {
         kernel[k] = std::exp(-(k-kernel_center)*(k-kernel_center)/(2*sigma*sigma));
+        n += kernel[k];
+    }
+    for(int k = 0; k < kernel_center*2+1; k++)
+        kernel[k] = kernel[k] / n;
 
     return kernel;
 };

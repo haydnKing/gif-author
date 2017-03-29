@@ -10,42 +10,31 @@
 class Frame;
 typedef std::shared_ptr<Frame> pFrame;
 
-class Frame 
+class Frame: public cv::Mat 
 {
     public:
         virtual ~Frame() {};
 
-        static pFrame create(int width, int height, int delay=0);
+        static pFrame create(int width, 
+                             int height, 
+                             int delay=0, 
+                             int depth=CV_8UC4);
         static pFrame create(const cv::Mat& mat, int delay=0);
-        static pFrame create_from_file(const std::string& filename, int delay=0);
+        static pFrame create_from_file(const std::string& filename, 
+                                       int delay=0);
+        static pFrame create(const pFrame& rhs, const cv::Rect& roi);
 
         int delay() const;
         void delay(int d);
 
-        int width() const;
-        int height() const;
-
-        const cv::Mat mat() const {return my_mat;}; 
-
-        pFrame resize(int width, int height, int interpolation=cv::INTER_AREA) const;
-        pFrame crop(int x, int y, int width, int height) const;
-        pFrame blur(float sigma) const;
-
-        const uint8_t* at(int x, int y) const;
-        uint8_t* at(int x, int y);
-
-        void set(int x, int y, const uint8_t* rhs);
-        void set(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-
     private:
         Frame(const std::string& filename, int delay);
-        Frame(int width, int height, int delay);
+        Frame(int width, int height, int delay, int depth);
         Frame(const cv::Mat& mat, int delay);
 
     protected:
 
         int the_delay;
-        cv::Mat my_mat;
 };
 
 
@@ -70,7 +59,9 @@ class Sequence : public std::vector<pFrame>
         /*
          * batch resize
          */
-        pSequence resize(int width, int height) const;
+        pSequence resize(int width, 
+                         int height, 
+                         int interpolation=cv::INTER_AREA) const;
         /*
          * batch crop
          */
