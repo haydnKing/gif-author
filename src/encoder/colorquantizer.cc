@@ -7,49 +7,54 @@
 ColorQuantizer::ColorQuantizer(std::string name, std::string description) :
     OptionGroup(name, description),
     colors(NULL),
-    max_colors(0),
-    num_colors(0)
+    num_colors(0),
+    max_colors(0)
 {};
 
 
 ColorQuantizer::~ColorQuantizer()
 {
-    if(colors != NULL)
-    {
-        delete [] colors;
-    }
+    clear_colors();
 };
 
-void ColorQuantizer::set_max_colors(int _max_colors)
+void ColorQuantizer::clear_colors()
 {
     if(colors != NULL)
     {
         delete [] colors;
+        colors = NULL;
     }
-    max_colors = _max_colors;
-    num_colors = 0;
-    colors = new uint8_t[3*max_colors];
 };
 
-void ColorQuantizer::add_color(const uint8_t* color)
+
+pcGIFColorTable ColorQuantizer::ct(pFrame fr, 
+                                   bool transparency, 
+                                   int quantized_colors)
 {
-    if(num_colors < max_colors)
+    //do we need more space
+    int mc = fr->rows * fr->cols;    
+    if(mc > max_colors)
     {
-        for(int i = 0; i < 3; i++)
-            colors[3*num_colors+i] = color[i];
-        num_colors++;
+        clear_colors();
+        colors = new uint8_t[mc*3];
+        max_colors = mc;
+        num_colors = 0;
     }
-};
 
-void ColorQuantizer::add_colors(const uint8_t* color, int count)
-{
-    for(int i = 0; i < count; i++)
+    for(auto px = fr->begin<cv::Vec4b>();
+             px < fr->end<cv::Vec4b>();
+             px++)
     {
-        add_color(color+3*i);
+        if(transparency && (*px)[3] == 0)
+            continue;
+        colors[3*max_colors  ] = (*px)[0];
+        colors[3*max_colors+1] = (*px)[1];
+        colors[3*max_colors+2] = (*px)[2];
+        max_colors++;
     }
+
+    return build_ct(transparency, quantized_colors);
 };
-
-
 
 /* *************************************************************
  *                                         MMCQuantizer
@@ -61,11 +66,10 @@ class MMCQuantizer : public ColorQuantizer
         
         static pColorQuantizer create();
 
-        virtual void build_ct(bool transparency, int quantized_colors=256);
-        virtual pcGIFColorTable get_ct() const;
-
     protected:
         MMCQuantizer();
+
+        virtual pcGIFColorTable build_ct(bool transparency, int quantized_colors=256);
 
         class vbox
         {
@@ -116,10 +120,10 @@ pColorQuantizer MMCQuantizer::create()
 MMCQuantizer::~MMCQuantizer()
 {};
 
-void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
+pcGIFColorTable MMCQuantizer::build_ct(bool transparent, int quantized_colors)
 {
     if(num_colors < 2)
-        return;
+        return pcGIFColorTable();
 
     //first two colours are just lightest and darkest
     ct = GIFColorTable::create();
@@ -144,6 +148,8 @@ void MMCQuantizer::build_ct(bool transparent, int quantized_colors)
         do_MMC(0.5, quantized_colors - 2);
     }
     ct->finalize();
+
+    return ct;
 };
 
 void MMCQuantizer::do_MMC(float f, int colours_to_add)
@@ -163,11 +169,6 @@ void MMCQuantizer::do_MMC(float f, int colours_to_add)
         box->split();
     }
     root.add_to_ct(ct);
-};
-
-pcGIFColorTable MMCQuantizer::get_ct() const
-{
-    return ct;
 };
 
 /* *************************************************************

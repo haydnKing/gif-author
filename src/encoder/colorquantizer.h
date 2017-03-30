@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "../output/gif.h"
+#include "../video/imagesequence.h"
 
 #include "../util/cline.h"
 
@@ -16,17 +17,18 @@ class ColorQuantizer : public OptionGroup
         ColorQuantizer(std::string name, std::string description);
         virtual ~ColorQuantizer();
 
-        void set_max_colors(int max_colors);
-        void add_color(const uint8_t* color);
-        void add_colors(const uint8_t* color, int count);
         int get_num_colors() const {return num_colors;};
 
-        virtual void build_ct(bool transparency, int quantized_colors=256) = 0;
-        virtual pcGIFColorTable get_ct() const = 0;
+        pcGIFColorTable ct(pFrame fr, 
+                           bool transparency, 
+                           int quantized_colors=256);
 
     protected:
+        virtual pcGIFColorTable build_ct(bool transparency, 
+                                         int quantized_colors=256) = 0;
+        void clear_colors();
         uint8_t* colors;
-        int max_colors, num_colors;
+        int num_colors, max_colors;
 };
 
 /**
