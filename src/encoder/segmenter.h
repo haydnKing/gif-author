@@ -11,7 +11,7 @@
 
 #include "../util/cline.h"
 
-#include "../video/videoframe.h"
+#include "../video/imagesequence.h"
 #include "../util/bitset.h"
 
 /**
@@ -31,8 +31,7 @@ class Segmenter : public OptionGroup
          * @param out_bits bitfield indicating which pixels in each frame are 
          * to be updated.
          */
-        virtual void segment(const std::vector<pVideoFrame> frames, 
-                             std::vector<pBitset>& out_bits) = 0;
+        virtual void segment(pSequence frames) = 0;
 
     protected:
         Segmenter(std::string name, std::string description) :

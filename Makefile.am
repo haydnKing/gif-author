@@ -6,12 +6,11 @@ gif_author_SOURCES = src/util/cline.cc \
  					 src/util/out.cc \
  					 src/util/exceptions.cc \
  					 src/video/imagesequence.cc \
- 					 src/output/gif.cc \
- 					 src/output/LZW.cc \
  					 src/encoder/colorquantizer.cc \
  					 src/encoder/ditherer.cc \
- 					 src/util/bitset.cc \
 					 src/encoder/segmenter.cc \
+ 					 src/output/gif.cc \
+ 					 src/output/LZW.cc \
  					 src/encoder/gifencoder.cc \
  					 src/gifauthor.cc \
 					 src/main.cc 

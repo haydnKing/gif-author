@@ -18,8 +18,7 @@ class DeltaSegmenter : public Segmenter
             return pSegmenter(new DeltaSegmenter());
         };
 
-        void segment(const std::vector<pVideoFrame> frames, 
-                     std::vector<pBitset>& out_bits);
+        void segment(pSequence frames);
 
         void name() const;
     protected:
@@ -43,50 +42,58 @@ class DeltaSegmenter : public Segmenter
         float delta, sigma, sigmaT;
 };
 
-void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames, 
-                                     std::vector<pBitset>& out_bits)
+void DeltaSegmenter::segment(pSequence frames)
 {
+    if(frames->size()==0) return;
 
     int x,y,z,start;
     float r,g,b,dr,dg,db;
-    uint8_t *px_start, *px_this;
+    cv::Vec4b px_this;
 
 
     //blur frames
-    std::vector<pVideoFrame> bframes;
-    for(auto it : frames)
-    {
-        bframes.push_back(it->blur(sigma));
-    }
-    bframes = VideoFrame::blur(bframes, sigmaT);
+    pSequence bframes;
+    bframes = frames->blur(sigma)->time_blur(sigmaT);
 
     //prepare output bits
     //No transparency in the first frame
-    out_bits.push_back(pBitset());
-    for(z=1; z < frames.size(); z++)
-        out_bits.push_back(Bitset::create(frames[0]->get_width(), frames[0]->get_height(), false));
-
+    for(auto px = frames->at(0)->begin<cv::Vec4b>();
+             px < frames->at(0)->end<cv::Vec4b>();
+             px++)
+    {
+        px[3] = 255;
+    }
+    //set full transparency in subsequent frames
+    for(auto fr = frames->begin()++; fr != frames->end(); fr++)
+    {
+        for(auto px = (*fr)->begin<cv::Vec4b>();
+                 px < (*fr)->end<cv::Vec4b>();
+                 px++)
+        {
+            px[3] = 0;
+        }
+    }
 
     //Do delta
-    for(y=0; y < frames[0]->get_height(); y++)
+    for(y=0; y < frames->height(); y++)
     {
-        for(x=0; x < frames[0]->get_width(); x++)
+        for(x=0; x < frames->width(); x++)
         {
-            px_this = frames[0]->get_pixel(x,y);
+            px_this = frames->at(0)->at<cv::Vec4b>(x,y);
             r = px_this[0];
             g = px_this[1];
             b = px_this[2];
             start = 0;
-            for(z=1; z < frames.size(); z++)
+            for(z=1; z < frames->size(); z++)
             {
-                px_this = frames[z]->get_pixel(x,y);
+                px_this = frames->at(z)->at<cv::Vec4b>(x,y);
                 //have we jumped more than delta?
                 dr = float(px_this[0]) - r/(z-start);
                 dg = float(px_this[1]) - g/(z-start);
                 db = float(px_this[2]) - b/(z-start);
                 if(dr*dr + dg*dg + db*db > delta*delta)
                 {
-                    if(out_bits[start]) out_bits[start]->set(x,y);
+                    frames->at(start)->at<cv::Vec4b>(x,y) = 255;
                     start = z;
                     r = g = b = 0.;
                 }
@@ -94,7 +101,7 @@ void DeltaSegmenter::segment(const std::vector<pVideoFrame> frames,
                 g += px_this[1];
                 b += px_this[2];
             }
-            if(out_bits[start]) out_bits[start]->set(x,y);
+            frames->at(start)->at<cv::Vec4b>(x,y) = 255;
         }
     }
 };
@@ -112,12 +119,17 @@ class NullSegmenter : public Segmenter
             return pSegmenter(new NullSegmenter());
         };
 
-        void segment(const std::vector<pVideoFrame> frames, 
-                     std::vector<pBitset>& out_bits)
+        void segment(pSequence frames)
         {
-            for(auto fr : frames)
+            //set each pixel in each frame to full opacity
+            for(auto fr : *frames)
             {
-                out_bits.push_back(Bitset::create(fr->get_width(), fr->get_height(), true));
+                for(auto px = fr->begin<cv::Vec4b>();
+                    px < fr->end<cv::Vec4b>();
+                    px++)
+                {
+                    px[3] = 255;
+                }
             }
         };
     protected:
