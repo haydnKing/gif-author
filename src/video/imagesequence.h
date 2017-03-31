@@ -27,6 +27,12 @@ class Frame: public cv::Mat
         int delay() const;
         void delay(int d);
 
+        //get the bounds of the non-transparent image
+        cv::Rect get_bounds() const;
+
+        //return true if at least one pixel is transparent
+        bool has_transparency() const;
+
     private:
         Frame(const std::string& filename, int delay);
         Frame(int width, int height, int delay, int depth);

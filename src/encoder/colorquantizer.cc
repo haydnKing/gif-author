@@ -27,8 +27,7 @@ void ColorQuantizer::clear_colors()
 };
 
 
-pcGIFColorTable ColorQuantizer::ct(pFrame fr, 
-                                   bool transparency, 
+pcGIFColorTable ColorQuantizer::quantize(pFrame fr, 
                                    int quantized_colors)
 {
     //do we need more space
@@ -45,7 +44,7 @@ pcGIFColorTable ColorQuantizer::ct(pFrame fr,
              px < fr->end<cv::Vec4b>();
              px++)
     {
-        if(transparency && (*px)[3] == 0)
+        if((*px)[3] == 0)
             continue;
         colors[3*max_colors  ] = (*px)[0];
         colors[3*max_colors+1] = (*px)[1];
@@ -53,7 +52,7 @@ pcGIFColorTable ColorQuantizer::ct(pFrame fr,
         max_colors++;
     }
 
-    return build_ct(transparency, quantized_colors);
+    return build_ct(fr->has_transparency(), quantized_colors);
 };
 
 /* *************************************************************

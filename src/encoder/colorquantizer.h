@@ -19,9 +19,7 @@ class ColorQuantizer : public OptionGroup
 
         int get_num_colors() const {return num_colors;};
 
-        pcGIFColorTable ct(pFrame fr, 
-                           bool transparency, 
-                           int quantized_colors=256);
+        pcGIFColorTable quantize(pFrame fr, int colors=256);
 
     protected:
         virtual pcGIFColorTable build_ct(bool transparency, 

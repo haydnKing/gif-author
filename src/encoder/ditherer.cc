@@ -6,9 +6,13 @@ Ditherer::Ditherer(std::string name, std::string description) :
 
 pGIFImage Ditherer::dither_image(const pFrame f,
                                  pcGIFColorTable ct) const {
-    //Create the output image
-    pGIFImage out = GIFImage::create(0, 0, f->cols, f->rows);
+    //autocrop the image
+    cv::Rect roi = f->get_bounds();
+    pFrame cropped = Frame::create(f, roi);
+    pGIFImage out = GIFImage::create(roi.x, roi.y, roi.width, roi.height);
     out->set_local_colortable(ct);
+    out->set_delay_time(f->delay());
+    out->set_disposal_method(DISPOSAL_METHOD_NONE);
 
     _dither_image(out, f, ct);
 

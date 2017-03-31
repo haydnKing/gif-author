@@ -49,6 +49,46 @@ void Frame::delay(int d)
 {
     the_delay = d;
 };
+        
+cv::Rect Frame::get_bounds() const
+{
+    int l = cols,
+        r = 0,
+        t = rows,
+        b = 0;
+    const uint8_t* row;
+    bool o;
+    for(int y = 0; y < rows; y++)
+    {
+        row = ptr(y);
+        o = false;
+        for(int x = 3; x < 4*cols; x+=4)
+        {
+            if(row[x] > 0)
+            {
+                o = true;
+                if(x < l) l = x;
+                if(x > r) r = x;
+            }
+        }
+        if(o)
+        {
+            if(y < t) t = y;
+            if(y > b) b = y;
+        }
+    }
+    if(l > r) return cv::Rect(0,0,0,0);
+    return cv::Rect(l,t,r-l+1,b-t+1);
+};
+        
+bool Frame::has_transparency() const
+{
+    for(auto px = begin<cv::Vec4b>();
+             px < end<cv::Vec4b>();
+             px++)
+        if((*px)[3] != 255) return true;
+    return false;
+};
    
 Sequence::Sequence(const std::vector<pFrame>& frames):
     std::vector<pFrame>(frames)

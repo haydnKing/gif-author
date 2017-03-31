@@ -5,7 +5,7 @@
  * Turn a sequence of pre-processed images into an efficient GIF
  */
 
-#include "../video/videoframe.h"
+#include "../video/imagesequence.h"
 #include "../output/gif.h"
 #include "colorquantizer.h"
 #include "segmenter.h"
@@ -33,9 +33,7 @@ class GIFEncoder
                    int max_colors=256);
         ~GIFEncoder();
 
-        void push_frame(pVideoFrame fr);
-
-        pGIF get_output();
+        pGIF encode(pSequence frames);
 
         void set_sigma(float s) {sm_sigma = s;};
         void set_threshold(float t) {sm_thresh = t;};
@@ -50,18 +48,6 @@ class GIFEncoder
         pSegmenter segmenter;
         pColorQuantizer colorquantizer;
         pDitherer ditherer;
-        //general settings
-        
-        std::vector<pVideoFrame> frames;
-        void smooth_transparency(const std::vector<pVideoFrame> frames, 
-                                     std::vector<pVideoFrame>& out_frames,
-                                     std::vector<pBitset>& bits);
-
-        void dbg_save_POI(int x, int y, const char* name) const;
-        void dbg_thresholding(int len, uint8_t *px, float *fpx, const char *name) const;
-
-        pGIFImage create_gif_image(int left, int top, int width, int height) const;
-
 };
 
 
