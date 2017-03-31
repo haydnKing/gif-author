@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "encoder/gifencoder.h"
+#include "video/imagesequence.h"
 #include "util/cline.h"
 #include "util/out.h"
 #include "util/exceptions.h"
@@ -48,7 +49,7 @@ class GIFAuthor
         std::string out_file;
         bool help_opt;
         
-        std::vector<pVideoFrame> frames;
+        pSequence frames;
         std::vector<std::string> filenames;
 
         pSegmenter segmenter;

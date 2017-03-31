@@ -84,47 +84,42 @@ pGIF GIFAuthor::run()
 
     load_files();
 
-    if(frames.size()==0)
+    if(frames->size()==0)
         return out;
     
     //work out size
     if(size_opts.width() < 0 && size_opts.height() < 0)
     {
-        size_opts.width(frames[0]->get_width());
-        size_opts.height(frames[0]->get_height());
+        size_opts.width(frames->width());
+        size_opts.height(frames->height());
     }
     else if(size_opts.height() < 0)
     {
-        float r = float(size_opts.width()) / float(frames[0]->get_width());
-        size_opts.height(int(0.5+r*float(frames[0]->get_height())));
+        float r = float(size_opts.width()) / float(frames->width());
+        size_opts.height(int(0.5+r*float(frames->height())));
     }
     else if(size_opts.width() < 0)
     {
-        float r = float(size_opts.height()) / float(frames[0]->get_height());
-        size_opts.width(int(0.5+r*float(frames[0]->get_width())));
+        float r = float(size_opts.height()) / float(frames->height());
+        size_opts.width(int(0.5+r*float(frames->width())));
     }
 
     print_overview();
-
+    if(crop_opts) 
+        frames = frames->crop(crop_opts.xpos(), 
+                              crop_opts.ypos(), 
+                              crop_opts.width(), 
+                              crop_opts.height());
+    //scale
+    frames = frames->resize(size_opts.width(), size_opts.height());
+        
     GIFEncoder encoder(size_opts.width(), 
                        size_opts.height(), 
                        segmenter, 
                        ditherer, 
                        colorquantizer, 
                        colors);
-    int frame_no = 0;
-    for(auto fr : frames)
-    {
-        if(crop_opts) {
-            fr = fr->crop(crop_opts.xpos(), crop_opts.ypos(), crop_opts.width(), crop_opts.height());
-        }
-        //scale
-        fr = fr->scale_to(size_opts.width(), size_opts.height());
-        
-        encoder.push_frame(fr);
-    }
-    
-    out = encoder.get_output();
+    out = encoder.encode(frames);
 
     int len = out->save(out_file);
     cout << out->as_string() << endl;
@@ -134,13 +129,5 @@ pGIF GIFAuthor::run()
 
 void GIFAuthor::load_files()
 {
-    frames.clear();
-
-    for(int i = 0; i < filenames.size(); i++)
-    {
-        pVideoFrame pv = VideoFrame::create_from_file(filenames[i], i*delay, i);
-
-        frames.push_back(pv);
-    }
-
+    frames = Sequence::create_from_filenames(filenames, delay);
 }
