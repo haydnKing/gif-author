@@ -184,14 +184,15 @@ pSequence Sequence::time_blur(float sigma) const
 
     //create an array of higher bit-depth copies
     vector<pFrame> images;
-    for(auto it : *this)
+    for(auto it = begin(); it < end(); it++)
     {
-        out = Frame::create(it->cols, it->rows, CV_16UC4);
-        it->convertTo(*out, CV_16U, 256.);
+        out = Frame::create((*it)->cols, (*it)->rows, (*it)->delay(), CV_16UC4);
+        (*it)->convertTo(*out, CV_16U, 256.);
+        images.push_back(out);
     }
 
     //for each position
-    sum = Frame::create(images[0]->cols, images[0]->rows, CV_16UC4);
+    sum = Frame::create(images[0]->cols, images[0]->rows, 0, CV_16UC4);
     out = Frame::create(images[0]->cols, images[0]->rows);
     for(int f = 0; f < images.size(); f++)
     {
