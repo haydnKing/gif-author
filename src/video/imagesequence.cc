@@ -78,7 +78,7 @@ cv::Rect Frame::get_bounds() const
         }
     }
     if(l > r) return cv::Rect(0,0,0,0);
-    return cv::Rect(l,t,r-l+1,b-t+1);
+    return cv::Rect(l/4,t,(r-l)/4+1,b-t+1);
 };
         
 bool Frame::has_transparency() const
