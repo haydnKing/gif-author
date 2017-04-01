@@ -61,16 +61,16 @@ void DeltaSegmenter::segment(pSequence frames)
              px < frames->at(0)->end<cv::Vec4b>();
              px++)
     {
-        px[3] = 255;
+        (*px)[3] = 255;
     }
     //set full transparency in subsequent frames
-    for(auto fr = frames->begin()++; fr != frames->end(); fr++)
+    for(auto fr = ++frames->begin(); fr != frames->end(); fr++)
     {
         for(auto px = (*fr)->begin<cv::Vec4b>();
                  px < (*fr)->end<cv::Vec4b>();
                  px++)
         {
-            px[3] = 0;
+            (*px)[3] = 0;
         }
     }
 
@@ -79,21 +79,21 @@ void DeltaSegmenter::segment(pSequence frames)
     {
         for(x=0; x < frames->width(); x++)
         {
-            px_this = frames->at(0)->at<cv::Vec4b>(x,y);
+            px_this = frames->at(0)->at<cv::Vec4b>(y,x);
             r = px_this[0];
             g = px_this[1];
             b = px_this[2];
             start = 0;
             for(z=1; z < frames->size(); z++)
             {
-                px_this = frames->at(z)->at<cv::Vec4b>(x,y);
+                px_this = frames->at(z)->at<cv::Vec4b>(y,x);
                 //have we jumped more than delta?
                 dr = float(px_this[0]) - r/(z-start);
                 dg = float(px_this[1]) - g/(z-start);
                 db = float(px_this[2]) - b/(z-start);
                 if(dr*dr + dg*dg + db*db > delta*delta)
                 {
-                    frames->at(start)->at<cv::Vec4b>(x,y) = 255;
+                    frames->at(start)->at<cv::Vec4b>(y,x)[3] = 255;
                     start = z;
                     r = g = b = 0.;
                 }
@@ -101,7 +101,7 @@ void DeltaSegmenter::segment(pSequence frames)
                 g += px_this[1];
                 b += px_this[2];
             }
-            frames->at(start)->at<cv::Vec4b>(x,y) = 255;
+            frames->at(start)->at<cv::Vec4b>(y,x)[3] = 255;
         }
     }
 };

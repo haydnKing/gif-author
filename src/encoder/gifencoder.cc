@@ -35,7 +35,11 @@ pGIF GIFEncoder::encode(pSequence frames)
     for(auto fr : *frames)
     {
         ct = colorquantizer->quantize(fr, max_colors);
+        if(!ct)
+            throw("ColorQuantizer failed");
         img = ditherer->dither_image(fr, ct);
+        if(!img)
+            throw("Ditherer Failed");
         out->push_back(img);
     }
     

@@ -37,21 +37,24 @@ pcGIFColorTable ColorQuantizer::quantize(pFrame fr,
         clear_colors();
         colors = new uint8_t[mc*3];
         max_colors = mc;
-        num_colors = 0;
     }
-
+    
+    num_colors = 0;
+    int blank = 0;
     for(auto px = fr->begin<cv::Vec4b>();
              px < fr->end<cv::Vec4b>();
              px++)
     {
         if((*px)[3] == 0)
+        {
+            blank++;
             continue;
-        colors[3*max_colors  ] = (*px)[0];
-        colors[3*max_colors+1] = (*px)[1];
-        colors[3*max_colors+2] = (*px)[2];
-        max_colors++;
+        }
+        colors[3*num_colors  ] = (*px)[0];
+        colors[3*num_colors+1] = (*px)[1];
+        colors[3*num_colors+2] = (*px)[2];
+        num_colors++;
     }
-
     return build_ct(fr->has_transparency(), quantized_colors);
 };
 
