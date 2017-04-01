@@ -14,7 +14,7 @@ pGIFImage Ditherer::dither_image(const pFrame f,
     out->set_delay_time(f->delay());
     out->set_disposal_method(DISPOSAL_METHOD_NONE);
 
-    _dither_image(out, f, ct);
+    _dither_image(out, cropped, ct);
 
     return out;
 };
