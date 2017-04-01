@@ -158,8 +158,8 @@ int GIFImage::write(std::ostream& str, pGIFColorTable global_ct)
             (active_ct->is_transparent()*0x01));
 
     //delay time
-    str.put(delay_time & 0xff);
-    str.put((delay_time >> 8) & 0xff);
+    str.put((delay_time/10) & 0xff);
+    str.put(((delay_time/10) >> 8) & 0xff);
 
     //transparent color index
     if(active_ct->is_transparent())
