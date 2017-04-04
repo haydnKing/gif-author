@@ -87,6 +87,11 @@ pGIF GIFAuthor::run()
     if(frames->size()==0)
         return out;
     
+    if(crop_opts) 
+        frames = frames->crop(crop_opts.xpos(), 
+                              crop_opts.ypos(), 
+                              crop_opts.width(), 
+                              crop_opts.height());
     //work out size
     if(size_opts.width() < 0 && size_opts.height() < 0)
     {
@@ -105,11 +110,6 @@ pGIF GIFAuthor::run()
     }
 
     print_overview();
-    if(crop_opts) 
-        frames = frames->crop(crop_opts.xpos(), 
-                              crop_opts.ypos(), 
-                              crop_opts.width(), 
-                              crop_opts.height());
     //scale
     frames = frames->resize(size_opts.width(), size_opts.height());
         
