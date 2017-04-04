@@ -115,10 +115,11 @@ std::basic_istream<CharT, Traits>&
     string s;
     is >> s;
 
-    regex re("([0-9]+),([0-9]+)+([0-9]+)x([0-9]+)");
+    regex re("([0-9]+),([0-9]+)\\+([0-9]+)x([0-9]+)");
     smatch m;
     if(!regex_match(s, m, re))
     {
+        std::cout << "failed" << std::endl;
         //bad stuff
         is.setstate(std::istream::failbit);
         return is;
